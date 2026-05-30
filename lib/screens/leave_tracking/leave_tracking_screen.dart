@@ -166,7 +166,7 @@ class _LeaveTrackingScreenState extends State<LeaveTrackingScreen>
         Provider.of<AttendanceViewModel>(context, listen: false);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       body: Column(
         children: [
           // Stack Header and TabBar for desktop overlap effect

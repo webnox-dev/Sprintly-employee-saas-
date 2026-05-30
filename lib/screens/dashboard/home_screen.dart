@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:ui';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -24,6 +26,8 @@ import 'package:webnox_taskops/widgets/animated_loading_states.dart';
 import 'package:webnox_taskops/view_model/attendance_view_model.dart';
 
 import 'package:webnox_taskops/widgets/enhanced_animated_team_card.dart';
+import 'package:webnox_taskops/widgets/dashboard_recreation/stats_card.dart';
+import 'package:webnox_taskops/widgets/simple_attendance_widget.dart';
 import 'package:webnox_taskops/screens/task_request/task_card_request_screen.dart';
 import 'package:webnox_taskops/services/local_storage_service.dart';
 import 'package:day_night_time_picker/day_night_time_picker.dart';
@@ -2483,9 +2487,8 @@ class HomeScreen extends HookWidget {
     );
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       appBar: null, // No app bar - using header in body
-      floatingActionButton: _buildFloatingActionButton(context),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -2555,302 +2558,324 @@ class HomeScreen extends HookWidget {
                           : 24,
                 ),
 
-                // Task Category Tabs
-                FutureBuilder<Widget>(
-                  future: _buildTaskTabs(
-                    context,
-                    selectedTab,
-                    isDesktop,
-                    pendingTasks,
-                    acceptedTasks,
-                    taskStatuses,
+                // Task Board Glassmorphic Container
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.015),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.04),
+                      width: 1.0,
+                    ),
                   ),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return snapshot.data!;
-                    } else {
-                      return const SizedBox.shrink();
-                    }
-                  },
-                ),
-
-                SizedBox(
-                  height: isSmallMobile
-                      ? 12
-                      : isMobile
-                          ? 16
-                          : 20,
-                ),
-
-                // Task List
-                if (isLoadingTasks.value)
-                  Column(
-                    children: [
-                      // Metric cards skeleton
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: metricColumns,
-                          crossAxisSpacing: cardSpacing,
-                          mainAxisSpacing: cardSpacing,
-                          childAspectRatio: 2.5,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          left: isMobile ? 12 : 20,
+                          top: isMobile ? 12 : 20,
+                          right: isMobile ? 12 : 20,
+                          bottom: isMobile ? 120 : 140,
                         ),
-                        itemCount: 4,
-                        itemBuilder: (context, index) {
-                          return MetricCardSkeleton(
-                            isMobile: isMobile,
-                            isSmallMobile: isSmallMobile,
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      // Task tabs skeleton
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.only(
-                            left: 16,
-                            top: 8,
-                            bottom: 8,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 16,
-                            horizontal: 20,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Task Category Tabs
+                            FutureBuilder<Widget>(
+                              future: _buildTaskTabs(
+                                context,
+                                selectedTab,
+                                isDesktop,
+                                pendingTasks,
+                                acceptedTasks,
+                                taskStatuses,
                               ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: List.generate(3, (index) {
-                              return Container(
-                                margin: EdgeInsets.only(
-                                  right: index < 2 ? 8 : 0,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                  horizontal: 16,
-                                ),
-                                child: SkeletonLoader(
-                                  height: 16,
-                                  width: 80,
-                                  borderRadius: 4,
-                                ),
-                              );
-                            }),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Task cards skeleton
-                      Column(
-                        children: List.generate(3, (index) {
-                          return TaskCardSkeleton(
-                            isMobile: isMobile,
-                            isSmallMobile: isSmallMobile,
-                          );
-                        }),
-                      ),
-                    ],
-                  )
-                else if (taskError.value != null)
-                  Container(
-                    height: 200,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            color: CommonColors.red,
-                            size: 32,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            taskError.value!,
-                            style: TextStyle(
-                              color: CommonColors.red,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  return snapshot.data!;
+                                } else {
+                                  return const SizedBox.shrink();
+                                }
+                              },
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 8),
-                          ElevatedButton(
-                            onPressed: () => refreshTasks(),
-                            child: const Text('Retry'),
-                          ),
-                        ],
+
+                            const SizedBox(height: 12),
+                            Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: Colors.white.withOpacity(0.06),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Scrollable Task List Area
+                            ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxHeight: isMobile ? 500 : (isTablet ? 650 : 800),
+                              ),
+                              child: Scrollbar(
+                                thumbVisibility: true,
+                                child: SingleChildScrollView(
+                                  physics: const BouncingScrollPhysics(),
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                      right: isMobile ? 8 : 12,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: [
+                                        if (isLoadingTasks.value)
+                                          Column(
+                                            children: [
+                                              // Task tabs skeleton
+                                              Align(
+                                                alignment: Alignment.centerLeft,
+                                                child: Container(
+                                                  margin: const EdgeInsets.only(
+                                                    left: 16,
+                                                    top: 8,
+                                                    bottom: 8,
+                                                  ),
+                                                  padding: const EdgeInsets.symmetric(
+                                                    vertical: 16,
+                                                    horizontal: 20,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white.withOpacity(0.02),
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    border: Border.all(
+                                                      color: Colors.white.withOpacity(0.04),
+                                                    ),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: List.generate(3, (index) {
+                                                      return Container(
+                                                        margin: EdgeInsets.only(
+                                                          right: index < 2 ? 8 : 0,
+                                                        ),
+                                                        padding: const EdgeInsets.symmetric(
+                                                          vertical: 8,
+                                                          horizontal: 16,
+                                                        ),
+                                                        child: SkeletonLoader(
+                                                          height: 16,
+                                                          width: 80,
+                                                          borderRadius: 4,
+                                                        ),
+                                                      );
+                                                    }),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 24),
+                                              // Task cards skeleton
+                                              Column(
+                                                children: List.generate(3, (index) {
+                                                  return TaskCardSkeleton(
+                                                    isMobile: isMobile,
+                                                    isSmallMobile: isSmallMobile,
+                                                  );
+                                                }),
+                                              ),
+                                            ],
+                                          )
+                                        else if (taskError.value != null)
+                                          Container(
+                                            height: 200,
+                                            child: Center(
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    Icons.error_outline,
+                                                    color: CommonColors.red,
+                                                    size: 32,
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Text(
+                                                    taskError.value!,
+                                                    style: TextStyle(
+                                                      color: CommonColors.red,
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  ElevatedButton(
+                                                    onPressed: () => refreshTasks(),
+                                                    child: const Text('Retry'),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          )
+                                        else ...[
+                                          Builder(
+                                            builder: (context) {
+                                              final filteredTasks = getFilteredTasks();
+
+                                              if (filteredTasks.isEmpty) {
+                                                // Show appropriate message based on selected tab
+                                                String emptyMessage;
+                                                // Different empty messages for QA Analysts vs regular employees
+                                                final isQAAnalyst =
+                                                    userRole.value?.toLowerCase().trim() ==
+                                                            'qa analyst' ||
+                                                        userRole.value?.toLowerCase().trim() ==
+                                                            'qa analyst' ||
+                                                        (userRole.value
+                                                                ?.toLowerCase()
+                                                                .trim()
+                                                                .contains('quality control') ??
+                                                            false);
+
+                                                if (isQAAnalyst) {
+                                                  switch (selectedTab.value) {
+                                                    case 0: // To Do
+                                                      emptyMessage = 'No tasks ready for QA review';
+                                                      break;
+                                                    case 1: // In Progress
+                                                      emptyMessage = 'No tasks currently in QC';
+                                                      break;
+                                                    case 2: // Completed
+                                                      emptyMessage = 'No QA work completed yet';
+                                                      break;
+                                                    case 3: // All Tasks
+                                                      emptyMessage = 'No tasks available';
+                                                      break;
+                                                    default:
+                                                      emptyMessage = 'No tasks available';
+                                                  }
+                                                } else {
+                                                  switch (selectedTab.value) {
+                                                    case 0: // To Do
+                                                      emptyMessage = 'No tasks assigned to you';
+                                                      break;
+                                                    case 1: // In Progress
+                                                      emptyMessage = 'No tasks in progress';
+                                                      break;
+                                                    case 2: // Completed
+                                                      emptyMessage = 'No completed tasks yet';
+                                                      break;
+                                                    case 3: // All Tasks
+                                                      emptyMessage = 'No tasks available';
+                                                      break;
+                                                    default:
+                                                      emptyMessage = 'No tasks available';
+                                                  }
+                                                }
+
+                                                return Container(
+                                                  height: isDesktop ? 550 : 380,
+                                                  child: EmptyStateWidget(
+                                                    title: emptyMessage,
+                                                    subtitle: 'Check back later or refresh the page',
+                                                  ),
+                                                );
+                                              } else {
+                                                // If Team Cards tab is selected (index 4), show team cards instead of tasks
+                                                if (selectedTab.value == 4) {
+                                                  return _buildTeamCardsTabContent(context, isDesktop);
+                                                }
+
+                                                // Custom Masonry Layout for Tasks
+                                                // Calculate columns based on width ranges matching standard breakpoints + our custom ones
+                                                final columns =
+                                                    ResponsiveUtils.getResponsiveGridColumns(
+                                                  context,
+                                                  mobile: 1,
+                                                  tablet: 2,
+                                                  laptop: 3,
+                                                  desktop: 4,
+                                                  fourK: 4,
+                                                );
+
+                                                // Spacing
+                                                final spacing = isSmallMobile
+                                                    ? 12.0
+                                                    : isMobile
+                                                        ? 16.0
+                                                        : 20.0; // Increased spacing for desktop
+
+                                                if (columns == 1) {
+                                                  return ListView.separated(
+                                                    shrinkWrap: true,
+                                                    physics: const NeverScrollableScrollPhysics(),
+                                                    itemCount: filteredTasks.length,
+                                                    separatorBuilder: (context, index) =>
+                                                        SizedBox(height: spacing),
+                                                    itemBuilder: (context, index) {
+                                                      final task = filteredTasks[index];
+                                                      return _buildTaskCardItem(
+                                                        context,
+                                                        task,
+                                                        index,
+                                                        userRole,
+                                                        taskViewModel,
+                                                      );
+                                                    },
+                                                  );
+                                                }
+
+                                                // Distribute tasks into columns
+                                                List<List<Task>> columnTasks = List.generate(
+                                                  columns,
+                                                  (_) => [],
+                                                );
+                                                for (int i = 0; i < filteredTasks.length; i++) {
+                                                  columnTasks[i % columns].add(filteredTasks[i]);
+                                                }
+
+                                                return Row(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: List.generate(columns, (colIndex) {
+                                                    return Expanded(
+                                                      child: Padding(
+                                                        padding: EdgeInsets.only(
+                                                          right: colIndex == columns - 1 ? 0 : spacing,
+                                                        ),
+                                                        child: Column(
+                                                          children: columnTasks[colIndex].map((task) {
+                                                            return Padding(
+                                                              padding: EdgeInsets.only(bottom: spacing),
+                                                              child: _buildTaskCardItem(
+                                                                context,
+                                                                task,
+                                                                filteredTasks.indexOf(task),
+                                                                userRole,
+                                                                taskViewModel,
+                                                              ),
+                                                            );
+                                                          }).toList(),
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }),
+                                                );
+                                              }
+                                            },
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  )
-                else ...[
-                  Builder(
-                    builder: (context) {
-                      final filteredTasks = getFilteredTasks();
-
-                      if (filteredTasks.isEmpty) {
-                        // Show appropriate message based on selected tab
-                        String emptyMessage;
-                        // Different empty messages for QA Analysts vs regular employees
-                        final isQAAnalyst =
-                            userRole.value?.toLowerCase().trim() ==
-                                    'qa analyst' ||
-                                userRole.value?.toLowerCase().trim() ==
-                                    'qa analyst' ||
-                                (userRole.value
-                                        ?.toLowerCase()
-                                        .trim()
-                                        .contains('quality control') ??
-                                    false);
-
-                        if (isQAAnalyst) {
-                          switch (selectedTab.value) {
-                            case 0: // To Do
-                              emptyMessage = 'No tasks ready for QA review';
-                              break;
-                            case 1: // In Progress
-                              emptyMessage = 'No tasks currently in QC';
-                              break;
-                            case 2: // Completed
-                              emptyMessage = 'No QA work completed yet';
-                              break;
-                            case 3: // All Tasks
-                              emptyMessage = 'No tasks available';
-                              break;
-                            default:
-                              emptyMessage = 'No tasks available';
-                          }
-                        } else {
-                          switch (selectedTab.value) {
-                            case 0: // To Do
-                              emptyMessage = 'No tasks assigned to you';
-                              break;
-                            case 1: // In Progress
-                              emptyMessage = 'No tasks in progress';
-                              break;
-                            case 2: // Completed
-                              emptyMessage = 'No completed tasks yet';
-                              break;
-                            case 3: // All Tasks
-                              emptyMessage = 'No tasks available';
-                              break;
-                            default:
-                              emptyMessage = 'No tasks available';
-                          }
-                        }
-
-                        return Container(
-                          height: isDesktop
-                              ? 500
-                              : 350, // Increased height for Lottie and text
-                          child: EmptyStateWidget(
-                            title: emptyMessage,
-                            subtitle: 'Check back later or refresh the page',
-                          ),
-                        );
-                      } else {
-                        // If Team Cards tab is selected (index 4), show team cards instead of tasks
-                        if (selectedTab.value == 4) {
-                          return _buildTeamCardsTabContent(context, isDesktop);
-                        }
-
-                        // Custom Masonry Layout for Tasks
-                        // Calculate columns based on width ranges matching standard breakpoints + our custom ones
-                        final columns =
-                            ResponsiveUtils.getResponsiveGridColumns(
-                          context,
-                          mobile: 1,
-                          tablet: 2,
-                          laptop: 3,
-                          desktop: 4,
-                          fourK: 4,
-                        );
-
-                        // Spacing
-                        final spacing = isSmallMobile
-                            ? 12.0
-                            : isMobile
-                                ? 16.0
-                                : 20.0; // Increased spacing for desktop
-
-                        if (columns == 1) {
-                          return ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: filteredTasks.length,
-                            separatorBuilder: (context, index) =>
-                                SizedBox(height: spacing),
-                            itemBuilder: (context, index) {
-                              final task = filteredTasks[index];
-                              return _buildTaskCardItem(
-                                context,
-                                task,
-                                index,
-                                userRole,
-                                taskViewModel,
-                              );
-                            },
-                          );
-                        }
-
-                        // Distribute tasks into columns
-                        List<List<Task>> columnTasks = List.generate(
-                          columns,
-                          (_) => [],
-                        );
-                        for (int i = 0; i < filteredTasks.length; i++) {
-                          columnTasks[i % columns].add(filteredTasks[i]);
-                        }
-
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: List.generate(columns, (colIndex) {
-                            return Expanded(
-                              child: Padding(
-                                padding: EdgeInsets.only(
-                                  right: colIndex == columns - 1 ? 0 : spacing,
-                                ),
-                                child: Column(
-                                  children: columnTasks[colIndex].map((task) {
-                                    return Padding(
-                                      padding: EdgeInsets.only(bottom: spacing),
-                                      child: _buildTaskCardItem(
-                                        context,
-                                        task,
-                                        filteredTasks.indexOf(task),
-                                        userRole,
-                                        taskViewModel,
-                                      ),
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                            );
-                          }),
-                        );
-                      }
-                    },
                   ),
-                ],
+                ),
 
                 // Bottom padding to ensure last cards are fully visible
                 SizedBox(
-                  height: ResponsiveUtils.getResponsiveSpacing(
-                    context,
-                    mobile: 100.0,
-                    tablet: 120.0,
-                    desktop: 140.0,
-                  ),
+                  height: isMobile ? 80.0 : 100.0,
                 ),
               ],
             ),
@@ -2892,7 +2917,6 @@ class HomeScreen extends HookWidget {
     );
   }
 
-  // Metric cards grid
   Widget _buildMetricCards(
     BuildContext context,
     bool isDesktop,
@@ -2908,19 +2932,8 @@ class HomeScreen extends HookWidget {
     PageController pageController,
     ValueNotifier<int> currentPage,
   ) {
-    String formatDuration(Duration duration) {
-      String twoDigits(int n) => n.toString().padLeft(2, "0");
-      String hours = twoDigits(duration.inHours);
-      String minutes = twoDigits(duration.inMinutes.remainder(60));
-      String seconds = twoDigits(duration.inSeconds.remainder(60));
-      return "$hours:$minutes:$seconds";
-    }
-
     // Get responsive breakpoints for this method
     final isSmallMobile = MediaQuery.of(context).size.width < 360;
-
-    // Reduced spacing for more compact layout
-    final adjustedCardSpacing = isSmallMobile ? 16.0 : cardSpacing;
 
     // Calculate metrics based on user role - same UI but role-specific counts
     final isQAAnalyst = userRole.value?.toLowerCase().trim() == 'qa analyst' ||
@@ -2974,63 +2987,40 @@ class HomeScreen extends HookWidget {
 
     if (isMobile) {
       final cards = [
-        _buildMobileMetricCard(
-          context: context,
-          icon: isQAAnalyst ? Icons.bug_report : Icons.assignment,
+        RecreatedStatsCard(
+          title: isQAAnalyst ? 'QA TASKS' : 'TOTAL TASKS',
           value: '$totalTasksCount',
-          label: isQAAnalyst ? 'QA Tasks' : 'Total Tasks',
+          badgeText: 'Active',
+          isGrowth: true,
+          imagePath: 'assets/images/total_task.png',
+          backSubtitle: isQAAnalyst ? 'Tasks needing review' : 'Overall tasks allocated this month',
+          icon: isQAAnalyst ? Icons.bug_report_rounded : Icons.format_list_bulleted_rounded,
+          accentColor: const Color(0xFF3B82F6),
           subtitle: isQAAnalyst ? 'Tasks needing review' : 'Assigned to you',
-          trend: '+$totalTasksCount',
-          trendColor: CommonColors.blue,
-          // New design props for Total Tasks
-          gradient: CommonColors.primaryGradient,
-          tag: 'Active',
-          waterMarkIcon: Icons.assignment_outlined,
         ),
-        _buildMobileMetricCard(
-          context: context,
-          icon: isQAAnalyst ? Icons.pending_actions : Icons.timelapse,
+        RecreatedStatsCard(
+          title: isQAAnalyst ? 'IN QC' : 'IN PROGRESS',
           value: '$pendingTasksCount',
-          label: isQAAnalyst ? 'In QC' : 'In Progress',
+          badgeText: 'Ongoing',
+          isGrowth: false,
+          imagePath: 'assets/images/inprogress.png',
+          backSubtitle: isQAAnalyst ? 'Ready for testing' : 'Tasks currently actively worked on',
+          icon: isQAAnalyst ? Icons.pending_actions_rounded : Icons.directions_run_rounded,
+          accentColor: const Color(0xFFF59E0B),
           subtitle: isQAAnalyst ? 'Ready for testing' : 'Currently active',
-          trend: '+$pendingTasksCount',
-          trendColor: const Color(0xFFF59E0B),
-          // New design props for In Progress
-          gradient: const LinearGradient(
-            colors: [
-              Color(0xFFF59E0B),
-              Color(0xFFD97706),
-            ], // Amber/Orange gradient
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          tag: 'Ongoing',
-          waterMarkIcon: isQAAnalyst ? Icons.pending_actions : Icons.timelapse,
         ),
-        _buildMobileMetricCard(
-          context: context,
-          icon: Icons.task_alt,
+        RecreatedStatsCard(
+          title: 'COMPLETED',
           value: '$completedTasksCount',
-          label: 'Completed',
+          badgeText: 'Done',
+          isGrowth: true,
+          imagePath: 'assets/images/completed.png',
+          backSubtitle: isQAAnalyst ? 'Tested & Verified' : 'Finished tasks with high quality score',
+          icon: Icons.check_rounded,
+          accentColor: const Color(0xFF10B981),
           subtitle: isQAAnalyst ? 'Tested & Verified' : 'Tasks finished',
-          trend: '+$completedTasksCount',
-          trendColor: const Color(0xFF22C55E),
-          // New design props for Completed
-          gradient: const LinearGradient(
-            colors: [Color(0xFF22C55E), Color(0xFF16A34A)], // Green gradient
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          tag: 'Done',
-          waterMarkIcon: Icons.task_alt,
         ),
-        _buildAttendanceMetricCard(
-          context: context,
-          clockedInTask: clockedInTask,
-          elapsedTime: elapsedTime,
-          formatDuration: formatDuration,
-          isDesktop: isDesktop,
-        ),
+        const SimpleAttendanceWidget(),
       ];
 
       return Column(
@@ -3075,76 +3065,125 @@ class HomeScreen extends HookWidget {
       );
     }
 
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: metricColumns,
-      crossAxisSpacing: adjustedCardSpacing,
-      mainAxisSpacing: adjustedCardSpacing,
-      childAspectRatio: metricAspectRatio,
-      children: [
-        _buildMetricCard(
-          context: context,
-          icon: isQAAnalyst ? Icons.bug_report : Icons.assignment,
-          value: '$totalTasksCount',
-          label: isQAAnalyst ? 'QA Tasks' : 'Total Tasks',
-          subtitle: isQAAnalyst ? 'Tasks needing review' : 'Assigned to you',
-          trend: '+$totalTasksCount',
-          trendColor: CommonColors.blue,
-          isDesktop: isDesktop,
-          // New design props for Total Tasks
-          gradient: CommonColors.primaryGradient,
-          tag: 'Active',
-          waterMarkIcon: Icons.assignment_outlined,
-        ),
-        _buildMetricCard(
-          context: context,
-          icon: isQAAnalyst ? Icons.pending_actions : Icons.timelapse,
-          value: '$pendingTasksCount',
-          label: isQAAnalyst ? 'In QC' : 'In Progress',
-          subtitle: isQAAnalyst ? 'Ready for testing' : 'Currently active',
-          trend: '+$pendingTasksCount',
-          trendColor: const Color(0xFFF59E0B),
-          isDesktop: isDesktop,
-          // New design props for In Progress (Desktop)
-          gradient: const LinearGradient(
-            colors: [
-              Color(0xFFF59E0B),
-              Color(0xFFD97706),
-            ], // Amber/Orange gradient
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          tag: 'Ongoing',
-          waterMarkIcon: isQAAnalyst ? Icons.pending_actions : Icons.timelapse,
-        ),
-        _buildMetricCard(
-          context: context,
-          icon: Icons.task_alt,
-          value: '$completedTasksCount',
-          label: 'Completed',
-          subtitle: isQAAnalyst ? 'Tested & Verified' : 'Tasks finished',
-          trend: '+$completedTasksCount',
-          trendColor: const Color(0xFF22C55E),
-          isDesktop: isDesktop,
-          // New design props for Completed (Desktop)
-          gradient: const LinearGradient(
-            colors: [Color(0xFF22C55E), Color(0xFF16A34A)], // Green gradient
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          tag: 'Done',
-          waterMarkIcon: Icons.task_alt,
-        ),
-        _buildAttendanceMetricCard(
-          context: context,
-          clockedInTask: clockedInTask,
-          elapsedTime: elapsedTime,
-          formatDuration: formatDuration,
-          isDesktop: isDesktop,
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 900;
+        if (isWide) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 3,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: RecreatedStatsCard(
+                        title: isQAAnalyst ? 'QA TASKS' : 'TOTAL TASKS',
+                        value: '$totalTasksCount',
+                        badgeText: 'Active',
+                        isGrowth: true,
+                        imagePath: 'assets/images/total_task.png',
+                        backSubtitle: isQAAnalyst ? 'Tasks needing review' : 'Overall tasks allocated this month',
+                        icon: isQAAnalyst ? Icons.bug_report_rounded : Icons.format_list_bulleted_rounded,
+                        accentColor: const Color(0xFF3B82F6),
+                        subtitle: isQAAnalyst ? 'Tasks needing review' : 'Assigned to you',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: RecreatedStatsCard(
+                        title: isQAAnalyst ? 'IN QC' : 'IN PROGRESS',
+                        value: '$pendingTasksCount',
+                        badgeText: 'Ongoing',
+                        isGrowth: false,
+                        imagePath: 'assets/images/inprogress.png',
+                        backSubtitle: isQAAnalyst ? 'Ready for testing' : 'Tasks currently actively worked on',
+                        icon: isQAAnalyst ? Icons.pending_actions_rounded : Icons.directions_run_rounded,
+                        accentColor: const Color(0xFFF59E0B),
+                        subtitle: isQAAnalyst ? 'Ready for testing' : 'Currently active',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: RecreatedStatsCard(
+                        title: 'COMPLETED',
+                        value: '$completedTasksCount',
+                        badgeText: 'Done',
+                        isGrowth: true,
+                        imagePath: 'assets/images/completed.png',
+                        backSubtitle: isQAAnalyst ? 'Tested & Verified' : 'Finished tasks with high quality score',
+                        icon: Icons.check_rounded,
+                        accentColor: const Color(0xFF10B981),
+                        subtitle: isQAAnalyst ? 'Tested & Verified' : 'Tasks finished',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: const SimpleAttendanceWidget(),
+              ),
+            ],
+          );
+        } else {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: RecreatedStatsCard(
+                      title: isQAAnalyst ? 'QA TASKS' : 'TOTAL TASKS',
+                      value: '$totalTasksCount',
+                      badgeText: 'Active',
+                      isGrowth: true,
+                      imagePath: 'assets/images/total_task.png',
+                      backSubtitle: isQAAnalyst ? 'Tasks needing review' : 'Overall tasks allocated this month',
+                      icon: isQAAnalyst ? Icons.bug_report_rounded : Icons.format_list_bulleted_rounded,
+                      accentColor: const Color(0xFF3B82F6),
+                      subtitle: isQAAnalyst ? 'Tasks needing review' : 'Assigned to you',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: RecreatedStatsCard(
+                      title: isQAAnalyst ? 'IN QC' : 'IN PROGRESS',
+                      value: '$pendingTasksCount',
+                      badgeText: 'Ongoing',
+                      isGrowth: false,
+                      imagePath: 'assets/images/inprogress.png',
+                      backSubtitle: isQAAnalyst ? 'Ready for testing' : 'Tasks currently actively worked on',
+                      icon: isQAAnalyst ? Icons.pending_actions_rounded : Icons.directions_run_rounded,
+                      accentColor: const Color(0xFFF59E0B),
+                      subtitle: isQAAnalyst ? 'Ready for testing' : 'Currently active',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: RecreatedStatsCard(
+                      title: 'COMPLETED',
+                      value: '$completedTasksCount',
+                      badgeText: 'Done',
+                      isGrowth: true,
+                      imagePath: 'assets/images/completed.png',
+                      backSubtitle: isQAAnalyst ? 'Tested & Verified' : 'Finished tasks with high quality score',
+                      icon: Icons.check_rounded,
+                      accentColor: const Color(0xFF10B981),
+                      subtitle: isQAAnalyst ? 'Tested & Verified' : 'Tasks finished',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const SimpleAttendanceWidget(),
+            ],
+          );
+        }
+      },
     );
+
   }
 
   Widget _buildMobileMetricCard({
@@ -4281,174 +4320,123 @@ class HomeScreen extends HookWidget {
                 {'label': 'Team Cards', 'count': '$teamCardsCount'},
               ];
 
-        return Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            margin: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.grey[800]
-                  : Colors.grey[100],
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: tabs.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final tab = entry.value;
-                  final isSelected = selectedTab.value == index;
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: tabs.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final tab = entry.value;
+                    final isSelected = selectedTab.value == index;
 
-                  final isMobile = ResponsiveUtils.isMobile(context);
-                  return MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () => selectedTab.value = index,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeInOut,
-                        padding: EdgeInsets.symmetric(
-                          vertical: isMobile ? 10 : 12,
-                          horizontal: isMobile ? 12 : 16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? CommonColors.primary
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '${tab['label']} (${tab['count']})',
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Colors.white
-                                    : Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.grey[300]
-                                        : Colors.grey[600],
-                                fontSize: isMobile ? 12 : 13,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                    final isMobile = ResponsiveUtils.isMobile(context);
+                    return MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: () => selectedTab.value = index,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: EdgeInsets.symmetric(
+                            vertical: isMobile ? 8 : 10,
+                            horizontal: isMobile ? 12 : 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? const Color(0xFF3B82F6).withOpacity(0.12)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isSelected
+                                  ? const Color(0xFF3B82F6).withOpacity(0.4)
+                                  : Colors.white.withOpacity(0.05),
+                              width: 1.2,
                             ),
-                            if (isSelected) ...[
-                              SizedBox(height: isMobile ? 6 : 8),
-                              Container(
-                                height: 2,
-                                width: isMobile ? 16 : 20,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(1),
-                                ),
-                              ),
-                            ],
-                          ],
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(0xFF3B82F6).withOpacity(0.1),
+                                      blurRadius: 10,
+                                    )
+                                  ]
+                                : null,
+                          ),
+                          child: Text(
+                            '${tab['label']} (${tab['count']})',
+                            style: GoogleFonts.inter(
+                              color: isSelected
+                                  ? const Color(0xFF3B82F6)
+                                  : Colors.white.withOpacity(0.4),
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                              fontSize: isMobile ? 12 : 13,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildFloatingActionButton(BuildContext context) {
-    final isDesktop =
-        ResponsiveUtils.isDesktop(context) || ResponsiveUtils.isLaptop(context);
-    final isMobile = ResponsiveUtils.isMobile(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).primaryColor,
-            (Theme.of(context).brightness == Brightness.dark
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).primaryColor)
-                .withValues(alpha: 0.8),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(isDesktop ? 16 : 14),
-        boxShadow: [
-          BoxShadow(
-            color: (Theme.of(context).brightness == Brightness.dark
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).primaryColor)
-                .withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-          BoxShadow(
-            color: (Theme.of(context).brightness == Brightness.dark
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).primaryColor)
-                .withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: FloatingActionButton.extended(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) => Dialog(
-              backgroundColor: Colors.transparent,
-              insetPadding: EdgeInsets.symmetric(
-                horizontal: isDesktop ? 40 : 16,
-                vertical: isDesktop ? 40 : 24,
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  constraints: BoxConstraints(maxWidth: 1200, maxHeight: 900),
-                  child: const TaskCardRequestScreen(),
+                    );
+                  }).toList(),
                 ),
               ),
             ),
-          );
-        },
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        icon: Icon(
-          Icons.add_task,
-          size: isDesktop ? 24 : 20,
-          color: Colors.white,
-        ),
-        label: Text(
-          isMobile ? 'Request' : 'Request Task',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: isDesktop ? 16 : 14,
-            letterSpacing: 0.2,
-          ),
-        ),
-      ),
+            const SizedBox(width: 16),
+            // Floating / Plus Add Button on top-right
+            Container(
+              height: 40,
+              width: 40,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF3B82F6).withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  )
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => Dialog(
+                        backgroundColor: Colors.transparent,
+                        insetPadding: EdgeInsets.symmetric(
+                          horizontal: isDesktop ? 40 : 16,
+                          vertical: isDesktop ? 40 : 24,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            constraints: const BoxConstraints(maxWidth: 1200, maxHeight: 900),
+                            child: const TaskCardRequestScreen(),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: const Icon(
+                    Icons.add,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

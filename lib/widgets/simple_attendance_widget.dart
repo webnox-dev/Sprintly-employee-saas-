@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'common_widgets.dart';
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../view_model/attendance_view_model.dart';
 import '../view_model/clock_view_model.dart';
 import 'package:responsive_framework/responsive_framework.dart' as responsive;
+import 'package:google_fonts/google_fonts.dart';
 
 class SimpleAttendanceWidget extends StatefulWidget {
   const SimpleAttendanceWidget({super.key});
@@ -15,13 +17,21 @@ class SimpleAttendanceWidget extends StatefulWidget {
   State<SimpleAttendanceWidget> createState() => _SimpleAttendanceWidgetState();
 }
 
-class _SimpleAttendanceWidgetState extends State<SimpleAttendanceWidget> {
+class _SimpleAttendanceWidgetState extends State<SimpleAttendanceWidget> with SingleTickerProviderStateMixin {
   Timer? _sessionTimer; // Stopwatch timer for session duration
   DateTime? _sessionStartTime; // Track when session actually started
+  late AnimationController _pulseController;
+  bool _isActionHovered = false;
+  bool _isStatusHovered = false;
 
   @override
   void initState() {
     super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+
     // Initial load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Trigger a fetch to ensure we have data
@@ -33,6 +43,7 @@ class _SimpleAttendanceWidgetState extends State<SimpleAttendanceWidget> {
   @override
   void dispose() {
     _sessionTimer?.cancel();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -283,570 +294,523 @@ class _SimpleAttendanceWidgetState extends State<SimpleAttendanceWidget> {
     bool isRemoteOverride = false,
     String? remoteReason,
   }) {
-    return Builder(
-      builder: (context) {
-        final screenHeight = MediaQuery.of(context).size.height;
-        final screenWidth = MediaQuery.of(context).size.width;
-        final isSmallScreen = screenHeight < 700 || screenWidth < 350;
-        // Detect laptop screens (between tablet and large desktop)
-        final isLaptop = screenWidth >= 900 && screenWidth < 1400;
-        final padding = isDesktop
-            ? (isLaptop ? screenWidth * 0.025 : screenWidth * 0.02)
-            : isSmallScreen
-                ? screenWidth * 0.03
-                : screenWidth * 0.04;
-        final margin = isDesktop
-            ? (isLaptop ? screenWidth * 0.025 : screenWidth * 0.02)
-            : isSmallScreen
-                ? screenWidth * 0.025
-                : screenWidth * 0.035;
-        final spacing = isSmallScreen
-            ? 12.0
-            : (isDesktop ? (isLaptop ? 14.0 : 16.0) : 20.0);
-
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOut,
-          margin: EdgeInsets.all(margin),
-          padding: EdgeInsets.all(padding),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isClockedIn
-                  ? [
-                      CommonColors.primary.withValues(alpha: 0.1),
-                      CommonColors.green.withValues(alpha: 0.1),
-                    ]
-                  : [
-                      CommonColors.primary.withValues(alpha: 0.05),
-                      CommonColors.grey.withValues(alpha: 0.05),
-                    ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isClockedIn
-                  ? CommonColors.green.withValues(alpha: 0.5)
-                  : Theme.of(context).dividerColor.withValues(alpha: 0.2),
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: isClockedIn
-                    ? CommonColors.green.withOpacity(0.1)
-                    : Colors.black.withOpacity(0.05),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: InteractiveViewer(
-            minScale: 0.8,
-            maxScale: 2.0,
-            panEnabled: true,
-            scaleEnabled: true,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final availableHeight = constraints.maxHeight;
-                final isVerySmallCard = availableHeight < 200;
-                final isSmallCard = availableHeight < 250;
-
-                // Calculate dynamic spacing based on available space
-                final baseSpacing =
-                    isVerySmallCard ? 4.0 : (isSmallCard ? 6.0 : spacing);
-                final reducedSpacing = baseSpacing * 0.5;
-
-                return ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: constraints.maxHeight,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 320;
+        return isWide
+            ? Row(
+                children: [
+                  Expanded(
+                    flex: 5,
+                    child: _buildTimingsCard(firstClockIn, lastClockOut),
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(context, isClockedIn, isDesktop, isDark,
-                          isRemoteOverride, remoteReason),
-                      SizedBox(height: baseSpacing),
-                      // Show current session duration if clocked in
-                      if (isClockedIn && sessionDuration != null) ...[
-                        _buildSessionDurationCard(
-                            context, sessionDuration, isDesktop, isDark),
-                        SizedBox(height: reducedSpacing),
-                      ],
-                      _buildTotalHoursCard(
-                          context, totalHours, isDesktop, isDark),
-                      SizedBox(height: reducedSpacing),
-                      _buildTimeInfoRow(context, firstClockIn, lastClockOut,
-                          isDesktop, isDark),
-                      SizedBox(height: baseSpacing),
-                      // Action button - always visible at the bottom
-                      _buildActionButton(
-                          context, isClockedIn, isDesktop, isDark),
-                    ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 4,
+                    child: isClockedIn
+                        ? _buildActiveSessionCard(sessionDuration)
+                        : _buildFingerprintCard(),
                   ),
-                );
-              },
-            ),
-          ),
-        );
+                ],
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildTimingsCard(firstClockIn, lastClockOut),
+                  const SizedBox(height: 12),
+                  isClockedIn
+                      ? _buildActiveSessionCard(sessionDuration)
+                      : _buildFingerprintCard(),
+                ],
+              );
       },
     );
   }
 
   Widget _buildLoadingState(BuildContext context, bool isDesktop, bool isDark) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 350;
-    final margin = isDesktop
-        ? screenWidth * 0.02
-        : isSmallScreen
-            ? screenWidth * 0.025
-            : screenWidth * 0.035;
-    final padding = isDesktop
-        ? screenWidth * 0.03
-        : isSmallScreen
-            ? screenWidth * 0.04
-            : screenWidth * 0.05;
-
     return Container(
-      margin: EdgeInsets.all(margin),
-      padding: EdgeInsets.all(padding),
+      height: 150,
       decoration: BoxDecoration(
-        color: isDark ? CommonColors.darkCardColor : CommonColors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.08),
+          width: 1.0,
+        ),
       ),
-      child: Center(
+      child: const Center(
         child: CircularProgressIndicator(
-          color: CommonColors.primary,
+          color: Color(0xFF3B82F6),
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool isClockedIn, bool isDesktop,
-      bool isDark, bool isRemoteOverride, String? remoteReason) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 350;
-    final iconSize = isDesktop ? 28.0 : (isSmallScreen ? 20.0 : 24.0);
-    final titleFontSize = isDesktop ? 20.0 : (isSmallScreen ? 16.0 : 18.0);
-    final subtitleFontSize = isDesktop ? 14.0 : (isSmallScreen ? 11.0 : 12.0);
-    final iconPadding = isDesktop ? 12.0 : (isSmallScreen ? 8.0 : 10.0);
-    final spacing = isDesktop
-        ? screenWidth * 0.02
-        : (isSmallScreen ? screenWidth * 0.02 : screenWidth * 0.03);
+  Widget _buildTimingsCard(String? firstClockIn, String? lastClockOut) {
+    final displayFirstClockIn = firstClockIn != null ? _formatTime(firstClockIn) : '--:--';
+    final displayLastClockOut = lastClockOut != null ? _formatTime(lastClockOut) : '--:--';
 
-    return Row(
-      children: [
-        Container(
-          padding: EdgeInsets.all(iconPadding),
-          decoration: BoxDecoration(
-            color: isClockedIn
-                ? CommonColors.green.withOpacity(0.2)
-                : CommonColors.grey.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            isClockedIn ? Icons.access_time : Icons.access_time_filled,
-            color: isClockedIn ? CommonColors.green : CommonColors.grey,
-            size: iconSize,
-          ),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isStatusHovered = true),
+      onExit: (_) => setState(() => _isStatusHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        height: 150,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(_isStatusHovered ? 0.25 : 0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
-        SizedBox(width: spacing),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              customTextWithClip(
-                text: 'Daily Attendance',
-                textColor: CommonColors.primary,
-                fontSize: titleFontSize,
-                fontWeight: FontWeight.bold,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.03),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: _isStatusHovered
+                      ? const Color(0xFF3B82F6).withOpacity(0.3)
+                      : Colors.white.withOpacity(0.08),
+                  width: 1.0,
+                ),
               ),
-              SizedBox(height: 4),
-              customTextWithClip(
-                text: isClockedIn ? 'Punched In' : 'Punched Out',
-                textColor: isClockedIn ? CommonColors.green : CommonColors.grey,
-                fontSize: subtitleFontSize,
-                fontWeight: FontWeight.w600,
-              ),
-            ],
-          ),
-        ),
-        Flexible(
-          child: Container(
-            padding: EdgeInsets.symmetric(
-                horizontal: isSmallScreen ? 8 : 12,
-                vertical: isSmallScreen ? 4 : 6),
-            decoration: BoxDecoration(
-              color: isClockedIn
-                  ? CommonColors.green.withOpacity(0.2)
-                  : CommonColors.grey.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isClockedIn ? CommonColors.green : CommonColors.grey,
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isRemoteOverride && isClockedIn) ...[
-                  Tooltip(
-                    message: remoteReason ?? 'Remote Work',
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.deepPurple.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.deepPurple, width: 1),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.wifi_tethering,
-                              size: 12, color: Colors.deepPurple),
-                          SizedBox(width: 4),
-                          Text(
-                            'REMOTE',
-                            style: TextStyle(
-                              color: Colors.deepPurple,
-                              fontSize: isSmallScreen ? 9 : 10,
-                              fontWeight: FontWeight.bold,
-                            ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Row 1: PUNCH IN Timings
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'PUNCH IN',
+                                style: GoogleFonts.lexend(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF10B981), // Teal/green
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 5,
+                                    height: 5,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF10B981),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      'FIRST IN',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF10B981).withOpacity(0.7),
+                                        letterSpacing: 0.5,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          displayFirstClockIn,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  SizedBox(width: 8),
+                  
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Colors.white.withOpacity(0.08),
+                  ),
+                  
+                  // Row 2: PUNCH OUT Timings
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'PUNCH OUT',
+                                style: GoogleFonts.lexend(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFFF59E0B), // Orange/yellow
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 5,
+                                    height: 5,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFF59E0B),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      'LAST OUT',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFFF59E0B).withOpacity(0.7),
+                                        letterSpacing: 0.5,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          displayLastClockOut,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: isClockedIn ? CommonColors.green : CommonColors.grey,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                SizedBox(width: isSmallScreen ? 4 : 6),
-                Flexible(
-                  child: customTextWithClip(
-                    text: isClockedIn ? 'Active' : 'Inactive',
-                    textColor:
-                        isClockedIn ? CommonColors.green : CommonColors.grey,
-                    fontSize: isSmallScreen ? 10 : 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildSessionDurationCard(BuildContext context, String sessionDuration,
-      bool isDesktop, bool isDark) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final isSmallScreen = screenHeight < 700 || screenWidth < 350;
-    final verticalPadding = isDesktop
-        ? screenHeight * 0.015
-        : isSmallScreen
-            ? screenHeight * 0.01
-            : screenHeight * 0.015;
-    final horizontalPadding = isDesktop
-        ? screenWidth * 0.03
-        : isSmallScreen
-            ? screenWidth * 0.03
-            : screenWidth * 0.04;
-    final iconSize = isDesktop ? 24.0 : (isSmallScreen ? 18.0 : 20.0);
-    final fontSize = isDesktop ? 24.0 : (isSmallScreen ? 18.0 : 20.0);
-    final labelFontSize = isDesktop ? 11.0 : (isSmallScreen ? 9.0 : 10.0);
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-        vertical: verticalPadding,
-        horizontal: horizontalPadding,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            CommonColors.green.withOpacity(0.1),
-            CommonColors.primary.withOpacity(0.1),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: CommonColors.green.withOpacity(0.3),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: CommonColors.green.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.access_time,
-                color: CommonColors.green,
-                size: iconSize,
-              ),
-              SizedBox(width: isSmallScreen ? 8 : 12),
-              Flexible(
-                child: customTextWithClip(
-                  text: sessionDuration,
-                  textColor: CommonColors.green,
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 6),
-          customTextWithClip(
-            text: 'Current Session',
-            textColor: CommonColors.grey,
-            fontSize: labelFontSize,
-            fontWeight: FontWeight.w500,
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildTotalHoursCard(
-      BuildContext context, double totalHours, bool isDesktop, bool isDark) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final isSmallScreen = screenHeight < 700 || screenWidth < 350;
-    final verticalPadding = isDesktop
-        ? screenHeight * 0.015
-        : isSmallScreen
-            ? screenHeight * 0.01
-            : screenHeight * 0.015;
-    final horizontalPadding = isDesktop
-        ? screenWidth * 0.03
-        : isSmallScreen
-            ? screenWidth * 0.03
-            : screenWidth * 0.04;
-    final iconSize = isDesktop ? 28.0 : (isSmallScreen ? 20.0 : 24.0);
-    final fontSize = isDesktop ? 28.0 : (isSmallScreen ? 20.0 : 24.0);
-    final labelFontSize = isDesktop ? 12.0 : (isSmallScreen ? 10.0 : 11.0);
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-        vertical: verticalPadding,
-        horizontal: horizontalPadding,
-      ),
-      decoration: BoxDecoration(
-        color: isDark ? CommonColors.darkCardColor : CommonColors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.timer_outlined,
-                color: CommonColors.primary,
-                size: iconSize,
-              ),
-              SizedBox(width: isSmallScreen ? 8 : 12),
-              Flexible(
-                child: customTextWithClip(
-                  text: _formatHours(totalHours),
-                  textColor: CommonColors.primary,
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 8),
-          customTextWithClip(
-            text: 'Total Hours Today',
-            textColor: CommonColors.grey,
-            fontSize: labelFontSize,
-            fontWeight: FontWeight.w500,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTimeInfoRow(BuildContext context, String? firstClockIn,
-      String? lastClockOut, bool isDesktop, bool isDark) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 350;
-    final spacing = isDesktop
-        ? screenWidth * 0.02
-        : (isSmallScreen ? screenWidth * 0.025 : screenWidth * 0.03);
-
-    return Row(
-      children: [
-        Expanded(
-          child: _buildTimeInfoCard(
-            context,
-            'Punch In',
-            firstClockIn,
-            Icons.login,
-            CommonColors.blue,
-            isDesktop,
-            isDark,
-          ),
-        ),
-        SizedBox(width: spacing),
-        Expanded(
-          child: _buildTimeInfoCard(
-            context,
-            'Punch Out',
-            lastClockOut,
-            Icons.logout,
-            CommonColors.orange,
-            isDesktop,
-            isDark,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTimeInfoCard(BuildContext context, String label, String? time,
-      IconData icon, Color color, bool isDesktop, bool isDark) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 350;
-    final padding = isDesktop
-        ? screenWidth * 0.025
-        : isSmallScreen
-            ? screenWidth * 0.03
-            : screenWidth * 0.04;
-    final iconSize = isDesktop ? 24.0 : (isSmallScreen ? 18.0 : 20.0);
-    final labelFontSize = isDesktop ? 11.0 : (isSmallScreen ? 9.0 : 10.0);
-    final timeFontSize = isDesktop ? 16.0 : (isSmallScreen ? 12.0 : 14.0);
-
-    return Container(
-      padding: EdgeInsets.all(padding),
-      decoration: BoxDecoration(
-        color: isDark ? CommonColors.darkCardColor : CommonColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: iconSize),
-          SizedBox(height: isSmallScreen ? 6 : 8),
-          customTextWithClip(
-            text: label,
-            textColor: CommonColors.grey,
-            fontSize: labelFontSize,
-            fontWeight: FontWeight.w500,
-          ),
-          SizedBox(height: isSmallScreen ? 4 : 6),
-          Flexible(
-            child: customTextWithClip(
-              text: time != null ? _formatTime(time) : '--:--',
-              textColor: CommonColors.black,
-              fontSize: timeFontSize,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton(
-      BuildContext context, bool isClockedIn, bool isDesktop, bool isDark) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final isSmallScreen = screenWidth < 350 || screenHeight < 700;
-    final fontSize = isDesktop ? 14.0 : (isSmallScreen ? 12.0 : 13.0);
-    final fingerprintSize = isDesktop ? 48.0 : (isSmallScreen ? 40.0 : 44.0);
-    final iconSize = isDesktop ? 28.0 : (isSmallScreen ? 24.0 : 26.0);
-
-    return Center(
+  Widget _buildFingerprintCard() {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isActionHovered = true),
+      onExit: (_) => setState(() => _isActionHovered = false),
       child: GestureDetector(
-        onTap: isClockedIn
-            ? () => _handleClockOut(context)
-            : () => _handleClockIn(context),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: fingerprintSize,
-              height: fingerprintSize,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: isClockedIn
-                      ? [
-                          CommonColors.red,
-                          CommonColors.red.withOpacity(0.8),
-                        ]
-                      : [
-                          CommonColors.green,
-                          CommonColors.green.withOpacity(0.8),
-                        ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: (isClockedIn ? CommonColors.red : CommonColors.green)
-                        .withOpacity(0.4),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                    offset: const Offset(0, 4),
+        onTap: () => _handleClockIn(context),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          height: 150,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF3B82F6).withOpacity(_isActionHovered ? 0.15 : 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.03),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: _isActionHovered
+                        ? const Color(0xFF3B82F6).withOpacity(0.4)
+                        : Colors.white.withOpacity(0.08),
+                    width: 1.0,
                   ),
-                ],
-              ),
-              child: Icon(
-                Icons.fingerprint,
-                color: Colors.white,
-                size: iconSize,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'PUNCH IN',
+                      style: GoogleFonts.lexend(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF3B82F6),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: AnimatedBuilder(
+                          animation: _pulseController,
+                          builder: (context, child) {
+                            final pulseVal = _pulseController.value;
+                            final baseColor = const Color(0xFF3B82F6);
+                            return AnimatedScale(
+                              scale: _isActionHovered ? 1.08 : 1.0,
+                              duration: const Duration(milliseconds: 200),
+                              child: Container(
+                                width: 58,
+                                height: 58,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: baseColor.withOpacity(0.3 + (pulseVal * 0.15)),
+                                      blurRadius: 12 + (pulseVal * 12),
+                                      spreadRadius: 1 + (pulseVal * 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.fingerprint_rounded,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: 6),
-            customTextWithClip(
-              text: isClockedIn ? 'Punch Out' : 'Punch In',
-              textColor: Theme.of(context).textTheme.bodySmall?.color ??
-                  CommonColors.black,
-              fontSize: fontSize,
-              fontWeight: FontWeight.w600,
-            ),
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  Widget _buildActiveSessionCard(String? sessionDuration) {
+    final startTimeStr = _sessionStartTime != null ? _formatTimeFromDateTime(_sessionStartTime!) : '--:--';
+    final durationStr = sessionDuration ?? '00:00:00';
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isStatusHovered = true),
+      onExit: (_) => setState(() => _isStatusHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        height: 150,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF3B82F6).withOpacity(_isStatusHovered ? 0.15 : 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.03),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: _isStatusHovered
+                      ? const Color(0xFF3B82F6).withOpacity(0.4)
+                      : const Color(0xFF3B82F6).withOpacity(0.2),
+                  width: 1.0,
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Row 1: PUNCH IN Title + LIVE SESSION & Timer
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'PUNCH IN',
+                              style: GoogleFonts.lexend(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF3B82F6),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                Container(
+                                  width: 4,
+                                  height: 4,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF3B82F6),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    'LIVE SESSION',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF3B82F6).withOpacity(0.7),
+                                      letterSpacing: 0.5,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        durationStr,
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  // Divider
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Colors.white.withOpacity(0.08),
+                  ),
+                  
+                  // Row 2: STARTED AT & Punch Out Button
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'STARTED AT',
+                              style: GoogleFonts.lexend(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white.withOpacity(0.4),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              startTimeStr,
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: () => _handleClockOut(context),
+                          child: AnimatedBuilder(
+                            animation: _pulseController,
+                            builder: (context, child) {
+                              final pulseVal = _pulseController.value;
+                              final baseColor = const Color(0xFFEF4444);
+                              return Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFFEF4444), Color(0xFFB91C1C)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: baseColor.withOpacity(0.3 + (pulseVal * 0.15)),
+                                      blurRadius: 8 + (pulseVal * 8),
+                                      spreadRadius: 1 + (pulseVal * 1.5),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.fingerprint_rounded,
+                                  color: Colors.white,
+                                  size: 22,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatTimeFromDateTime(DateTime dt) {
+    final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final minute = dt.minute.toString().padLeft(2, '0');
+    final amPm = dt.hour >= 12 ? 'PM' : 'AM';
+    return '${hour.toString().padLeft(2, '0')}:$minute $amPm';
   }
 
   Future<void> _handleClockIn(BuildContext context) async {
@@ -1244,16 +1208,6 @@ class _SimpleAttendanceWidgetState extends State<SimpleAttendanceWidget> {
           duration: Duration(seconds: success ? 2 : 4),
         ),
       );
-    }
-  }
-
-  String _formatHours(double hours) {
-    final h = hours.floor();
-    final m = ((hours - h) * 60).round();
-    if (h > 0) {
-      return '${h}h ${m}m';
-    } else {
-      return '${m}m';
     }
   }
 

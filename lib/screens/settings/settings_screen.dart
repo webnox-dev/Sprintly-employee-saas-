@@ -21,7 +21,7 @@ class SettingsScreen extends StatelessWidget {
     final isVerySmallMobile = MediaQuery.of(context).size.width <= 320;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       appBar: null,
       body: SafeArea(
         child: SingleChildScrollView(

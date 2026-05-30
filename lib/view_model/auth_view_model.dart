@@ -11,6 +11,7 @@ import '../api/api_client.dart';
 import '../api/endpoints/auth_api.dart';
 import '../api/endpoints/employee_api.dart';
 import '../services/firebase_notification_service.dart';
+import 'dart:convert';
 
 class AuthViewModel extends ChangeNotifier {
   final localStorage = LocalStorageService();
@@ -671,6 +672,7 @@ class AuthViewModel extends ChangeNotifier {
             emailId: emailController.text,
             password: pswController.text,
             organizationName: organizationName,
+            planFeatures: data['plan_features'] != null ? jsonEncode(data['plan_features']) : null,
           );
 
           // Set token in API client
@@ -797,6 +799,7 @@ class AuthViewModel extends ChangeNotifier {
             emailId: emailController.text,
             password: pswController.text,
             organizationName: organizationName,
+            planFeatures: data['plan_features'] != null ? jsonEncode(data['plan_features']) : null,
           );
 
           // Set token in API client
@@ -863,6 +866,7 @@ class AuthViewModel extends ChangeNotifier {
             userId: employeeId,
             emailId: email,
             password: pswController.text, // Store the password used for login
+            planFeatures: data['plan_features'] != null ? jsonEncode(data['plan_features']) : null,
           );
 
           // Set token in API client

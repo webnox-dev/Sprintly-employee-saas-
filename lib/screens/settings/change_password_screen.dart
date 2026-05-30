@@ -105,7 +105,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     final isVerySmallMobile = MediaQuery.of(context).size.width <= 320;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       appBar: null,
       body: _isLoading
           ? const EnhancedLoadingIndicator(message: 'Changing password...')

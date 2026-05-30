@@ -2216,7 +2216,7 @@ class KanbanBoardScreen extends HookWidget {
         MediaQuery.of(context).size.width < 1200;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       appBar: null, // No app bar - using header in body
       floatingActionButton: null,
       body: kanbanViewModel.isLoading

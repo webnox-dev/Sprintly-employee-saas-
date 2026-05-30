@@ -566,7 +566,7 @@ class _ReportsScreenState extends State<ReportsScreen>
         ResponsiveUtils.isDesktop(context) || ResponsiveUtils.isLaptop(context);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       body: ScreenLoadingOverlay(
         isLoading: _isLoading,
         message: 'Loading reports...',

@@ -224,7 +224,7 @@ class ProfileScreen extends HookWidget {
     );
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       appBar: null,
       body: SafeArea(
         child: isLoadingEmployee.value

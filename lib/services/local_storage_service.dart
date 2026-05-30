@@ -12,6 +12,7 @@ class LocalStorageService {
   static const String passwordKey = 'passwordKey';
   static const String employeeIdKey = 'employeeId'; // Added for backend API
   static const String organizationNameKey = 'organizationName'; // Added for dynamic header
+  static const String planFeaturesKey = 'planFeatures'; // Added for plan-based feature restrictions
   static const String chatThemeKey = 'chatTheme';
   static const String conversationThemesKey = 'conversationThemes';
   static const String _notifyOnAssignmentKey = 'notify_on_assignment';
@@ -36,13 +37,17 @@ class LocalStorageService {
       required String userId,
       required String emailId,
       required String password,
-      String? organizationName}) async {
+      String? organizationName,
+      String? planFeatures}) async {
     await storage.setString(userIdKey, userId);
     await storage.setString(accessTokenKey, accessToken);
     await storage.setString(emailIdKey, emailId);
     await storage.setString(passwordKey, password);
     if (organizationName != null) {
       await storage.setString(organizationNameKey, organizationName);
+    }
+    if (planFeatures != null) {
+      await storage.setString(planFeaturesKey, planFeatures);
     }
     await storage.setBool(isLoggedInKey, true);
   }
@@ -53,6 +58,7 @@ class LocalStorageService {
     await storage.remove(emailIdKey);
     await storage.remove(passwordKey);
     await storage.remove(organizationNameKey);
+    await storage.remove(planFeaturesKey);
     await storage.setBool(isLoggedInKey, false);
   }
 
@@ -61,6 +67,7 @@ class LocalStorageService {
   String get emailId => storage.getString(emailIdKey) ?? '';
   String get password => storage.getString(passwordKey) ?? '';
   String get organizationName => storage.getString(organizationNameKey) ?? '';
+  String get planFeatures => storage.getString(planFeaturesKey) ?? '{}';
   bool get isLoggedIn => storage.getBool(isLoggedInKey) ?? false;
 
   // Employee ID for backend API calls

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
-import '../../helpers/common_colors.dart';
-import '../../utils/responsive_utils.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class EmptyStateWidget extends StatelessWidget {
   final String title;
@@ -20,57 +18,51 @@ class EmptyStateWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Lottie.asset(
-              'assets/lottie/empty_box.json',
-              width: size ??
-                  ResponsiveUtils.getResponsiveSize(
-                    context,
-                    mobile: 200,
-                    tablet: 220,
-                    desktop: 250,
-                  ),
-              height: size ??
-                  ResponsiveUtils.getResponsiveSize(
-                    context,
-                    mobile: 200,
-                    tablet: 220,
-                    desktop: 250,
-                  ),
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: TextStyle(
-                color: CommonColors.getTextColor(context),
-                fontSize: fontSize ??
-                    ResponsiveUtils.getResponsiveFontSize(context,
-                        mobile: 16, tablet: 18, desktop: 20),
-                fontWeight: FontWeight.w600,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Empty State Illustration
+          Container(
+            height: size ?? 140,
+            width: size ?? 140,
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/empty_task.png'),
+                fit: BoxFit.contain,
               ),
-              textAlign: TextAlign.center,
             ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 8),
-              Text(
+          ),
+          const SizedBox(height: 20),
+          
+          // Title
+          Text(
+            title,
+            style: GoogleFonts.lexend(
+              fontSize: fontSize ?? 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          
+          if (subtitle != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              constraints: const BoxConstraints(maxWidth: 320),
+              child: Text(
                 subtitle!,
-                style: TextStyle(
-                  color: CommonColors.getSecondaryTextColor(context),
-                  fontSize: (fontSize ??
-                          ResponsiveUtils.getResponsiveFontSize(context,
-                              mobile: 16, tablet: 18, desktop: 20)) -
-                      2,
-                ),
                 textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: Colors.white.withOpacity(0.4),
+                  height: 1.5,
+                ),
               ),
-            ],
+            ),
           ],
-        ),
+        ],
       ),
     );
   }

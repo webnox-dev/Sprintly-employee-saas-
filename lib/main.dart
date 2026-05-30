@@ -1,3 +1,4 @@
+
 import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ import 'package:responsive_framework/responsive_framework.dart';
 import 'package:webnox_taskops/services/local_storage_service.dart';
 
 import 'package:webnox_taskops/screens/dashboard/dashboard_screen.dart';
+import 'package:webnox_taskops/screens/dashboard/recreated_dashboard_screen.dart';
 import 'package:webnox_taskops/screens/auth/otp_verification_screen.dart';
 
 import 'package:webnox_taskops/view_model/team_sync_view_model.dart';
@@ -215,6 +217,7 @@ class _MyAppState extends State<MyApp> {
                   routes: {
                     '/': (context) => const SplashScreen(),
                     '/dashboard': (context) => const DashboardScreen(),
+                    '/dashboard-recreation': (context) => const RecreatedDashboardScreen(),
                     '/login': (context) => const LoginScreen(),
                     // All dashboard routes go through DashboardScreen to show sidebar
                     '/reports': (context) => const DashboardScreen(),

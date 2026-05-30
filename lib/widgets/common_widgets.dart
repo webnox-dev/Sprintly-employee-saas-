@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../helpers/common_strings.dart';
 import 'package:toastification/toastification.dart';
 import 'package:responsive_framework/responsive_framework.dart';
@@ -108,6 +109,24 @@ Widget customTextWithEllipsis({
   );
 }
 
+EdgeInsets _getToastMargin() {
+  try {
+    final context = Get.context;
+    final double width;
+    if (context != null) {
+      width = MediaQuery.of(context).size.width;
+    } else {
+      final view = WidgetsBinding.instance.platformDispatcher.views.first;
+      width = view.physicalSize.width / view.devicePixelRatio;
+    }
+    if (width > 600) {
+      final double sideMargin = (width - 320) / 2;
+      return EdgeInsets.only(left: sideMargin, right: sideMargin, bottom: 24);
+    }
+  } catch (_) {}
+  return const EdgeInsets.symmetric(horizontal: 16);
+}
+
 void showSuccess({required String text}) {
   toastification.show(
       padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 6.0),
@@ -121,7 +140,7 @@ void showSuccess({required String text}) {
       showProgressBar: false,
       alignment: Alignment.bottomCenter,
       direction: TextDirection.ltr,
-      margin: const EdgeInsets.symmetric(horizontal: 16));
+      margin: _getToastMargin());
 }
 
 void showInfo({required String text}) {
@@ -137,7 +156,7 @@ void showInfo({required String text}) {
       showProgressBar: false,
       alignment: Alignment.bottomCenter,
       direction: TextDirection.ltr,
-      margin: const EdgeInsets.symmetric(horizontal: 16));
+      margin: _getToastMargin());
 }
 
 void showError({required String text}) {
@@ -153,7 +172,7 @@ void showError({required String text}) {
       showProgressBar: false,
       alignment: Alignment.bottomCenter,
       direction: TextDirection.ltr,
-      margin: const EdgeInsets.symmetric(horizontal: 16));
+      margin: _getToastMargin());
 }
 
 void showWarning({required String text}) {
@@ -169,7 +188,7 @@ void showWarning({required String text}) {
       showProgressBar: false,
       alignment: Alignment.bottomCenter,
       direction: TextDirection.ltr,
-      margin: const EdgeInsets.symmetric(horizontal: 16));
+      margin: _getToastMargin());
 }
 
 // Responsive button widget

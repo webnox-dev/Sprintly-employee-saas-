@@ -5,6 +5,7 @@ import 'api_config.dart';
 import 'api_response.dart';
 import '../services/local_storage_service.dart';
 import '../services/session_expiry_service.dart';
+import '../services/feature_guard_service.dart';
 
 /// HTTP Client for communicating with the custom backend
 class ApiClient {
@@ -250,6 +251,16 @@ class ApiClient {
       } else {
         _logger.i(
             'Received 401 — Business logic error or non-auth request: $errorCode');
+      }
+    }
+
+    // Intercept 403 SaaS Feature Limitations
+    if (response.statusCode == 403) {
+      final errorCode = jsonBody?['error']?['code'] ?? jsonBody?['code'];
+      if (errorCode == 'FEATURE_NOT_AVAILABLE') {
+        final errMessage = jsonBody?['error']?['message']?.toString() ?? jsonBody?['message']?.toString();
+        _logger.w('🔒 Received 403 — FEATURE_NOT_AVAILABLE');
+        FeatureGuardService().handleFeatureLocked(errMessage);
       }
     }
 

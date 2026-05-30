@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
@@ -20,7 +21,6 @@ import 'package:webnox_taskops/screens/reports/reports_screen.dart';
 import 'package:webnox_taskops/screens/team_sync/team_sync_screen.dart';
 import 'package:webnox_taskops/view_model/announcement_view_model.dart';
 import 'package:webnox_taskops/view_model/notification_view_model.dart';
-import 'package:webnox_taskops/widgets/announcement_popup.dart';
 import 'package:webnox_taskops/screens/calendar/calendar_screen.dart';
 import 'package:webnox_taskops/widgets/employee_assistant.dart';
 
@@ -35,12 +35,23 @@ import 'package:webnox_taskops/screens/leave_tracking/leave_tracking_screen.dart
 import 'package:webnox_taskops/services/local_storage_service.dart';
 import 'package:webnox_taskops/services/firebase_notification_service.dart';
 import 'package:webnox_taskops/widgets/fullscreen_toggle_button.dart';
+import 'package:webnox_taskops/widgets/dashboard_recreation/sidebar.dart';
+import 'package:webnox_taskops/widgets/dashboard_recreation/header.dart';
+import '../../utils/feature_guard.dart';
 
 // Global notifiers for search/filter state (shared across screens)
 // Child screens (HomeScreen, KanbanBoardScreen, TeamScreen) should use these
 final globalSearchExpanded = <int, ValueNotifier<bool>>{};
 final globalHasActiveFilters = <int, ValueNotifier<bool>>{};
 final globalFilterTrigger = <int, ValueNotifier<int>>{};
+final globalSearchQueryText = <int, ValueNotifier<String>>{};
+
+ValueNotifier<String> getSearchQueryTextNotifierForScreen(int screenIndex) {
+  if (!globalSearchQueryText.containsKey(screenIndex)) {
+    globalSearchQueryText[screenIndex] = ValueNotifier<String>('');
+  }
+  return globalSearchQueryText[screenIndex]!;
+}
 
 ValueNotifier<bool> getSearchNotifierForScreen(int screenIndex) {
   if (!globalSearchExpanded.containsKey(screenIndex)) {
@@ -444,12 +455,13 @@ class ModernDashboardScreen extends HookWidget {
     }, [selectedIndex.value]);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFF070B14),
       appBar: null, // Removed MainAppBar
 
       body: Stack(
         clipBehavior: Clip.none,
         children: [
+          _buildBackgroundGlows(context),
           SafeArea(
             bottom: false,
             child: isDesktop
@@ -602,360 +614,33 @@ class ModernDashboardScreen extends HookWidget {
 
     return Row(
       children: [
-        // Left Sidebar - narrower on laptop-sized desktops
-        // Left Sidebar - narrower on laptop/medium desktops
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          width: isSidebarExpanded.value
-              ? (ResponsiveUtils.isLaptop(context)
-                  ? 160.0 // Narrower on laptop screens (900–1400px)
-                  : ResponsiveUtils.getResponsiveSize(
-                      context,
-                      mobile: 240,
-                      tablet: 220,
-                      laptop: 200,
-                      desktop: 260,
-                    ))
-              : (ResponsiveUtils.isLaptop(context)
-                  ? 56.0 // Narrower collapsed on laptop
-                  : ResponsiveUtils.getResponsiveSize(
-                      context,
-                      mobile: 60,
-                      tablet: 60,
-                      laptop: 60,
-                      desktop: 72,
-                    )),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            border: Border(
-              right: BorderSide(
-                color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
-                width: 1,
-              ),
-            ),
-          ),
-          child: Column(
-            children: [
-              // Logo Section
-              Container(
-                height: ResponsiveUtils.getResponsiveSize(
-                  context,
-                  mobile: 70,
-                  tablet: 75,
-                  laptop: 72,
-                  desktop: 80,
-                ),
-                padding: isSidebarExpanded.value
-                    ? (ResponsiveUtils.isLaptop(context)
-                        ? const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 14,
-                          ) // Adjusted for 160px width to match nav items
-                        : ResponsiveUtils.getResponsivePadding(
-                            context,
-                            mobile: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            tablet: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 14,
-                            ),
-                            laptop: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 14,
-                            ),
-                            desktop: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 16,
-                            ),
-                          ))
-                    : const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                child: Row(
-                  children: [
-                    if (isSidebarExpanded.value)
-                      Expanded(
-                        child: Container(
-                          height: ResponsiveUtils.getResponsiveSize(
-                            context,
-                            mobile: 70,
-                            tablet: 75,
-                            laptop: 72,
-                            desktop: 80,
-                          ),
-                          constraints: BoxConstraints(
-                            minHeight: 50, // Ensure minimum height
-                            maxHeight: ResponsiveUtils.getResponsiveSize(
-                              context,
-                              mobile: 70,
-                              tablet: 75,
-                              laptop: 72,
-                              desktop: 80,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Center(
-                                  child: Image.asset(
-                                    'assets/logo/company_name_img.png',
-                                    fit: BoxFit.contain,
-                                    alignment: Alignment.center,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      // Fallback to text if image fails to load
-                                      return Text(
-                                        'Webnox Sprintly',
-                                        style: TextStyle(
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.onSurface,
-                                          fontSize:
-                                              ResponsiveUtils.getResponsiveSize(
-                                            context,
-                                            mobile: 18,
-                                            tablet: 20,
-                                            desktop: 22,
-                                          ),
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(
-                                  minWidth: 32,
-                                  minHeight: 32,
-                                ),
-                                onPressed: () {
-                                  isSidebarExpanded.value = false;
-                                },
-                                icon: Icon(
-                                  Icons.keyboard_double_arrow_left,
-                                  color: Theme.of(
-                                    context,
-                                  )
-                                      .colorScheme
-                                      .onSurface
-                                      .withValues(alpha: 0.6),
-                                  size: 20,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    else
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                              height: ResponsiveUtils.getResponsiveSize(
-                                context,
-                                mobile: 25,
-                                tablet: 28,
-                                desktop: 30,
-                              ),
-                              width: ResponsiveUtils.getResponsiveSize(
-                                context,
-                                mobile: 25,
-                                tablet: 28,
-                                desktop: 30,
-                              ),
-                              constraints: BoxConstraints(
-                                minHeight: 20, // Ensure minimum height
-                                minWidth: 20, // Ensure minimum width
-                                maxHeight: ResponsiveUtils.getResponsiveSize(
-                                  context,
-                                  mobile: 25,
-                                  tablet: 28,
-                                  desktop: 30,
-                                ),
-                                maxWidth: ResponsiveUtils.getResponsiveSize(
-                                  context,
-                                  mobile: 25,
-                                  tablet: 28,
-                                  desktop: 30,
-                                ),
-                              ),
-                              child: InkWell(
-                                onTap: () {
-                                  isSidebarExpanded.value = true;
-                                },
-                                child: Image.asset(
-                                  'assets/logo/logo.png',
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    // Fallback to text if image fails to load
-                                    return Center(
-                                      child: Text(
-                                        'T',
-                                        style: TextStyle(
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.onSurface,
-                                          fontSize:
-                                              ResponsiveUtils.getResponsiveSize(
-                                            context,
-                                            mobile: 18,
-                                            tablet: 20,
-                                            desktop: 22,
-                                          ),
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+        RecreatedSidebar(
+          selectedIndex: selectedIndex.value,
+          onIndexChanged: (index) {
+            String? featureKey;
+            switch(index) {
+              case 1: featureKey = 'advanced_reports'; break;
+              case 2: featureKey = 'team_sync_chat'; break;
+            }
 
-              // Navigation Menu
-              Expanded(
-                child: ListView(
-                  padding: isSidebarExpanded.value
-                      ? ResponsiveUtils.getResponsivePadding(
-                          context,
-                          mobile: const EdgeInsets.only(
-                            left: 12,
-                            right: 12,
-                            top: 16,
-                            bottom: 0,
-                          ),
-                          tablet: const EdgeInsets.only(
-                            left: 14,
-                            right: 14,
-                            top: 20,
-                            bottom: 0,
-                          ),
-                          desktop: const EdgeInsets.only(
-                            left: 16,
-                            right: 16,
-                            top: 24,
-                            bottom: 0,
-                          ),
-                        )
-                      : const EdgeInsets.symmetric(vertical: 20, horizontal: 4),
-                  children: [
-                    _buildNavItem(
-                      context,
-                      Icons.home,
-                      'Home',
-                      0,
-                      selectedIndex.value == 0,
-                      isSidebarExpanded,
-                      selectedIndex,
-                      lastManualIndexChange,
-                    ),
-                    _buildNavItem(
-                      context,
-                      Icons.folder,
-                      'Report',
-                      1,
-                      selectedIndex.value == 1,
-                      isSidebarExpanded,
-                      selectedIndex,
-                      lastManualIndexChange,
-                    ),
-                    _buildNavItem(
-                      context,
-                      Icons.chat_bubble_outline,
-                      'Sync Board',
-                      2,
-                      selectedIndex.value == 2,
-                      isSidebarExpanded,
-                      selectedIndex,
-                      lastManualIndexChange,
-                    ),
-                    _buildNavItem(
-                      context,
-                      Icons.analytics,
-                      'Attendance',
-                      3,
-                      selectedIndex.value == 3,
-                      isSidebarExpanded,
-                      selectedIndex,
-                      lastManualIndexChange,
-                    ),
-                    _buildNavItem(
-                      context,
-                      Icons.calendar_month,
-                      'Calendar',
-                      4,
-                      selectedIndex.value == 4,
-                      isSidebarExpanded,
-                      selectedIndex,
-                      lastManualIndexChange,
-                    ),
-                    _buildNavItem(
-                      context,
-                      Icons.person,
-                      'Profile',
-                      5,
-                      selectedIndex.value == 5,
-                      isSidebarExpanded,
-                      selectedIndex,
-                      lastManualIndexChange,
-                    ),
-                    _buildNavItem(
-                      context,
-                      Icons.view_kanban,
-                      'Kanban Board',
-                      6,
-                      selectedIndex.value == 6,
-                      isSidebarExpanded,
-                      selectedIndex,
-                      lastManualIndexChange,
-                    ),
-                    _buildNavItem(
-                      context,
-                      Icons.folder_outlined,
-                      'Projects',
-                      7,
-                      selectedIndex.value == 7,
-                      isSidebarExpanded,
-                      selectedIndex,
-                      lastManualIndexChange,
-                    ),
-                    _buildNavItem(
-                      context,
-                      Icons.settings,
-                      'Settings',
-                      8,
-                      selectedIndex.value == 8,
-                      isSidebarExpanded,
-                      selectedIndex,
-                      lastManualIndexChange,
-                    ),
-                  ],
-                ),
-              ),
+            void navigate() {
+              lastManualIndexChange.value = DateTime.now();
+              selectedIndex.value = index;
+            }
 
-              // Daily Quote Sticky Note (pinned to bottom, not scrollable)
-              if (isSidebarExpanded.value &&
-                  !ResponsiveUtils.isMobile(context)) ...[
-                Padding(
-                  padding: ResponsiveUtils.getResponsivePadding(
-                    context,
-                    mobile: const EdgeInsets.all(12),
-                    tablet: const EdgeInsets.all(14),
-                    desktop: const EdgeInsets.all(16),
-                  ),
-                  child: _buildStickyNoteWidget(context),
-                ),
-              ],
-            ],
-          ),
+            if (featureKey != null) {
+              FeatureGuard.checkFeature(
+                context: context,
+                featureKey: featureKey,
+                onAccess: navigate,
+              );
+            } else {
+              navigate();
+            }
+          },
+          onLogout: () {
+            _showSignOutConfirmation(context, Provider.of<AuthViewModel>(context, listen: false));
+          },
         ),
 
         // Main Content Area
@@ -963,541 +648,49 @@ class ModernDashboardScreen extends HookWidget {
           child: Column(
             children: [
               // Top Header
-              Container(
-                height: 80,
-                decoration: BoxDecoration(
-                  color: CommonColors.getCardColor(context),
-                  border: Border(
-                    bottom: BorderSide(
-                      color:
-                          Theme.of(context).dividerColor.withValues(alpha: 0.1),
-                      width: 1,
-                    ),
-                  ),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Left - Metrics
-                    Consumer<AuthViewModel>(
-                      builder: (context, authViewModel, child) {
-                        return Consumer<AttendanceViewModel>(
-                          builder: (context, attendanceViewModel, child) {
-                            return Row(
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // Developer Mode Indicator (Visual Only)
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          authViewModel.organizationName.isNotEmpty 
-                                              ? authViewModel.organizationName 
-                                              : 'Sprintly Employee',
-                                          style: TextStyle(
-                                            color: Theme.of(
-                                              context,
-                                            ).textTheme.titleLarge?.color,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        _buildBetaBadge(context),
-                                        if (attendanceViewModel
-                                            .isDeveloperMode) ...[
-                                          const SizedBox(width: 8),
-                                          Icon(
-                                            Icons.build_circle,
-                                            size: 16,
-                                            color: CommonColors.primary,
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'Efficient Task Management And Attendance Tracking',
-                                      style: TextStyle(
-                                        color: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.color
-                                            ?.withValues(alpha: 0.7),
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(width: 16),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                    ),
-
-                    // Right - Controls & User Info
-                    Row(
-                      children: [
-                        // Theme Toggle
-                        Consumer<ThemeProvider>(
-                          builder: (context, themeProvider, child) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: CommonColors.getTextColor(
-                                    context,
-                                  ).withValues(alpha: 0.2),
-                                  width: 1,
-                                ),
-                              ),
-                              child: IconButton(
-                                onPressed: () => themeProvider.toggleTheme(),
-                                icon: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 300),
-                                  child: Icon(
-                                    themeProvider.isDarkMode
-                                        ? Icons.light_mode_outlined
-                                        : Icons.dark_mode_outlined,
-                                    key: ValueKey(themeProvider.isDarkMode),
-                                    color: CommonColors.getTextColor(context),
-                                    size: 24.0,
-                                  ),
-                                ),
-                                tooltip: themeProvider.isDarkMode
-                                    ? 'Switch to Light Mode'
-                                    : 'Switch to Dark Mode',
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 8),
-
-                        // Fullscreen Toggle Button
-                        FullscreenToggleButton(
-                          iconColor: CommonColors.getTextColor(context),
-                          iconSize: 24.0,
-                        ),
-                        const SizedBox(width: 8),
-
-                        // Search icon (only show for screens that support search)
-                        if (selectedIndex.value == 0 ||
-                            selectedIndex.value == 2 ||
-                            selectedIndex.value == 6) // Home, Team, Kanban
-                          ValueListenableBuilder<bool>(
-                            valueListenable: getSearchNotifierForScreen(
-                              selectedIndex.value,
-                            ),
-                            builder: (context, isExpanded, child) {
-                              return IconButton(
-                                onPressed: () {
-                                  final notifier = getSearchNotifierForScreen(
-                                    selectedIndex.value,
-                                  );
-                                  notifier.value = !notifier.value;
-                                },
-                                icon: Icon(
-                                  isExpanded ? Icons.close : Icons.search,
-                                  color: CommonColors.getTextColor(context),
-                                  size: 24.0,
-                                ),
-                                tooltip: isExpanded ? 'Close search' : 'Search',
-                              );
-                            },
-                          ),
-                        // Notification Bell Icon for Announcements
-                        Consumer2<AnnouncementViewModel, NotificationViewModel>(
-                          builder:
-                              (context, announcementVM, notificationVM, child) {
-                            final totalBadgeCount = announcementVM.unreadCount +
-                                notificationVM.unreadCount;
-
-                            return Stack(
-                              children: [
-                                Builder(
-                                  builder: (buttonContext) => IconButton(
-                                    onPressed: () {
-                                      // Mark as opened - updates the timestamp in local storage
-                                      announcementVM
-                                          .updateNotificationCheckTime();
-                                      // Refresh notification VM to reflect new timestamp
-                                      notificationVM.refreshBadgeState();
-
-                                      AnnouncementPopup.show(buttonContext);
-                                    },
-                                    icon: Icon(
-                                      Icons.notifications_outlined,
-                                      color: CommonColors.getTextColor(context),
-                                      size: 24.0,
-                                    ),
-                                    tooltip: 'Announcements & Notifications',
-                                  ),
-                                ),
-                                if (totalBadgeCount > 0)
-                                  Positioned(
-                                    right: 6,
-                                    top: 6,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.error,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      constraints: const BoxConstraints(
-                                        minWidth: 16,
-                                        minHeight: 16,
-                                      ),
-                                      child: Text(
-                                        totalBadgeCount > 9
-                                            ? '9+'
-                                            : '$totalBadgeCount',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            );
-                          },
-                        ),
-
-                        // Filter Button (only show for Kanban board which is index 6)
-                        if (selectedIndex.value == 6)
-                          ValueListenableBuilder<bool>(
-                            valueListenable: getFiltersNotifierForScreen(
-                              selectedIndex.value,
-                            ),
-                            builder: (context, hasActiveFilters, child) {
-                              return Stack(
-                                children: [
-                                  IconButton(
-                                    onPressed: () {
-                                      final trigger = getFilterTriggerForScreen(
-                                        selectedIndex.value,
-                                      );
-                                      trigger.value++;
-                                    },
-                                    icon: Icon(
-                                      Icons.filter_list,
-                                      color: CommonColors.getTextColor(context),
-                                      size: 24.0,
-                                    ),
-                                    tooltip: 'Filter',
-                                  ),
-                                  if (hasActiveFilters)
-                                    Positioned(
-                                      right: 8,
-                                      top: 8,
-                                      child: Container(
-                                        width: 8,
-                                        height: 8,
-                                        decoration: BoxDecoration(
-                                          color: Colors.red,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: Theme.of(context).cardColor,
-                                            width: 1.5,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              );
-                            },
-                          ),
-                          
-                        // Refresh Button
-                        ValueListenableBuilder<bool>(
-                          valueListenable: isRefreshing,
-                          builder: (context, refreshing, child) {
-                            return IconButton(
-                              onPressed: refreshing
-                                  ? null
-                                  : () async {
-                                      // Set refreshing state
-                                      isRefreshing.value = true;
-
-                                      try {
-                                        // Refresh entire app by triggering all view models
-                                        refreshTrigger.value++;
-
-                                        // Force refresh all major view models
-                                        final taskViewModel =
-                                            Provider.of<TaskViewModel>(
-                                          context,
-                                          listen: false,
-                                        );
-                                        final attendanceViewModel =
-                                            Provider.of<AttendanceViewModel>(
-                                          context,
-                                          listen: false,
-                                        );
-                                        final authViewModel =
-                                            Provider.of<AuthViewModel>(
-                                          context,
-                                          listen: false,
-                                        );
-
-                                        // Trigger comprehensive refresh by calling all fetch methods
-                                        final now = DateTime.now();
-                                        final startOfMonth = DateTime(
-                                          now.year,
-                                          now.month,
-                                          1,
-                                        );
-                                        final endOfMonth = DateTime(
-                                          now.year,
-                                          now.month + 1,
-                                          0,
-                                        );
-
-                                        // Refresh all data sources comprehensively
-                                        await Future.wait([
-                                          // Task data refresh - multiple methods to ensure complete refresh
-                                          taskViewModel.fetchTasksSmart(
-                                            authViewModel,
-                                          ),
-                                          taskViewModel.fetchAllTasks(),
-                                          taskViewModel.fetchStartedTasks(),
-
-                                          // Attendance data refresh
-                                          attendanceViewModel
-                                              .fetchCurrentAttendance(),
-                                          attendanceViewModel
-                                              .fetchAttendanceHistory(
-                                            startDate: startOfMonth,
-                                            endDate: endOfMonth,
-                                          ),
-
-                                          // Auth data refresh
-                                          authViewModel.getUserRole(),
-                                        ]);
-
-                                        // Add a small delay to ensure all data is processed
-                                        await Future.delayed(
-                                          const Duration(milliseconds: 100),
-                                        );
-
-                                        // Force rebuild by incrementing refresh triggers
-
-                                        // Additional refresh trigger to force complete app rebuild
-                                        refreshTrigger.value++;
-                                        appRefreshKey.value++;
-
-                                        // Show success feedback
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Row(
-                                              children: [
-                                                Icon(
-                                                  Icons.check_circle,
-                                                  color: Colors.white,
-                                                  size: 16,
-                                                ),
-                                                const SizedBox(width: 8),
-                                                const Text(
-                                                  'All data refreshed successfully!',
-                                                ),
-                                              ],
-                                            ),
-                                            backgroundColor:
-                                                AppTheme.successGreen,
-                                            duration: const Duration(
-                                              seconds: 2,
-                                            ),
-                                            behavior: SnackBarBehavior.floating,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                          ),
-                                        );
-                                      } catch (e) {
-                                        // Show error feedback
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Row(
-                                              children: [
-                                                Icon(
-                                                  Icons.error,
-                                                  color: Colors.white,
-                                                  size: 16,
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Text(
-                                                  'Refresh failed: ${e.toString()}',
-                                                ),
-                                              ],
-                                            ),
-                                            backgroundColor:
-                                                AppTheme.highPriority,
-                                            duration: const Duration(
-                                              seconds: 3,
-                                            ),
-                                            behavior: SnackBarBehavior.floating,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                          ),
-                                        );
-                                      } finally {
-                                        // Reset refreshing state
-                                        isRefreshing.value = false;
-                                      }
-                                    },
-                              icon: refreshing
-                                  ? SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                          CommonColors.getTextColor(
-                                            context,
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                  : Icon(
-                                      Icons.refresh,
-                                      color: CommonColors.getTextColor(context),
-                                      size: 24.0,
-                                    ),
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 16),
-
-                        // User Profile
-                        Consumer<AuthViewModel>(
-                          builder: (context, authViewModel, child) {
-                            return Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 20,
-                                  backgroundColor: AppTheme.primaryBlue,
-                                  backgroundImage:
-                                      authViewModel.currentUserProfile?.img !=
-                                                  null &&
-                                              authViewModel.currentUserProfile!
-                                                  .img!.isNotEmpty
-                                          ? NetworkImage(
-                                              authViewModel
-                                                  .currentUserProfile!.img!,
-                                            )
-                                          : null,
-                                  child:
-                                      authViewModel.currentUserProfile?.img ==
-                                                  null ||
-                                              authViewModel.currentUserProfile!
-                                                  .img!.isEmpty
-                                          ? Text(
-                                              _getUserInitials(
-                                                authViewModel.userDisplayName,
-                                              ),
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            )
-                                          : null,
-                                ),
-                                const SizedBox(width: 12),
-                                GestureDetector(
-                                  onTap: () =>
-                                      _showUserDropdown(context, authViewModel),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        authViewModel.userDisplayName ?? 'User',
-                                        style: TextStyle(
-                                          color: CommonColors.getTextColor(
-                                            context,
-                                          ),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      FutureBuilder<String?>(
-                                        future: authViewModel.getUserRole(),
-                                        builder: (context, snapshot) {
-                                          return Text(
-                                            snapshot.data ?? 'Employee',
-                                            style: TextStyle(
-                                              color: CommonColors.getTextColor(
-                                                context,
-                                              ).withValues(alpha: 0.7),
-                                              fontSize: 12,
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 16),
-                        // Sign Out Button
-                        Consumer<AuthViewModel>(
-                          builder: (context, authViewModel, child) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: CommonColors.dangerRed.withOpacity(
-                                    0.3,
-                                  ),
-                                  width: 1,
-                                ),
-                              ),
-                              child: IconButton(
-                                onPressed: () async {
-                                  await _showSignOutConfirmation(
-                                    context,
-                                    authViewModel,
-                                  );
-                                },
-                                icon: Icon(
-                                  Icons.logout,
-                                  color: CommonColors.dangerRed,
-                                  size: 20,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              RecreatedHeader(
+                title: selectedIndex.value == 0
+                    ? 'Dashboard Overview'
+                    : selectedIndex.value == 1
+                        ? 'Reports Workspace'
+                        : selectedIndex.value == 2
+                            ? 'Sync Board'
+                            : selectedIndex.value == 3
+                                ? 'Attendance Tracking'
+                                : selectedIndex.value == 4
+                                    ? 'Calendar & Events'
+                                    : selectedIndex.value == 5
+                                        ? 'My Profile'
+                                        : selectedIndex.value == 6
+                                            ? 'Kanban Task Board'
+                                            : selectedIndex.value == 7
+                                                ? 'Active Projects'
+                                                : selectedIndex.value == 8
+                                                    ? 'Settings'
+                                                    : 'Dashboard',
+                breadcrumb: selectedIndex.value == 0
+                    ? 'Workspace / Dashboard'
+                    : selectedIndex.value == 1
+                        ? 'Workspace / Reports'
+                        : selectedIndex.value == 2
+                            ? 'Workspace / Sync Board'
+                            : selectedIndex.value == 3
+                                ? 'Workspace / Attendance'
+                                : selectedIndex.value == 4
+                                    ? 'Workspace / Calendar'
+                                    : selectedIndex.value == 5
+                                        ? 'Workspace / Profile'
+                                        : selectedIndex.value == 6
+                                            ? 'Workspace / Kanban Board'
+                                            : selectedIndex.value == 7
+                                                ? 'Workspace / Projects'
+                                                : selectedIndex.value == 8
+                                                    ? 'Workspace / Settings'
+                                                    : 'Workspace',
+                searchQueryNotifier: getSearchQueryTextNotifierForScreen(selectedIndex.value),
+                onSearchChanged: (val) {
+                  getSearchQueryTextNotifierForScreen(selectedIndex.value).value = val;
+                },
               ),
 
               // Main Content
@@ -1552,10 +745,10 @@ class ModernDashboardScreen extends HookWidget {
         Container(
           height: 70,
           decoration: BoxDecoration(
-            color: CommonColors.getCardColor(context),
+            color: Colors.white.withOpacity(0.015),
             border: Border(
               bottom: BorderSide(
-                color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+                color: Colors.white.withOpacity(0.05),
                 width: 1,
               ),
             ),
@@ -1574,11 +767,11 @@ class ModernDashboardScreen extends HookWidget {
                       'assets/logo/logo.png',
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) {
-                        return Center(
+                        return const Center(
                           child: Text(
                             'T',
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
+                              color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
                             ),
@@ -1591,10 +784,10 @@ class ModernDashboardScreen extends HookWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
+                      const Text(
                         'Webnox Sprintly',
                         style: TextStyle(
-                          color: CommonColors.getTextColor(context),
+                          color: Colors.white,
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
                         ),
@@ -1617,15 +810,15 @@ class ModernDashboardScreen extends HookWidget {
                           themeProvider.isDarkMode
                               ? Icons.light_mode_outlined
                               : Icons.dark_mode_outlined,
-                          color: CommonColors.getTextColor(context),
+                          color: Colors.white,
                           size: 24.0,
                         ),
                       );
                     },
                   ),
                   // Fullscreen Toggle Button
-                  FullscreenToggleButton(
-                    iconColor: CommonColors.getTextColor(context),
+                  const FullscreenToggleButton(
+                    iconColor: Colors.white,
                     iconSize: 24.0,
                   ),
                   const SizedBox(width: 8),
@@ -1649,8 +842,8 @@ class ModernDashboardScreen extends HookWidget {
                           const SizedBox(width: 8),
                           Text(
                             authViewModel.userDisplayName ?? 'User',
-                            style: TextStyle(
-                              color: CommonColors.getTextColor(context),
+                            style: const TextStyle(
+                              color: Colors.white,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1668,10 +861,10 @@ class ModernDashboardScreen extends HookWidget {
         Container(
           height: 60,
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
+            color: Colors.white.withOpacity(0.015),
             border: Border(
               bottom: BorderSide(
-                color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+                color: Colors.white.withOpacity(0.05),
                 width: 1,
               ),
             ),
@@ -1775,26 +968,41 @@ class ModernDashboardScreen extends HookWidget {
     bool isSelected = selectedIndex.value == index;
     return GestureDetector(
       onTap: () async {
-        if (selectedIndex.value != index) {
-          lastManualIndexChange.value = DateTime.now();
-          selectedIndex.value = index;
+        String? featureKey;
+        switch(index) {
+          case 1: featureKey = 'advanced_reports'; break;
+          case 2: featureKey = 'team_sync_chat'; break;
         }
-        await _initializeDataForScreen(context, index);
+
+        void navigate() async {
+          if (selectedIndex.value != index) {
+            lastManualIndexChange.value = DateTime.now();
+            selectedIndex.value = index;
+          }
+          await _initializeDataForScreen(context, index);
+        }
+
+        if (featureKey != null) {
+          FeatureGuard.checkFeature(
+            context: context,
+            featureKey: featureKey,
+            onAccess: navigate,
+          );
+        } else {
+          navigate();
+        }
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+              ? const Color(0xFF3B82F6).withOpacity(0.12)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: isSelected
               ? Border.all(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.3),
+                  color: const Color(0xFF3B82F6).withOpacity(0.3),
                 )
               : null,
         ),
@@ -1807,9 +1015,8 @@ class ModernDashboardScreen extends HookWidget {
                 Icon(
                   icon,
                   color: isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : CommonColors.getTextColor(context)
-                          .withValues(alpha: 0.7),
+                      ? const Color(0xFF3B82F6)
+                      : Colors.white.withOpacity(0.4),
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -1817,9 +1024,8 @@ class ModernDashboardScreen extends HookWidget {
                   label,
                   style: TextStyle(
                     color: isSelected
-                        ? Theme.of(context).colorScheme.primary
-                        : CommonColors.getTextColor(context)
-                            .withValues(alpha: 0.7),
+                        ? const Color(0xFF3B82F6)
+                        : Colors.white.withOpacity(0.4),
                     fontSize: 14,
                     fontWeight:
                         isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -1897,17 +1103,12 @@ class ModernDashboardScreen extends HookWidget {
                       width: 44, // iPhone standard touch target
                       height: 44,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
+                        color: Colors.white.withOpacity(0.03),
                         borderRadius: BorderRadius.circular(22),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(
-                              context,
-                            ).shadowColor.withValues(alpha: 0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.08),
+                          width: 1,
+                        ),
                       ),
                       child: IconButton(
                         padding: EdgeInsets.zero,
@@ -1918,9 +1119,9 @@ class ModernDashboardScreen extends HookWidget {
                             lastManualIndexChange,
                           );
                         },
-                        icon: Icon(
+                        icon: const Icon(
                           Icons.menu,
-                          color: Theme.of(context).colorScheme.onSurface,
+                          color: Colors.white,
                           size: 24,
                         ),
                       ),
@@ -1938,13 +1139,11 @@ class ModernDashboardScreen extends HookWidget {
                           'assets/logo/company_name_img.png',
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) {
-                            return Center(
+                            return const Center(
                               child: Text(
                                 'Webnox Sprintly',
                                 style: TextStyle(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
+                                  color: Colors.white,
                                   fontSize: 20,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -1967,17 +1166,12 @@ class ModernDashboardScreen extends HookWidget {
                         width: 44, // iPhone standard touch target
                         height: 44,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
+                          color: Colors.white.withOpacity(0.03),
                           borderRadius: BorderRadius.circular(22),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Theme.of(
-                                context,
-                              ).shadowColor.withValues(alpha: 0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.08),
+                            width: 1,
+                          ),
                         ),
                         child: IconButton(
                           padding: EdgeInsets.zero,
@@ -1988,9 +1182,9 @@ class ModernDashboardScreen extends HookWidget {
                             );
                             notifier.value = !notifier.value;
                           },
-                          icon: Icon(
+                          icon: const Icon(
                             Icons.search,
-                            color: Theme.of(context).colorScheme.onSurface,
+                            color: Colors.white,
                             size: 24,
                           ),
                         ),
@@ -2005,17 +1199,12 @@ class ModernDashboardScreen extends HookWidget {
                         width: 44, // iPhone standard touch target
                         height: 44,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
+                          color: Colors.white.withOpacity(0.03),
                           borderRadius: BorderRadius.circular(22),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Theme.of(
-                                context,
-                              ).shadowColor.withValues(alpha: 0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.08),
+                            width: 1,
+                          ),
                         ),
                         child: IconButton(
                           padding: EdgeInsets.zero,
@@ -2027,7 +1216,7 @@ class ModernDashboardScreen extends HookWidget {
                                   ? Icons.light_mode_outlined
                                   : Icons.dark_mode_outlined,
                               key: ValueKey(themeProvider.isDarkMode),
-                              color: Theme.of(context).colorScheme.onSurface,
+                              color: Colors.white,
                               size: 24,
                             ),
                           ),
@@ -2037,9 +1226,23 @@ class ModernDashboardScreen extends HookWidget {
                   ),
                   const SizedBox(width: 12),
                   // Fullscreen Toggle Button - iPhone style
-                  FullscreenToggleButton(
-                    iconColor: Theme.of(context).colorScheme.onSurface,
-                    iconSize: 24.0,
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.03),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.08),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Center(
+                      child: FullscreenToggleButton(
+                        iconColor: Colors.white,
+                        iconSize: 24.0,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   // Sign Out Button - iPhone style
@@ -2083,75 +1286,70 @@ class ModernDashboardScreen extends HookWidget {
         // Mobile Content with proper padding
         Expanded(
           child: Container(
-            color: Theme.of(context).scaffoldBackgroundColor,
+            color: Colors.transparent,
             child: IndexedStack(index: selectedIndex.value, children: allPages),
           ),
         ),
 
         // Mobile Bottom Navigation - iPhone optimized design
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            border: Border(
-              top: BorderSide(
-                color: Theme.of(context)
-                    .colorScheme
-                    .outline
-                    .withValues(alpha: 0.2),
-                width: 0.5,
+        ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.015),
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.white.withOpacity(0.05),
+                    width: 0.5,
+                  ),
+                ),
               ),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(context).shadowColor.withValues(alpha: 0.1),
-                blurRadius: 20,
-                offset: const Offset(0, -4),
-              ),
-            ],
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildMobileNavItem(
-                    context,
-                    Icons.home,
-                    'Home',
-                    0,
-                    selectedIndex,
-                    isSmallMobile,
-                    lastManualIndexChange,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildMobileNavItem(
+                        context,
+                        Icons.home,
+                        'Home',
+                        0,
+                        selectedIndex,
+                        isSmallMobile,
+                        lastManualIndexChange,
+                      ),
+                      _buildMobileNavItem(
+                        context,
+                        Icons.analytics,
+                        'Attendance',
+                        3,
+                        selectedIndex,
+                        isSmallMobile,
+                        lastManualIndexChange,
+                      ),
+                      _buildMobileNavItem(
+                        context,
+                        Icons.folder,
+                        'Report',
+                        1,
+                        selectedIndex,
+                        isSmallMobile,
+                        lastManualIndexChange,
+                      ),
+                      _buildMobileNavItem(
+                        context,
+                        Icons.chat_bubble_outline,
+                        'Sync Board',
+                        2,
+                        selectedIndex,
+                        isSmallMobile,
+                        lastManualIndexChange,
+                      ),
+                    ],
                   ),
-                  _buildMobileNavItem(
-                    context,
-                    Icons.analytics,
-                    'Attendance',
-                    3,
-                    selectedIndex,
-                    isSmallMobile,
-                    lastManualIndexChange,
-                  ),
-                  _buildMobileNavItem(
-                    context,
-                    Icons.folder,
-                    'Report',
-                    1,
-                    selectedIndex,
-                    isSmallMobile,
-                    lastManualIndexChange,
-                  ),
-                  _buildMobileNavItem(
-                    context,
-                    Icons.chat_bubble_outline,
-                    'Sync Board',
-                    2,
-                    selectedIndex,
-                    isSmallMobile,
-                    lastManualIndexChange,
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -2173,17 +1371,35 @@ class ModernDashboardScreen extends HookWidget {
     bool isSelected = selectedIndex.value == index;
     return GestureDetector(
       onTap: () async {
-        if (selectedIndex.value != index) {
-          lastManualIndexChange.value = DateTime.now();
-          selectedIndex.value = index;
+        String? featureKey;
+        switch(index) {
+          case 1: featureKey = 'advanced_reports'; break;
+          case 2: featureKey = 'team_sync_chat'; break;
         }
-        await _initializeDataForScreen(context, index);
+
+        void navigate() async {
+          if (selectedIndex.value != index) {
+            lastManualIndexChange.value = DateTime.now();
+            selectedIndex.value = index;
+          }
+          await _initializeDataForScreen(context, index);
+        }
+
+        if (featureKey != null) {
+          FeatureGuard.checkFeature(
+            context: context,
+            featureKey: featureKey,
+            onAccess: navigate,
+          );
+        } else {
+          navigate();
+        }
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+              ? const Color(0xFF3B82F6).withOpacity(0.12)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
@@ -2196,10 +1412,8 @@ class ModernDashboardScreen extends HookWidget {
                 Icon(
                   icon,
                   color: isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.6),
+                      ? const Color(0xFF3B82F6)
+                      : Colors.white.withOpacity(0.4),
                   size: 24, // iPhone standard icon size
                 ),
                 const SizedBox(height: 4),
@@ -2207,10 +1421,8 @@ class ModernDashboardScreen extends HookWidget {
                   label,
                   style: TextStyle(
                     color: isSelected
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ? const Color(0xFF3B82F6)
+                        : Colors.white.withOpacity(0.4),
                     fontSize: 11, // iPhone standard font size
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     letterSpacing: 0.2, // iPhone typography
@@ -2869,16 +2081,35 @@ class ModernDashboardScreen extends HookWidget {
     return GestureDetector(
       onTap: () async {
         if (index >= 0) {
-          if (selectedIndex.value != index) {
-            lastManualIndexChange.value = DateTime.now();
-            selectedIndex.value = index;
+          String? featureKey;
+          switch(index) {
+            case 1: featureKey = 'advanced_reports'; break;
+            case 2: featureKey = 'team_sync_chat'; break;
           }
-          await _initializeDataForScreen(context, index);
+
+          void navigate() async {
+            if (selectedIndex.value != index) {
+              lastManualIndexChange.value = DateTime.now();
+              selectedIndex.value = index;
+            }
+            await _initializeDataForScreen(context, index);
+            Navigator.of(context).pop(); // Close the side menu
+          }
+
+          if (featureKey != null) {
+            FeatureGuard.checkFeature(
+              context: context,
+              featureKey: featureKey,
+              onAccess: navigate,
+            );
+          } else {
+            navigate();
+          }
         } else {
           // Handle special cases like search
           // You can implement search functionality here
+          Navigator.of(context).pop(); // Close the side menu
         }
-        Navigator.of(context).pop(); // Close the side menu
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
@@ -3333,4 +2564,59 @@ class _HoverableMetricChipState extends State<_HoverableMetricChip> {
       ),
     );
   }
+}
+
+Widget _buildBackgroundGlows(BuildContext context) {
+  return Container(
+    decoration: const BoxDecoration(
+      gradient: LinearGradient(
+        colors: [
+          Color(0xFF070B14),
+          Color(0xFF0D1525),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ),
+    ),
+    child: Stack(
+      children: [
+        // Ambient Glow 1: Top Right (rgba(30, 58, 138, 0.1))
+        Positioned(
+          top: -100,
+          right: -100,
+          child: Container(
+            width: 500,
+            height: 500,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  Color(0x1A1E3A8A), // rgba(30, 58, 138, 0.1)
+                  Color(0x001E3A8A), // rgba(30, 58, 138, 0)
+                ],
+              ),
+            ),
+          ),
+        ),
+        // Ambient Glow 2: Bottom Left (rgba(59, 130, 246, 0.15))
+        Positioned(
+          bottom: -150,
+          left: -150,
+          child: Container(
+            width: 600,
+            height: 600,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  Color(0x263B82F6), // rgba(59, 130, 246, 0.15)
+                  Color(0x003B82F6), // rgba(59, 130, 246, 0)
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }

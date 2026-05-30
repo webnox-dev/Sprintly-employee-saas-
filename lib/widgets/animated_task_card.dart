@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../model/task_model.dart';
 import 'qc_completion_dialog.dart';
 
@@ -455,11 +456,17 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
   }
 
   Widget _buildBackSide() {
+    final accentColor = _getStatusColor();
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF1E1E1E)
-            : Colors.white,
+        gradient: LinearGradient(
+          colors: [
+            accentColor.withOpacity(0.06),
+            Colors.white.withOpacity(0.015),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(
           ResponsiveUtils.getResponsiveBorderRadius(
             context,
@@ -469,16 +476,12 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
           ),
         ),
         border: Border.all(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.white.withOpacity(0.05)
-              : Colors.grey.withOpacity(0.1),
-          width: 1,
+          color: accentColor.withOpacity(0.2),
+          width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.black.withOpacity(0.3)
-                : Colors.grey.withOpacity(0.08),
+            color: Colors.black.withOpacity(0.2),
             blurRadius: 16,
             offset: const Offset(0, 8),
             spreadRadius: 0,
@@ -1269,38 +1272,40 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
   }
 
   Widget _buildFrontSide() {
+    final accentColor = _getStatusColor();
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: () => _showTaskDetailsDialog(),
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF1E1E1E) // Darker surface for dark mode
-                : Colors.white,
+            gradient: LinearGradient(
+              colors: [
+                accentColor.withOpacity(0.06),
+                Colors.white.withOpacity(0.015),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(
               ResponsiveUtils.getResponsiveBorderRadius(
                 context,
-                mobile: 16.0, // More rounded corners
+                mobile: 16.0,
                 tablet: 20.0,
                 desktop: 24.0,
               ),
             ),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.black.withOpacity(0.3)
-                    : Colors.grey.withOpacity(0.08), // Softer shadow
+                color: Colors.black.withOpacity(0.2),
                 blurRadius: 16,
                 offset: const Offset(0, 8),
                 spreadRadius: 0,
               ),
             ],
             border: Border.all(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white.withOpacity(0.05)
-                  : Colors.grey.withOpacity(0.1),
-              width: 1,
+              color: accentColor.withOpacity(0.2),
+              width: 1.0,
             ),
           ),
           child: Padding(
@@ -1333,9 +1338,7 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
                         desktop: 56.0,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey[800]
-                            : const Color(0xFFF5F5F5),
+                        color: accentColor.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Center(
@@ -1345,12 +1348,9 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
                                     .substring(0, 1)
                                     .toUpperCase()
                               : 'T',
-                          style: TextStyle(
+                          style: GoogleFonts.lexend(
                             fontWeight: FontWeight.w700,
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white
-                                : Colors.black87,
+                            color: accentColor,
                             fontSize: ResponsiveUtils.getResponsiveFontSize(
                               context,
                               mobile: 20,
@@ -1376,7 +1376,7 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
                         children: [
                           Text(
                             widget.task.taskName ?? 'Untitled Task',
-                            style: TextStyle(
+                            style: GoogleFonts.lexend(
                               fontSize: ResponsiveUtils.getResponsiveFontSize(
                                 context,
                                 mobile: 16,
@@ -1384,11 +1384,7 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
                                 desktop: 18,
                               ),
                               fontWeight: FontWeight.bold,
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : const Color(0xFF212121),
+                              color: Colors.white,
                               height: 1.2,
                             ),
                             maxLines: 2,
@@ -1409,18 +1405,14 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
                                 : (widget.task.taskType?.isNotEmpty ?? false)
                                 ? widget.task.taskType!
                                 : 'Task',
-                            style: TextStyle(
+                            style: GoogleFonts.inter(
                               fontSize: ResponsiveUtils.getResponsiveFontSize(
                                 context,
                                 mobile: 12,
                                 tablet: 13,
                                 desktop: 13,
                               ),
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.grey[400]
-                                  : Colors.grey[600],
+                              color: Colors.white.withOpacity(0.4),
                               fontWeight: FontWeight.w500,
                             ),
                             maxLines: 1,
@@ -1458,7 +1450,7 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
                       ),
                       child: Text(
                         _getStatusText(),
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           color: _getStatusColor(),
                           fontSize: ResponsiveUtils.getResponsiveFontSize(
                             context,
@@ -1483,7 +1475,7 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
                       ),
                       child: Text(
                         _getPriorityText(),
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           color: _getPriorityColor(),
                           fontSize: ResponsiveUtils.getResponsiveFontSize(
                             context,
@@ -1512,14 +1504,10 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white.withOpacity(0.05)
-                        : const Color(0xFFF9FAFB),
+                    color: Colors.white.withOpacity(0.02),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white.withOpacity(0.05)
-                          : Colors.grey.withOpacity(0.1),
+                      color: Colors.white.withOpacity(0.04),
                     ),
                   ),
                   child: Row(
@@ -1531,24 +1519,16 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
                             Icon(
                               Icons.calendar_today_rounded,
                               size: 16,
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.grey[400]
-                                  : Colors.grey[500],
+                              color: Colors.white.withOpacity(0.4),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 _getDateRange(),
-                                style: TextStyle(
+                                style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
-                                  color:
-                                      Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.grey[300]
-                                      : Colors.grey[700],
+                                  color: Colors.white.withOpacity(0.6),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -1562,7 +1542,7 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
                         height: 16,
                         width: 1,
                         margin: const EdgeInsets.symmetric(horizontal: 12),
-                        color: Theme.of(context).dividerColor,
+                        color: Colors.white.withOpacity(0.06),
                       ),
                       // Duration
                       Expanded(
@@ -1571,24 +1551,16 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
                             Icon(
                               Icons.access_time_rounded,
                               size: 16,
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.grey[400]
-                                  : Colors.grey[500],
+                              color: Colors.white.withOpacity(0.4),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 _getTaskDuration(),
-                                style: TextStyle(
+                                style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
-                                  color:
-                                      Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.grey[300]
-                                      : Colors.grey[700],
+                                  color: Colors.white.withOpacity(0.6),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,

@@ -46,7 +46,7 @@ class _ProjectsScreenState extends State<ProjectsScreen>
         ResponsiveUtils.isDesktop(context) || ResponsiveUtils.isLaptop(context);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: Colors.transparent,
       body: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(),
     );
   }

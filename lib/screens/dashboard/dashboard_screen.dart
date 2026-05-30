@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:webnox_taskops/screens/dashboard/modern_dashboard_screen.dart';
 
-// Alias for ModernDashboardScreen to maintain backward compatibility
+// Alias to maintain backward compatibility
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 

@@ -185,7 +185,7 @@ class CalendarScreen extends HookWidget {
     ]);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       body: Column(
         children: [
           // Header
