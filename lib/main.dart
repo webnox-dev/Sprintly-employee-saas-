@@ -206,7 +206,7 @@ class _MyAppState extends State<MyApp> {
 
                 return GetMaterialApp(
                   navigatorKey: SessionExpiryService().navigatorKey,
-                  title: 'Webnox Sprintly Employee',
+                  title: 'Rathz Employee',
                   debugShowCheckedModeBanner: false,
                   theme: AppTheme.lightTheme,
                   darkTheme: AppTheme.darkTheme,

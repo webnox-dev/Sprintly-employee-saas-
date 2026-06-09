@@ -168,6 +168,21 @@ class ModernDashboardScreen extends HookWidget {
       if (currentRoute != null && currentRoute.isNotEmpty) {
         final index = _getIndexForRoute(currentRoute);
         print('📍 Initial route detected: $currentRoute -> Index: $index');
+        
+        String? featureKey;
+        switch(index) {
+          case 1: featureKey = 'advanced_reports'; break;
+          case 2: featureKey = 'team_sync_chat'; break;
+          case 3: featureKey = 'leave_tracker'; break;
+          case 4: featureKey = 'calendar_meetings'; break;
+          case 6: featureKey = 'task_management'; break;
+          case 7: featureKey = 'projects'; break;
+        }
+        if (featureKey != null && !FeatureGuard.hasFeature(featureKey)) {
+          print('🔒 Gated initial route $currentRoute redirected to /dashboard due to plan limits.');
+          return 0;
+        }
+        
         return index;
       }
 
@@ -304,6 +319,31 @@ class ModernDashboardScreen extends HookWidget {
             currentRoute != lastDetectedRoute.value) {
           final routeIndex = _getIndexForRoute(currentRoute);
           final expectedRoute = _getRouteForIndex(selectedIndex.value);
+
+          String? featureKey;
+          switch(routeIndex) {
+            case 1: featureKey = 'advanced_reports'; break;
+            case 2: featureKey = 'team_sync_chat'; break;
+            case 3: featureKey = 'leave_tracker'; break;
+            case 4: featureKey = 'calendar_meetings'; break;
+            case 6: featureKey = 'task_management'; break;
+            case 7: featureKey = 'projects'; break;
+          }
+          if (featureKey != null && !FeatureGuard.hasFeature(featureKey)) {
+            print('🔒 Detected route $currentRoute is gated by $featureKey. Access denied, redirecting to /dashboard.');
+            lastDetectedRoute.value = currentRoute;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              selectedIndex.value = 0;
+              if (kIsWeb) {
+                try {
+                  Navigator.pushReplacementNamed(context, '/dashboard');
+                } catch (_) {
+                  Get.offAllNamed('/dashboard');
+                }
+              }
+            });
+            return;
+          }
 
           // CRITICAL: Always check browser URL path as source of truth
           // If browser URL matches expected route, don't change anything
@@ -621,6 +661,10 @@ class ModernDashboardScreen extends HookWidget {
             switch(index) {
               case 1: featureKey = 'advanced_reports'; break;
               case 2: featureKey = 'team_sync_chat'; break;
+              case 3: featureKey = 'leave_tracker'; break;
+              case 4: featureKey = 'calendar_meetings'; break;
+              case 6: featureKey = 'task_management'; break;
+              case 7: featureKey = 'projects'; break;
             }
 
             void navigate() {
@@ -785,7 +829,7 @@ class ModernDashboardScreen extends HookWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
-                        'Webnox Sprintly',
+                        'Rathz',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -966,14 +1010,19 @@ class ModernDashboardScreen extends HookWidget {
     ObjectRef<DateTime?> lastManualIndexChange,
   ) {
     bool isSelected = selectedIndex.value == index;
-    return GestureDetector(
-      onTap: () async {
-        String? featureKey;
-        switch(index) {
-          case 1: featureKey = 'advanced_reports'; break;
-          case 2: featureKey = 'team_sync_chat'; break;
-        }
+    String? featureKey;
+    switch(index) {
+      case 1: featureKey = 'advanced_reports'; break;
+      case 2: featureKey = 'team_sync_chat'; break;
+      case 3: featureKey = 'leave_tracker'; break;
+      case 4: featureKey = 'calendar_meetings'; break;
+      case 6: featureKey = 'task_management'; break;
+      case 7: featureKey = 'projects'; break;
+    }
+    final isLocked = featureKey != null && !FeatureGuard.hasFeature(featureKey);
 
+    return GestureDetector(
+      onTap: isLocked ? null : () async {
         void navigate() async {
           if (selectedIndex.value != index) {
             lastManualIndexChange.value = DateTime.now();
@@ -981,16 +1030,7 @@ class ModernDashboardScreen extends HookWidget {
           }
           await _initializeDataForScreen(context, index);
         }
-
-        if (featureKey != null) {
-          FeatureGuard.checkFeature(
-            context: context,
-            featureKey: featureKey,
-            onAccess: navigate,
-          );
-        } else {
-          navigate();
-        }
+        navigate();
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
@@ -1016,7 +1056,9 @@ class ModernDashboardScreen extends HookWidget {
                   icon,
                   color: isSelected
                       ? const Color(0xFF3B82F6)
-                      : Colors.white.withOpacity(0.4),
+                      : (isLocked
+                          ? Colors.white.withOpacity(0.15)
+                          : Colors.white.withOpacity(0.4)),
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -1025,12 +1067,36 @@ class ModernDashboardScreen extends HookWidget {
                   style: TextStyle(
                     color: isSelected
                         ? const Color(0xFF3B82F6)
-                        : Colors.white.withOpacity(0.4),
+                        : (isLocked
+                            ? Colors.white.withOpacity(0.15)
+                            : Colors.white.withOpacity(0.4)),
                     fontSize: 14,
                     fontWeight:
                         isSelected ? FontWeight.w600 : FontWeight.normal,
                   ),
                 ),
+                if (isLocked) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEF4444).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: const Color(0xFFEF4444).withOpacity(0.3),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: const Text(
+                      'Upgrade',
+                      style: TextStyle(
+                        color: Color(0xFFFCA5A5),
+                        fontSize: 8,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
             if (index == 2 || index == 7)
@@ -1141,7 +1207,7 @@ class ModernDashboardScreen extends HookWidget {
                           errorBuilder: (context, error, stackTrace) {
                             return const Center(
                               child: Text(
-                                'Webnox Sprintly',
+                                'Rathz',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 20,
@@ -1369,14 +1435,19 @@ class ModernDashboardScreen extends HookWidget {
     ObjectRef<DateTime?> lastManualIndexChange,
   ) {
     bool isSelected = selectedIndex.value == index;
-    return GestureDetector(
-      onTap: () async {
-        String? featureKey;
-        switch(index) {
-          case 1: featureKey = 'advanced_reports'; break;
-          case 2: featureKey = 'team_sync_chat'; break;
-        }
+    String? featureKey;
+    switch(index) {
+      case 1: featureKey = 'advanced_reports'; break;
+      case 2: featureKey = 'team_sync_chat'; break;
+      case 3: featureKey = 'leave_tracker'; break;
+      case 4: featureKey = 'calendar_meetings'; break;
+      case 6: featureKey = 'task_management'; break;
+      case 7: featureKey = 'projects'; break;
+    }
+    final isLocked = featureKey != null && !FeatureGuard.hasFeature(featureKey);
 
+    return GestureDetector(
+      onTap: isLocked ? null : () async {
         void navigate() async {
           if (selectedIndex.value != index) {
             lastManualIndexChange.value = DateTime.now();
@@ -1384,16 +1455,7 @@ class ModernDashboardScreen extends HookWidget {
           }
           await _initializeDataForScreen(context, index);
         }
-
-        if (featureKey != null) {
-          FeatureGuard.checkFeature(
-            context: context,
-            featureKey: featureKey,
-            onAccess: navigate,
-          );
-        } else {
-          navigate();
-        }
+        navigate();
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1413,7 +1475,9 @@ class ModernDashboardScreen extends HookWidget {
                   icon,
                   color: isSelected
                       ? const Color(0xFF3B82F6)
-                      : Colors.white.withOpacity(0.4),
+                      : (isLocked
+                          ? Colors.white.withOpacity(0.15)
+                          : Colors.white.withOpacity(0.4)),
                   size: 24, // iPhone standard icon size
                 ),
                 const SizedBox(height: 4),
@@ -1422,7 +1486,9 @@ class ModernDashboardScreen extends HookWidget {
                   style: TextStyle(
                     color: isSelected
                         ? const Color(0xFF3B82F6)
-                        : Colors.white.withOpacity(0.4),
+                        : (isLocked
+                            ? Colors.white.withOpacity(0.15)
+                            : Colors.white.withOpacity(0.4)),
                     fontSize: 11, // iPhone standard font size
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     letterSpacing: 0.2, // iPhone typography
@@ -1457,6 +1523,36 @@ class ModernDashboardScreen extends HookWidget {
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            if (isLocked)
+              Positioned(
+                top: -6,
+                right: -10,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1.5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF4444),
+                    borderRadius: BorderRadius.circular(4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFEF4444).withOpacity(0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Text(
+                    'Upgrade',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 7,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -2078,15 +2174,22 @@ class ModernDashboardScreen extends HookWidget {
     ValueNotifier<int> selectedIndex,
     ObjectRef<DateTime?> lastManualIndexChange,
   ) {
-    return GestureDetector(
-      onTap: () async {
-        if (index >= 0) {
-          String? featureKey;
-          switch(index) {
-            case 1: featureKey = 'advanced_reports'; break;
-            case 2: featureKey = 'team_sync_chat'; break;
-          }
+    String? featureKey;
+    if (index >= 0) {
+      switch(index) {
+        case 1: featureKey = 'advanced_reports'; break;
+        case 2: featureKey = 'team_sync_chat'; break;
+        case 3: featureKey = 'leave_tracker'; break;
+        case 4: featureKey = 'calendar_meetings'; break;
+        case 6: featureKey = 'task_management'; break;
+        case 7: featureKey = 'projects'; break;
+      }
+    }
+    final isLocked = featureKey != null && !FeatureGuard.hasFeature(featureKey);
 
+    return GestureDetector(
+      onTap: isLocked ? null : () async {
+        if (index >= 0) {
           void navigate() async {
             if (selectedIndex.value != index) {
               lastManualIndexChange.value = DateTime.now();
@@ -2095,16 +2198,7 @@ class ModernDashboardScreen extends HookWidget {
             await _initializeDataForScreen(context, index);
             Navigator.of(context).pop(); // Close the side menu
           }
-
-          if (featureKey != null) {
-            FeatureGuard.checkFeature(
-              context: context,
-              featureKey: featureKey,
-              onAccess: navigate,
-            );
-          } else {
-            navigate();
-          }
+          navigate();
         } else {
           // Handle special cases like search
           // You can implement search functionality here
@@ -2127,15 +2221,19 @@ class ModernDashboardScreen extends HookWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: 0.1),
+                color: isLocked
+                    ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05)
+                    : Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 icon,
-                color: Theme.of(context).colorScheme.primary,
+                color: isLocked
+                    ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15)
+                    : Theme.of(context).colorScheme.primary,
                 size: 20,
               ),
             ),
@@ -2147,7 +2245,9 @@ class ModernDashboardScreen extends HookWidget {
                   Text(
                     title,
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
+                      color: isLocked
+                          ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25)
+                          : Theme.of(context).colorScheme.onSurface,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.2,
@@ -2157,9 +2257,9 @@ class ModernDashboardScreen extends HookWidget {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: isLocked
+                          ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15)
+                          : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                       fontSize: 13,
                       letterSpacing: 0.1,
                     ),
@@ -2167,14 +2267,35 @@ class ModernDashboardScreen extends HookWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right,
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.4),
-              size: 18,
-            ),
+            isLocked
+                ? Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEF4444).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: const Color(0xFFEF4444).withOpacity(0.3),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: const Text(
+                      'Upgrade',
+                      style: TextStyle(
+                        color: Color(0xFFFCA5A5),
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  )
+                : Icon(
+                    Icons.chevron_right,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.4),
+                    size: 18,
+                  ),
             if (index == 2) ...[
               const SizedBox(width: 8),
               Container(

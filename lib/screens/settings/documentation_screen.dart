@@ -150,7 +150,7 @@ class DocumentationScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Sprintly Employee Guide',
+                  'Rathz Employee Guide',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -159,7 +159,7 @@ class DocumentationScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'A comprehensive guide to all features in the Sprintly Employee App. Use this document to navigate and utilize the platform efficiently.',
+                  'A comprehensive guide to all features in the Rathz Employee App. Use this document to navigate and utilize the platform efficiently.',
                   style: TextStyle(
                     fontSize: 14,
                     color: Theme.of(context)
@@ -293,7 +293,7 @@ class DocumentationScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Contact support at support@sprintly.com',
+            'Contact support at support@rathz.com',
             style: TextStyle(
               fontSize: 14,
               color: Theme.of(context)

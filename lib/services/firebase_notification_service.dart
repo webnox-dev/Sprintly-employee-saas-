@@ -27,8 +27,8 @@ class FirebaseNotificationService {
   // Notification channel for Android
   static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
     'webnox_sprintly_notifications',
-    'Webnox Sprintly Notifications',
-    description: 'Notifications from Webnox Sprintly',
+    'Rathz Notifications',
+    description: 'Notifications from Rathz',
     importance: Importance.high,
     playSound: true,
   );
@@ -161,14 +161,14 @@ class FirebaseNotificationService {
     if (notification != null) {
       if (kIsWeb) {
         web_notification.showWebNotification(
-          notification.title ?? 'Webnox Sprintly',
+          notification.title ?? 'Rathz',
           notification.body ?? '',
           tag: message.messageId,
         );
       } else if (android != null) {
         _localNotifications.show(
           notification.hashCode,
-          notification.title ?? 'Webnox Sprintly',
+          notification.title ?? 'Rathz',
           notification.body ?? '',
           NotificationDetails(
             android: AndroidNotificationDetails(

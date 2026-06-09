@@ -3,6 +3,23 @@ import 'package:flutter/material.dart';
 import '../services/local_storage_service.dart';
 
 class FeatureGuard {
+  /// Check if the organization has access to the specified feature.
+  static bool hasFeature(String featureKey) {
+    final storage = LocalStorageService();
+    final planFeaturesStr = storage.planFeatures;
+
+    if (planFeaturesStr.isNotEmpty && planFeaturesStr != '{}') {
+      try {
+        final features = jsonDecode(planFeaturesStr) as Map<String, dynamic>;
+        return features[featureKey] == true;
+      } catch (e) {
+        debugPrint('Error parsing plan features: $e');
+        return true; // Fallback to true on parse error
+      }
+    }
+    return true; // Default to true if not loaded yet / not SaaS
+  }
+
   /// Checks if the organization has access to the specified feature.
   /// If true, executes [onAccess].
   /// If false, shows an "Access Denied" dialog.

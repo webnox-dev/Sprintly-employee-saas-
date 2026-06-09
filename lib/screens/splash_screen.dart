@@ -199,7 +199,7 @@ class _SplashScreenState extends State<SplashScreen>
 
                     // Brand Name - Strong, Professional
                     Text(
-                      'Sprintly',
+                      'Rathz',
                       style: TextStyle(
                         fontFamily: 'Inter', // Presuming Inter or system font
                         fontSize: isMobile ? 32 : 40,

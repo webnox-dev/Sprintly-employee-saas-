@@ -141,7 +141,7 @@ class ChatWebSocketService {
     _stopPingTimer();
     _reconnectTimer?.cancel();
     _subscription?.cancel();
-    _channel?.sink.close(ws_status.goingAway);
+    _channel?.sink.close(ws_status.normalClosure);
     _isConnected = false;
     _isConnecting = false;
     _channel = null;

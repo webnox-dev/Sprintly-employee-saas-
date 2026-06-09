@@ -14,7 +14,7 @@ class RecreatedHeader extends StatefulWidget {
 
   const RecreatedHeader({
     super.key,
-    this.title = 'Sprintly Employee',
+    this.title = 'Rathz Employee',
     this.breadcrumb = 'Workspace / Dashboard',
     this.onSearchChanged,
     this.searchQueryNotifier,

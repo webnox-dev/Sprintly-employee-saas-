@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:webnox_taskops/view_model/auth_view_model.dart';
+import '../../utils/feature_guard.dart';
 
 class RecreatedSidebar extends StatefulWidget {
   final int selectedIndex;
@@ -22,6 +23,18 @@ class RecreatedSidebar extends StatefulWidget {
 
 class _RecreatedSidebarState extends State<RecreatedSidebar> {
   int? _hoveredIndex;
+
+  String? _getFeatureKeyForIndex(int index) {
+    switch (index) {
+      case 1: return 'advanced_reports';
+      case 2: return 'team_sync_chat';
+      case 3: return 'leave_tracker';
+      case 4: return 'calendar_meetings';
+      case 6: return 'task_management';
+      case 7: return 'projects';
+      default: return null;
+    }
+  }
 
   final List<Map<String, dynamic>> _menuItems = [
     {'title': 'Dashboard', 'icon': Icons.space_dashboard_rounded},
@@ -91,13 +104,16 @@ class _RecreatedSidebarState extends State<RecreatedSidebar> {
                       itemBuilder: (context, index) {
                         final item = _menuItems[index];
                         final isSelected = widget.selectedIndex == index;
-                        final isHovered = _hoveredIndex == index;
+                        final featureKey = _getFeatureKeyForIndex(index);
+                        final isLocked = featureKey != null && !FeatureGuard.hasFeature(featureKey);
+                        final isHovered = _hoveredIndex == index && !isLocked;
 
                         return MouseRegion(
-                          onEnter: (_) => setState(() => _hoveredIndex = index),
-                          onExit: (_) => setState(() => _hoveredIndex = null),
+                          onEnter: isLocked ? null : (_) => setState(() => _hoveredIndex = index),
+                          onExit: isLocked ? null : (_) => setState(() => _hoveredIndex = null),
+                          cursor: isLocked ? SystemMouseCursors.basic : SystemMouseCursors.click,
                           child: GestureDetector(
-                            onTap: () => widget.onIndexChanged(index),
+                            onTap: isLocked ? null : () => widget.onIndexChanged(index),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
                               margin: const EdgeInsets.symmetric(vertical: 4),
@@ -136,26 +152,53 @@ class _RecreatedSidebarState extends State<RecreatedSidebar> {
                                     item['icon'] as IconData,
                                     color: isSelected
                                         ? Colors.white
-                                        : (isHovered
-                                            ? Colors.white.withOpacity(0.9)
-                                            : Colors.white.withOpacity(0.4)),
+                                        : (isLocked
+                                            ? Colors.white.withOpacity(0.15)
+                                            : (isHovered
+                                                ? Colors.white.withOpacity(0.9)
+                                                : Colors.white.withOpacity(0.4))),
                                     size: 20,
                                   ),
                                   const SizedBox(width: 14),
-                                  Text(
-                                    item['title'] as String,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 13,
-                                      fontWeight: isSelected
-                                          ? FontWeight.w600
-                                          : FontWeight.w500,
-                                      color: isSelected
-                                          ? Colors.white
-                                          : (isHovered
-                                              ? Colors.white.withOpacity(0.9)
-                                              : Colors.white.withOpacity(0.5)),
+                                  Expanded(
+                                    child: Text(
+                                      item['title'] as String,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 13,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.w500,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : (isLocked
+                                                ? Colors.white.withOpacity(0.15)
+                                                : (isHovered
+                                                    ? Colors.white.withOpacity(0.9)
+                                                    : Colors.white.withOpacity(0.5))),
+                                      ),
                                     ),
                                   ),
+                                  if (isLocked)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFEF4444).withOpacity(0.12),
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: const Color(0xFFEF4444).withOpacity(0.3),
+                                          width: 0.8,
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Upgrade',
+                                        style: TextStyle(
+                                          color: Color(0xFFFCA5A5),
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 0.2,
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),

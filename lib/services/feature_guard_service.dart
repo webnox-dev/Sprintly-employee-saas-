@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'session_expiry_service.dart';
 
 class FeatureGuardService {
@@ -30,7 +31,14 @@ class FeatureGuardService {
             content: Text(message ?? "This feature is not available on your company's current plan."),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  try {
+                    Get.offAllNamed('/dashboard');
+                  } catch (_) {
+                    Navigator.of(context).pushReplacementNamed('/dashboard');
+                  }
+                },
                 child: const Text('Close'),
               ),
             ],

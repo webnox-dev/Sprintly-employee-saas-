@@ -476,7 +476,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                                     },
                                   ),
                                   // Logo small
-                                  Text('Sprintly',
+                                  Text('Rathz',
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: CommonColors.primary)),

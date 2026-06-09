@@ -92,7 +92,7 @@ class LoginScreen extends HookWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Sprintly',
+                        'Rathz',
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.primary,
                           fontSize: isMobile ? 26 : (isShortViewport ? 28 : 34),
@@ -122,7 +122,7 @@ class LoginScreen extends HookWidget {
               // Title
               Text(
                 currentStep.value == 0 
-                  ? 'Welcome to Sprintly' 
+                  ? 'Welcome to Rathz' 
                   : (currentStep.value == 1 ? 'Select Workspace' : 'Log in to your Account'),
                 style: TextStyle(
                   color: Theme.of(context).textTheme.titleLarge?.color,

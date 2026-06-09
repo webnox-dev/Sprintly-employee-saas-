@@ -158,6 +158,17 @@ class AuthViewModel extends ChangeNotifier {
         _cachedUserRole = _currentUserProfile!.role;
       }
 
+      // Update plan features cache if available in details
+      if (details['plan_features'] != null) {
+        try {
+          final planFeaturesStr = jsonEncode(details['plan_features']);
+          await localStorage.storage.setString(LocalStorageService.planFeaturesKey, planFeaturesStr);
+          logger.i('Plan features updated in local storage: $planFeaturesStr');
+        } catch (e) {
+          logger.e('Error caching plan features: $e');
+        }
+      }
+
       notifyListeners();
     } else {
       // Fallback or error handling if needed, but no Supabase fallback
