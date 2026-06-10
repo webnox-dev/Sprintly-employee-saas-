@@ -13,9 +13,7 @@ import 'package:webnox_taskops/view_model/task_view_model.dart';
 import 'package:webnox_taskops/widgets/animated_loading_states.dart';
 import 'package:webnox_taskops/view_model/attendance_view_model.dart';
 import 'package:webnox_taskops/view_model/report_view_model.dart';
-import 'package:webnox_taskops/helpers/common_colors.dart';
 import '../../widgets/common/empty_state_widget.dart';
-import '../../widgets/animations/silk_shader_widget.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -30,8 +28,6 @@ class _ReportsScreenState extends State<ReportsScreen>
 
   // Tab Controller
   late TabController _tabController;
-  late AnimationController _tabAnimationController;
-  late Animation<double> _tabAnimation;
 
   // Metric Card Animations (for mobile view)
   final Map<String, AnimationController> _metricAnimationControllers = {};
@@ -89,20 +85,6 @@ class _ReportsScreenState extends State<ReportsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _tabAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _tabAnimation = CurvedAnimation(
-      parent: _tabAnimationController,
-      curve: Curves.easeInOut,
-    );
-
-    _tabController.addListener(() {
-      if (_tabController.indexIsChanging) {
-        _tabAnimationController.forward();
-      }
-    });
 
     _reportNotesController = TextEditingController();
 
@@ -118,7 +100,6 @@ class _ReportsScreenState extends State<ReportsScreen>
   void dispose() {
     _stopSessionTimer();
     _tabController.dispose();
-    _tabAnimationController.dispose();
     _reportNotesController?.dispose();
 
     // Dispose task-notes controllers
@@ -473,21 +454,6 @@ class _ReportsScreenState extends State<ReportsScreen>
     _sessionTimer = null;
   }
 
-  /// Format duration for display
-  String _formatDuration(Duration duration) {
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes % 60;
-    final seconds = duration.inSeconds % 60;
-
-    if (hours > 0) {
-      return '${hours}h ${minutes}m ${seconds}s';
-    } else if (minutes > 0) {
-      return '${minutes}m ${seconds}s';
-    } else {
-      return '${seconds}s';
-    }
-  }
-
   // Helper to parse timestamp string - only converts UTC (with 'Z') to local
   // Timestamps without 'Z' are assumed to already be in local time
   DateTime _parseUtcToLocal(String dateString) {
@@ -561,7 +527,6 @@ class _ReportsScreenState extends State<ReportsScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Treat both laptop and desktop as "wide" layout (desktop-style tab bar, wider padding)
     final isDesktop =
         ResponsiveUtils.isDesktop(context) || ResponsiveUtils.isLaptop(context);
 
@@ -572,36 +537,8 @@ class _ReportsScreenState extends State<ReportsScreen>
         message: 'Loading reports...',
         child: Column(
           children: [
-            // Stack Header and TabBar for desktop overlap effect
-            Stack(
-              alignment: Alignment.bottomCenter,
-              children: [
-                // Header (with extra padding at bottom on desktop)
-                Column(
-                  children: [
-                    _buildHeader(isDesktop),
-                    if (isDesktop)
-                      const SizedBox(height: 20), // Spacer for overlap
-                  ],
-                ),
-
-                // Tab Bar (Floating Overlap on Desktop)
-                if (isDesktop)
-                  Transform.translate(
-                    offset: const Offset(
-                        0, 0), // Adjust if needed, currently header has padding
-                    child: _buildTabBar(isDesktop),
-                  ),
-              ],
-            ),
-
-            // Mobile Tab Bar (Standard Layout)
-            if (!isDesktop) ...[
-              const SizedBox(height: 20),
-              _buildTabBar(isDesktop),
-            ],
-
-            const SizedBox(height: 20),
+            _buildHeader(isDesktop),
+            const SizedBox(height: 24),
 
             // Tab Content
             Expanded(
@@ -610,14 +547,12 @@ class _ReportsScreenState extends State<ReportsScreen>
                 children: [
                   // Tab 1: Today's Work
                   isDesktop
-                      // Remove Top Padding on Desktop Content since TabBar is integrated
                       ? Padding(
                           padding: const EdgeInsets.only(top: 8.0),
                           child: _buildDesktopWorkSessionLayout(),
                         )
                       : SingleChildScrollView(
-                          // ... mobile layout
-                          padding: EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(12),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -628,7 +563,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                           ),
                         ),
 
-                  // Tab 2: Generate Report (Moved to 2nd position)
+                  // Tab 2: Generate Report
                   SingleChildScrollView(
                     padding: EdgeInsets.all(isDesktop ? 24 : 12),
                     child: Center(
@@ -639,7 +574,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                     ),
                   ),
 
-                  // Tab 3: Report History (Moved to last position)
+                  // Tab 3: Report History
                   SingleChildScrollView(
                     padding: EdgeInsets.all(isDesktop ? 24 : 12),
                     child: _buildReportHistoryTab(isDesktop),
@@ -660,12 +595,8 @@ class _ReportsScreenState extends State<ReportsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Metrics Section (Daily Summary)
           _buildDailySummary(true),
           const SizedBox(height: 32),
-
-          // 2. Task Work Today (Full Width)
-          // 2. Task Work Today (Full Width)
           _buildTaskWorkToday(true),
           const SizedBox(height: 24),
         ],
@@ -674,514 +605,129 @@ class _ReportsScreenState extends State<ReportsScreen>
   }
 
   Widget _buildHeader(bool isDesktop) {
-    return SilkShaderWidget(
-      speed: 0.8,
-      scale: 1.2,
-      color: Theme.of(context).colorScheme.primary,
-      noiseIntensity: 1.5,
-      child: Container(
-        width: double.infinity,
-        // Remove margin on desktop for full-width look
-        margin: isDesktop
-            ? EdgeInsets.zero
-            : ResponsiveUtils.getResponsiveMargin(context),
-        padding: EdgeInsets.symmetric(
-            horizontal: isDesktop ? 32 : 14,
-            vertical: isDesktop
-                ? 28
-                : 16 // More vertical padding on desktop for the "Hero" feel
-            ),
-        decoration: BoxDecoration(
-          // Sharp corners on desktop, rounded on mobile
-          borderRadius:
-              isDesktop ? BorderRadius.zero : BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: CommonColors.primary.withOpacity(0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-              spreadRadius: 0,
-            ),
-          ],
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 32 : 20,
+        vertical: isDesktop ? 24 : 16,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFF111321),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF1E2135),
+          width: 1,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
+      ),
+      child: isDesktop
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Icon Box
-                Container(
-                  padding: EdgeInsets.all(isDesktop ? 12 : 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    Icons.analytics_rounded,
-                    color: Colors.white,
-                    size: ResponsiveUtils.getResponsiveSize(
-                      context,
-                      mobile: 22,
-                      tablet: 22,
-                      laptop: 20, // Reduced from 24
-                      desktop: 24,
-                    ),
-                  ),
-                ),
-                SizedBox(width: isDesktop ? 16 : 12),
-
-                // Title Text
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Work Sessions \u0026 Reports',
+                      const Text(
+                        'Work Sessions & Reports',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: ResponsiveUtils.getResponsiveSize(
-                            context,
-                            mobile: 18,
-                            tablet: 20,
-                            laptop: 22, // Reduced from 28
-                            desktop: 28,
-                          ),
+                          fontSize: 26,
                           fontWeight: FontWeight.bold,
-                          height: 1.2,
+                          letterSpacing: -0.5,
                         ),
                       ),
-                      if (!isDesktop) // Show subtitle only on mobile or if needed
-                        Text(
-                          'and manage work efficiently',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 14,
-                          ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Manage your daily productivity and generate performance insights.',
+                        style: TextStyle(
+                          color: Color(0xFF8F93A4),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
                         ),
+                      ),
                     ],
                   ),
                 ),
-
-                // Refresh Button
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    onPressed: _loadTodayData,
-                    icon: const Icon(
-                      Icons.refresh_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                    tooltip: 'Refresh Data',
+                const SizedBox(width: 24),
+                _buildTabButtonsRow(),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Work Sessions & Reports',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
                   ),
                 ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Manage your daily productivity and generate performance insights.',
+                  style: TextStyle(
+                    color: Color(0xFF8F93A4),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildTabButtonsRow(),
               ],
             ),
-            // On Desktop, add extra spacing at bottom to let the TabBar overlap
-            if (isDesktop) const SizedBox(height: 20),
-          ],
-        ),
-      ),
     );
   }
 
-  /// Build tab bar ("Nano Bar")
-  Widget _buildTabBar(bool isDesktop) {
-    return Center(
-      child: Container(
-        width: isDesktop ? 600 : null, // Constrain width on desktop
-        margin: ResponsiveUtils.getResponsiveMargin(
-          context,
-          mobile: const EdgeInsets.only(left: 16, top: 0, right: 16, bottom: 0),
-          tablet: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-          desktop: const EdgeInsets.only(left: 0, top: 0, right: 0, bottom: 0),
-        ),
-        decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.grey[850]
-              : Colors.white,
-          borderRadius: BorderRadius.circular(50),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(
-                  Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-              spreadRadius: 0,
-            ),
+  Widget _buildTabButtonsRow() {
+    return AnimatedBuilder(
+      animation: _tabController.animation!,
+      builder: (context, child) {
+        final selectedIndex = _tabController.index;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildTabButton("Today's Work", 0, selectedIndex == 0),
+            const SizedBox(width: 8),
+            _buildTabButton("Generate Report", 1, selectedIndex == 1),
+            const SizedBox(width: 8),
+            _buildTabButton("History", 2, selectedIndex == 2),
           ],
-        ),
-        padding: const EdgeInsets.all(4),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(50),
-          child: AnimatedBuilder(
-            animation: _tabAnimation,
-            builder: (context, child) {
-              return TabBar(
-                controller: _tabController,
-                labelColor: Colors.white,
-                unselectedLabelColor:
-                    Theme.of(context).brightness == Brightness.dark
-                        ? Colors.grey[400]
-                        : Colors.grey[600],
-                indicator: BoxDecoration(
-                  gradient: CommonColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(40),
-                  boxShadow: [
-                    BoxShadow(
-                      color: CommonColors.primary.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-                indicatorSize: TabBarIndicatorSize.tab,
-                dividerColor: Colors.transparent,
-                splashFactory: NoSplash.splashFactory,
-                overlayColor: MaterialStateProperty.all(Colors.transparent),
-                labelStyle: TextStyle(
-                  fontSize: isDesktop ? 14 : 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-                unselectedLabelStyle: TextStyle(
-                  fontSize: isDesktop ? 14 : 12,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 0.5,
-                ),
-                tabs: [
-                  Tab(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: const Text("Today's Work"),
-                    ),
-                  ),
-                  Tab(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: const Text('Generate Report'),
-                    ),
-                  ),
-                  Tab(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: const Text('Report History'),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  /// Build session management controls
-  Widget _buildSessionManagement(bool isDesktop) {
-    return Container(
-      padding: EdgeInsets.all(isDesktop ? 20 : 16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Task Management',
+  Widget _buildTabButton(String label, int index, bool isActive) {
+    return Material(
+      color: isActive ? const Color(0xFF3B62FF) : Colors.transparent,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _tabController.animateTo(index);
+          });
+        },
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Text(
+            label,
             style: TextStyle(
-              fontSize: isDesktop ? 20 : 18,
-              fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface,
-              letterSpacing: -0.3,
+              color: isActive ? Colors.white : const Color(0xFF8F93A4),
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 20),
-
-          // Task Selection
-          if (_availableTasks.isNotEmpty) ...[
-            Text(
-              'Select Task',
-              style: TextStyle(
-                fontSize: isDesktop ? 16 : 14,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .surfaceVariant
-                    .withOpacity(0.3),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<Task>(
-                  value: _selectedTask,
-                  hint: Text(
-                    'Choose a task to work on',
-                    style: TextStyle(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.6),
-                      fontSize: isDesktop ? 16 : 14,
-                    ),
-                  ),
-                  isExpanded: true,
-                  icon: Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 20,
-                  ),
-                  items: _availableTasks.map((Task task) {
-                    return DropdownMenuItem<Task>(
-                      value: task,
-                      child: Text(
-                        (task.taskName?.isNotEmpty == true)
-                            ? task.taskName!
-                            : 'Unnamed Task',
-                        style: TextStyle(
-                          fontSize: isDesktop ? 16 : 14,
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (Task? newValue) {
-                    if (newValue != null) {
-                      setState(() {
-                        _selectedTask = newValue;
-                      });
-                    }
-                  },
-                ),
-              ),
-            ),
-          ] else ...[
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .surfaceVariant
-                    .withOpacity(0.3),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-              child: Text(
-                'No tasks available for selection',
-                style: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                  fontSize: isDesktop ? 16 : 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ],
-
-          const SizedBox(height: 16),
-
-          // Clock In/Out Controls
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed:
-                      (_isClockedIn || _selectedTask == null) ? null : _clockIn,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: (_isClockedIn || _selectedTask == null)
-                        ? Theme.of(context).colorScheme.surfaceVariant
-                        : Theme.of(context).colorScheme.primary,
-                    foregroundColor: (_isClockedIn || _selectedTask == null)
-                        ? Theme.of(context).colorScheme.onSurfaceVariant
-                        : Theme.of(context).colorScheme.onPrimary,
-                    padding:
-                        EdgeInsets.symmetric(vertical: isDesktop ? 16 : 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                    shadowColor: Colors.transparent,
-                  ),
-                  child: Text(
-                    _isClockedIn ? 'Already Clocked In' : 'Clock In',
-                    style: TextStyle(
-                      fontSize: isDesktop ? 16 : 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _isClockedIn ? _clockOut : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _isClockedIn
-                        ? Theme.of(context).colorScheme.error
-                        : Theme.of(context).colorScheme.surfaceVariant,
-                    foregroundColor: _isClockedIn
-                        ? Theme.of(context).colorScheme.onError
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
-                    padding:
-                        EdgeInsets.symmetric(vertical: isDesktop ? 14 : 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                    shadowColor: Colors.transparent,
-                  ),
-                  child: Text(
-                    'Clock Out',
-                    style: TextStyle(
-                      fontSize: isDesktop ? 16 : 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Active Session Display - Show if ANY task is clocked in
-          if (_isClockedIn) ...[
-            const SizedBox(height: 20),
-            Builder(
-              builder: (context) {
-                // Get active task from daily summary (not from selected task)
-                // Exclude "Daily Attendance" - it's just attendance, not a work session
-                final tasks =
-                    _dailySummary?['tasks_for_the_day'] as List<dynamic>? ?? [];
-                Map<String, dynamic>? activeTask;
-
-                // Find active task (clock_out_time is null, excluding "Daily Attendance")
-                for (final task in tasks) {
-                  if (task is Map) {
-                    final taskName = task['task_name']?.toString() ?? '';
-                    final clockOutTime = task['clock_out_time'];
-                    // Exclude "Daily Attendance" from active session
-                    if (clockOutTime == null &&
-                        taskName.toLowerCase() != 'daily attendance') {
-                      activeTask = Map<String, dynamic>.from(task);
-                      break;
-                    }
-                  }
-                }
-
-                final activeTaskName =
-                    (activeTask != null && activeTask.isNotEmpty)
-                        ? (activeTask['task_name']?.toString() ?? 'Active Task')
-                        : 'Active Task';
-
-                return Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Active Task',
-                            style: TextStyle(
-                              fontSize: isDesktop ? 18 : 16,
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Task: $activeTaskName',
-                        style: TextStyle(
-                          fontSize: isDesktop ? 16 : 14,
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Started: ${_sessionStartTime != null ? _formatTime(_sessionStartTime!.toIso8601String()) : '--:--'}',
-                        style: TextStyle(
-                          fontSize: isDesktop ? 14 : 12,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withOpacity(0.7),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Duration: ${_formatDurationHHMMSSFromDuration(_sessionDuration)}',
-                        style: TextStyle(
-                          fontSize: isDesktop ? 14 : 12,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
+
+
+
+
 
   /// Build daily summary section
   Widget _buildDailySummary(bool isDesktop) {
@@ -1259,15 +805,15 @@ class _ReportsScreenState extends State<ReportsScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: const Color(0xFF111321),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+          color: const Color(0xFF1E2135),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.04),
+            color: Colors.black.withOpacity(0.2),
             blurRadius: 16,
             offset: const Offset(0, 4),
             spreadRadius: 0,
@@ -1277,12 +823,12 @@ class _ReportsScreenState extends State<ReportsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Daily Summary',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface,
+              color: Colors.white,
               letterSpacing: -0.3,
             ),
           ),
@@ -1330,23 +876,45 @@ class _ReportsScreenState extends State<ReportsScreen>
   /// Build summary card
   Widget _buildSummaryCard(
       String title, String value, IconData icon, Color color, bool isDesktop) {
-    // Determine gradient based on title
-    LinearGradient gradient;
+    // Determine colors and border based on title
+    Color iconColor;
+    Color iconBgColor;
+    Color borderColor;
+    LinearGradient gradientBg;
+
     if (title.contains('Total Tasks')) {
-      gradient = const LinearGradient(
-        colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)], // Modern Blue
+      iconColor = const Color(0xFF3A62FF);
+      iconBgColor = const Color(0xFF1F2B5E);
+      borderColor = const Color(0xFF1E2B5C);
+      gradientBg = LinearGradient(
+        colors: [
+          const Color(0xFF141A33),
+          const Color(0xFF13192F).withOpacity(0.8),
+        ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
     } else if (title.contains('Active Tasks')) {
-      gradient = const LinearGradient(
-        colors: [Color(0xFFF97316), Color(0xFFEA580C)], // Vibrant Orange
+      iconColor = const Color(0xFFF97316);
+      iconBgColor = const Color(0xFF4E2C18);
+      borderColor = const Color(0xFF5C381E);
+      gradientBg = LinearGradient(
+        colors: [
+          const Color(0xFF281810),
+          const Color(0xFF24160F).withOpacity(0.8),
+        ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
     } else {
-      gradient = const LinearGradient(
-        colors: [Color(0xFFA855F7), Color(0xFF7C3AED)], // Rich Purple
+      iconColor = const Color(0xFF8C5CF6);
+      iconBgColor = const Color(0xFF351F4E);
+      borderColor = const Color(0xFF3E235F);
+      gradientBg = LinearGradient(
+        colors: [
+          const Color(0xFF201430),
+          const Color(0xFF1F142E).withOpacity(0.8),
+        ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
@@ -1374,88 +942,54 @@ class _ReportsScreenState extends State<ReportsScreen>
             ? _metricAnimationControllers[title]!
             : null;
 
-    // Base accent color for shadows and decorations
-    final Color accentColor = gradient.colors.first;
-
     Widget cardContent = Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: gradient,
-        boxShadow: [
-          BoxShadow(
-            color: accentColor.withOpacity(0.4),
-            blurRadius: 25,
-            spreadRadius: -5,
-            offset: const Offset(0, 15),
-          ),
-        ],
+        gradient: gradientBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: borderColor,
+          width: 1.5,
+        ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Stack(
+      child: Padding(
+        padding: EdgeInsets.all(isDesktop ? 20 : 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Simplified Organic Decorative Shape
-            Positioned(
-              top: -20,
-              right: -20,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.12),
-                  shape: BoxShape.circle,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: iconBgColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    color: iconColor,
+                    size: 20,
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                letterSpacing: -0.5,
               ),
             ),
-
-            // Content Container
-            Container(
-              padding: EdgeInsets.all(isDesktop ? 24 : 16),
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: isDesktop ? 36 : 28,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: -1.0,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          icon,
-                          size: isDesktop ? 16 : 14,
-                          color: Colors.white.withOpacity(0.9),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: isDesktop ? 13 : 11,
-                            color: Colors.white.withOpacity(0.95),
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF8F93A4),
               ),
             ),
           ],
@@ -1504,17 +1038,17 @@ class _ReportsScreenState extends State<ReportsScreen>
   /// Build task work today section
   Widget _buildTaskWorkToday(bool isDesktop) {
     return Container(
-      padding: EdgeInsets.all(isDesktop ? 16 : 12),
+      padding: EdgeInsets.all(isDesktop ? 20 : 16),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: const Color(0xFF111321),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+          color: const Color(0xFF1E2135),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.04),
+            color: Colors.black.withOpacity(0.2),
             blurRadius: 16,
             offset: const Offset(0, 4),
             spreadRadius: 0,
@@ -1524,16 +1058,16 @@ class _ReportsScreenState extends State<ReportsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Task Work Today',
             style: TextStyle(
-              fontSize: isDesktop ? 20 : 18,
+              fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface,
+              color: Colors.white,
               letterSpacing: -0.3,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           Builder(
             builder: (context) {
               // Filter out "Daily Attendance" tasks
@@ -1747,18 +1281,11 @@ class _ReportsScreenState extends State<ReportsScreen>
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: const Color(0xFF171926),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+          color: const Color(0xFF1E2135),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Row(
         children: [
@@ -1766,7 +1293,7 @@ class _ReportsScreenState extends State<ReportsScreen>
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withOpacity(0.12),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -1784,10 +1311,10 @@ class _ReportsScreenState extends State<ReportsScreen>
               children: [
                 Text(
                   taskName,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: Colors.white,
                   ),
                 ),
                 if (task['notes'] != null || task['dev_notes'] != null)
@@ -1795,12 +1322,9 @@ class _ReportsScreenState extends State<ReportsScreen>
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
                       (task['notes'] ?? task['dev_notes'] ?? '').toString(),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withOpacity(0.5),
+                        color: Color(0xFF8F93A4),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1814,22 +1338,22 @@ class _ReportsScreenState extends State<ReportsScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color:
-                  Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+              color: const Color(0xFF111321),
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFF1E2135)),
             ),
             child: Row(
               children: [
-                Icon(Icons.access_time,
+                const Icon(Icons.access_time,
                     size: 14,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    color: Color(0xFF8F93A4)),
                 const SizedBox(width: 8),
                 Text(
                   timeRange,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: Color(0xFF8F93A4),
                   ),
                 ),
               ],
@@ -1841,15 +1365,16 @@ class _ReportsScreenState extends State<ReportsScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: CommonColors.primary.withOpacity(0.1),
+              color: const Color(0xFF3B62FF).withOpacity(0.12),
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFF3B62FF).withOpacity(0.3)),
             ),
             child: Text(
               durationText,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: CommonColors.primary,
+                color: Color(0xFF3B62FF),
               ),
             ),
           ),
@@ -1859,16 +1384,17 @@ class _ReportsScreenState extends State<ReportsScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withOpacity(0.12),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: statusColor.withOpacity(0.2)),
+              border: Border.all(color: statusColor.withOpacity(0.3)),
             ),
             child: Text(
-              status,
+              status.toUpperCase(),
               style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
                 color: statusColor,
+                letterSpacing: 0.5,
               ),
             ),
           ),
@@ -1892,6 +1418,7 @@ class _ReportsScreenState extends State<ReportsScreen>
     final workedHours = task['worked_hours'] ?? 0.0;
     final isActive = clockOutTime == null;
     final status = _getRealTaskStatusFromTask(task);
+    final statusColor = _getStatusColor(status);
 
     // Controller key for notes: one per task (all cards for same task share notes)
     final notesKey = taskId.isNotEmpty ? taskId : taskName.toString();
@@ -1921,24 +1448,21 @@ class _ReportsScreenState extends State<ReportsScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: const Color(0xFF171926),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.08),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(
+          color: const Color(0xFF1E2135),
+          width: 1,
+        ),
       ),
       child: Column(
         children: [
           // Task Header
           Container(
             padding: EdgeInsets.all(isDesktop ? 12 : 10),
-            decoration: BoxDecoration(
-              color: _getStatusColor(status).withOpacity(0.1),
-              borderRadius: const BorderRadius.only(
+            decoration: const BoxDecoration(
+              color: Color(0xFF1E2135),
+              borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
               ),
@@ -1948,12 +1472,12 @@ class _ReportsScreenState extends State<ReportsScreen>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(status),
+                    color: statusColor.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     _getStatusIcon(status),
-                    color: Theme.of(context).colorScheme.onPrimary,
+                    color: statusColor,
                     size: 20,
                   ),
                 ),
@@ -1967,10 +1491,10 @@ class _ReportsScreenState extends State<ReportsScreen>
                           Flexible(
                             child: Text(
                               taskName,
-                              style: TextStyle(
-                                fontSize: isDesktop ? 20 : 18,
+                              style: const TextStyle(
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -1982,18 +1506,18 @@ class _ReportsScreenState extends State<ReportsScreen>
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: Colors.deepPurple.withOpacity(0.1),
+                                  color: Colors.deepPurple.withOpacity(0.12),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                       color:
-                                          Colors.deepPurple.withOpacity(0.5)),
+                                          Colors.deepPurple.withOpacity(0.3)),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
-                                  children: [
+                                  children: const [
                                     Icon(Icons.wifi_tethering,
                                         size: 12, color: Colors.deepPurple),
-                                    const SizedBox(width: 4),
+                                    SizedBox(width: 4),
                                     Text(
                                       'REMOTE',
                                       style: TextStyle(
@@ -2013,12 +1537,9 @@ class _ReportsScreenState extends State<ReportsScreen>
                         const SizedBox(height: 4),
                         Text(
                           'Project: ${task['project_details']['project_name'] ?? 'Unknown'}',
-                          style: TextStyle(
-                            fontSize: isDesktop ? 14 : 12,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withOpacity(0.7),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF8F93A4),
                           ),
                         ),
                       ],
@@ -2026,20 +1547,22 @@ class _ReportsScreenState extends State<ReportsScreen>
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isDesktop ? 16 : 12,
-                    vertical: 8,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(status),
+                    color: statusColor.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: statusColor.withOpacity(0.3)),
                   ),
                   child: Text(
-                    status,
+                    status.toUpperCase(),
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                      color: statusColor,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 10,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
@@ -2055,12 +1578,12 @@ class _ReportsScreenState extends State<ReportsScreen>
                 // Session Info
                 Row(
                   children: [
-                    Text(
+                    const Text(
                       'Task Details',
                       style: TextStyle(
-                        fontSize: isDesktop ? 16 : 14,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface,
+                        color: Colors.white,
                       ),
                     ),
                     const Spacer(),
@@ -2068,25 +1591,19 @@ class _ReportsScreenState extends State<ReportsScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withOpacity(0.1),
+                        color: const Color(0xFF3B62FF).withOpacity(0.12),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withOpacity(0.3),
+                          color: const Color(0xFF3B62FF).withOpacity(0.3),
                           width: 1,
                         ),
                       ),
                       child: Text(
                         _formatDurationHHMMSS(durationHours),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
+                        style: const TextStyle(
+                          color: Color(0xFF3B62FF),
                           fontWeight: FontWeight.w600,
-                          fontSize: isDesktop ? 16 : 14,
+                          fontSize: 14,
                         ),
                       ),
                     ),
@@ -2100,7 +1617,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                   'Clock In',
                   _formatTime(clockInTime),
                   Icons.login,
-                  Theme.of(context).colorScheme.primary,
+                  const Color(0xFF3B62FF),
                   isDesktop,
                 ),
 
@@ -2111,7 +1628,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                     'Clock Out',
                     _formatTime(clockOutTime),
                     Icons.logout,
-                    Theme.of(context).colorScheme.error,
+                    const Color(0xFFEF4444),
                     isDesktop,
                   ),
                   const SizedBox(height: 8),
@@ -2121,7 +1638,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                   'Duration',
                   _formatDurationHHMMSS(durationHours),
                   Icons.timer,
-                  Theme.of(context).colorScheme.primary,
+                  const Color(0xFF3B62FF),
                   isDesktop,
                 ),
 
@@ -2131,16 +1648,10 @@ class _ReportsScreenState extends State<ReportsScreen>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.1),
+                      color: const Color(0xFF3B62FF).withOpacity(0.12),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withOpacity(0.3),
+                        color: const Color(0xFF3B62FF).withOpacity(0.3),
                         width: 1,
                       ),
                     ),
@@ -2150,16 +1661,16 @@ class _ReportsScreenState extends State<ReportsScreen>
                         Container(
                           width: 6,
                           height: 6,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF3B62FF),
                             shape: BoxShape.circle,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text(
+                        const Text(
                           'Active Task',
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
+                            color: Color(0xFF3B62FF),
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -2169,38 +1680,59 @@ class _ReportsScreenState extends State<ReportsScreen>
                   ),
                 ],
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 // Task Notes input on the report screen
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Task Notes',
+                  child: const Text(
+                    'TASK NOTES',
                     style: TextStyle(
-                      fontSize: isDesktop ? 14 : 12,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.8),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF8F93A4),
+                      letterSpacing: 1.0,
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: notesController,
-                  maxLines: 2,
-                  decoration: InputDecoration(
-                    hintText: 'Add notes for this task (optional)...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                const SizedBox(height: 10),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(top: 2),
+                      child: Icon(
+                        Icons.check_box_outline_blank_rounded,
+                        size: 16,
+                        color: Color(0xFF8F93A4),
+                      ),
                     ),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: notesController,
+                        maxLines: null,
+                        minLines: 1,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF8F93A4),
+                        ),
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                          hintText: 'Add notes for this task (optional)...',
+                          hintStyle: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF4A4E61),
+                          ),
+                          filled: false,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -2249,10 +1781,10 @@ class _ReportsScreenState extends State<ReportsScreen>
         padding: const EdgeInsets.all(32),
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          color: const Color(0xFF111321),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+            color: const Color(0xFF1E2135),
             width: 1,
           ),
         ),
@@ -2308,6 +1840,8 @@ class _ReportsScreenState extends State<ReportsScreen>
           'is_active': isActive,
           'dev_notes_list': <String>[],
           'notes_key': notesKey,
+          'workflow_status': task['workflow_status'],
+          'task_id': task['task_id'],
         };
       } else {
         // If task already exists, preserve the first non-empty description
@@ -2359,224 +1893,324 @@ class _ReportsScreenState extends State<ReportsScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // "Paper" Document Container
+              // 1. Daily Report Card
               Container(
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
+                  color: const Color(0xFF111321),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFF1E2135),
+                    width: 1,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                      spreadRadius: 0,
+                      color: Colors.black.withOpacity(0.4),
+                      blurRadius: 32,
+                      offset: const Offset(0, 16),
                     ),
                   ],
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 1. Professional Header
-                    Container(
+                    // Header of the card
+                    Padding(
                       padding: const EdgeInsets.all(32),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            color:
-                                Theme.of(context).dividerColor.withOpacity(0.1),
-                          ),
-                        ),
-                      ),
-                      child: Column(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              const Text(
+                                'DAILY REPORT',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF3A62FF),
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Work Summary',
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
                                 children: [
-                                  Text(
-                                    'DAILY REPORT',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      letterSpacing: 1.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary
-                                          .withOpacity(0.8),
-                                    ),
+                                  const Icon(
+                                    Icons.calendar_today_outlined,
+                                    size: 16,
+                                    color: Color(0xFF8F93A4),
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(width: 8),
                                   Text(
-                                    'Work Summary',
-                                    style: TextStyle(
-                                      fontSize: isDesktop ? 32 : 24,
-                                      fontWeight: FontWeight.w800,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                      letterSpacing: -0.5,
-                                      height: 1.1,
+                                    DateFormat('EEEE, MMMM d, yyyy').format(today),
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Color(0xFF8F93A4),
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ],
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withOpacity(0.05),
-                                  borderRadius: BorderRadius.circular(50),
-                                  border: Border.all(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                        .withOpacity(0.1),
-                                  ),
-                                ),
-                                child: Text(
-                                  'PREVIEW',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    letterSpacing: 1.0,
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
-                          const SizedBox(height: 24),
-                          // Date Row
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_today_outlined,
-                                size: 16,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withOpacity(0.5),
+                          // Preview Button
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: const Color(0xFF2C2F48),
+                                width: 1.5,
                               ),
-                              const SizedBox(width: 8),
-                              Text(
-                                DateFormat('EEEE, MMMM d, yyyy').format(today),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withOpacity(0.7),
-                                  fontWeight: FontWeight.w500,
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(10),
+                                onTap: () {
+                                  // Preview action: could open a preview dialog or trigger existing preview logic
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
+                                  child: Row(
+                                    children: const [
+                                      Icon(
+                                        Icons.visibility_outlined,
+                                        size: 16,
+                                        color: Colors.white,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Preview',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ],
+                            ),
                           ),
                         ],
                       ),
                     ),
 
-                    // 2. Elegant Metrics
-                    Container(
-                      padding: const EdgeInsets.all(24),
+                    // Metrics Grid (Row of 2)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
                       child: Row(
                         children: [
+                          // Total Time
                           Expanded(
-                            child: _buildPreviewStatCard(
-                              'Total Time',
-                              _formatDetailedTimeFromHours(totalHours),
-                              Icons.access_time_filled_rounded,
-                              Theme.of(context).colorScheme.primary,
-                              isDesktop,
+                            child: Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    const Color(0xFF141A33),
+                                    const Color(0xFF13192F).withOpacity(0.8),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: const Color(0xFF1E2B5C),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF1F2B5E),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.access_time,
+                                      color: Color(0xFF3A62FF),
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Text(
+                                    _formatDetailedTimeFromHours(totalHours),
+                                    style: const TextStyle(
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                      letterSpacing: -0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'Total Time',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF8F93A4),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           const SizedBox(width: 16),
+                          // Tasks Completed
                           Expanded(
-                            child: _buildPreviewStatCard(
-                              'Tasks Completed',
-                              '${consolidatedTasks.length}',
-                              Icons.check_circle_rounded,
-                              Theme.of(context).colorScheme.secondary,
-                              isDesktop,
+                            child: Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    const Color(0xFF201430),
+                                    const Color(0xFF1F142E).withOpacity(0.8),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: const Color(0xFF3E235F),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF351F4E),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.done,
+                                      color: Color(0xFF8C5CF6),
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Text(
+                                    '${consolidatedTasks.length}',
+                                    style: const TextStyle(
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                      letterSpacing: -0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'Tasks Completed',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF8F93A4),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
 
-                    // 3. Consolidated Task List
-                    Container(
-                      padding: const EdgeInsets.only(
-                          left: 32, right: 32, bottom: 32),
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surface
-                          .withOpacity(0.5),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: Text(
-                              'ACTIVITY LOG',
-                              style: TextStyle(
-                                fontSize: 12,
-                                letterSpacing: 1.2,
-                                fontWeight: FontWeight.w700,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withOpacity(0.4),
-                              ),
-                            ),
-                          ),
-                          if (consolidatedTasks.isEmpty)
-                            Padding(
-                              padding: const EdgeInsets.all(40),
+                    const SizedBox(height: 32),
+
+                    // Activity Log Header
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        'ACTIVITY LOG',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF8F93A4),
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Timeline + Task Log List
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: consolidatedTasks.isEmpty
+                          ? const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 40),
                               child: Center(
                                 child: Text(
                                   'No activity recorded today',
                                   style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withOpacity(0.4),
+                                    color: Color(0xFF8F93A4),
                                     fontStyle: FontStyle.italic,
                                   ),
                                 ),
                               ),
                             )
-                          else
-                            ...consolidatedTasks.values.map((task) =>
-                                _buildPreviewConsolidatedTaskCard(
-                                    task, isDesktop)),
-                        ],
-                      ),
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: consolidatedTasks.length,
+                              itemBuilder: (context, index) {
+                                final task = consolidatedTasks.values.elementAt(index);
+                                return _buildTimelineItem(task, index == consolidatedTasks.length - 1);
+                              },
+                            ),
                     ),
+
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
 
               const SizedBox(height: 24),
 
-              // 4. Action Area (Floating outside the paper)
-              SizedBox(
+              // Confirm & Submit Button
+              Container(
                 height: 56,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF3B62FF), Color(0xFF615EFC)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF3B62FF).withOpacity(0.4),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
                 child: ElevatedButton(
                   onPressed:
                       _dailySummary != null ? _generateAndSubmitReport : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                    elevation: 4,
-                    shadowColor:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   child: Row(
@@ -2597,15 +2231,12 @@ class _ReportsScreenState extends State<ReportsScreen>
                 ),
               ),
               const SizedBox(height: 16),
-              Center(
+              const Center(
                 child: Text(
                   'Please review your report before submitting. Changes cannot be made after submission.',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withOpacity(0.4),
+                    color: Color(0xFF8F93A4),
                   ),
                 ),
               ),
@@ -2616,235 +2247,207 @@ class _ReportsScreenState extends State<ReportsScreen>
     );
   }
 
-  /// Build preview stat card (Tile Style)
-  Widget _buildPreviewStatCard(
-      String title, String value, IconData icon, Color color, bool isDesktop) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.2), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const Spacer(),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            value,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
-              height: 1.0,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Build preview consolidated task card
-  Widget _buildPreviewConsolidatedTaskCard(
-      Map<String, dynamic> task, bool isDesktop) {
+  Widget _buildTimelineItem(Map<String, dynamic> task, bool isLast) {
     final taskName = task['task_name'] ?? 'Unknown Task';
-    final taskDescription = task['task_description'] ?? '';
     final totalHours = task['total_hours'] ?? 0.0;
-    final sessionsCount = task['sessions_count'] ?? 0;
     final firstClockIn = task['first_clock_in'];
-    final lastClockOut = task['last_clock_out'];
-    final isActive = task['is_active'] ?? false;
     final status = _getRealTaskStatusFromTask(task);
-    final statusColor = _getStatusColor(status);
-    final List<dynamic>? devNotesListDynamic =
-        task['dev_notes_list'] as List<dynamic>?;
-    // Make notes unique and clean
-    final devNotesList = devNotesListDynamic
-            ?.map((e) => e.toString().trim())
-            .where((e) => e.isNotEmpty)
-            .toSet() // remove duplicates
-            .toList() ??
-        const <String>[];
+    
+    // Status colors
+    Color statusColor;
+    if (status.toLowerCase().contains('progress')) {
+      statusColor = const Color(0xFF3A62FF);
+    } else if (status.toLowerCase().contains('completed') || status.toLowerCase().contains('done')) {
+      statusColor = const Color(0xFF22C55E);
+    } else {
+      statusColor = const Color(0xFFE0E0E0);
+    }
 
-    // Convert hours to detailed time format (hours, minutes, seconds)
     final totalSeconds = (totalHours * 3600).round();
     final hours = totalSeconds ~/ 3600;
     final minutes = (totalSeconds % 3600) ~/ 60;
     final seconds = totalSeconds % 60;
+    final durationStr = _formatDetailedTime(hours, minutes, seconds);
 
-    // Calculate average per session with detailed time
-    final avgSeconds =
-        sessionsCount > 0 ? (totalSeconds / sessionsCount).round() : 0;
-    final avgHours = avgSeconds ~/ 3600;
-    final avgMinutes = (avgSeconds % 3600) ~/ 60;
-    final avgSecs = avgSeconds % 60;
+    final notesKey = task['notes_key']?.toString() ?? taskName;
+    if (!_taskNotesControllers.containsKey(notesKey)) {
+      final List<dynamic>? devNotesListDynamic = task['dev_notes_list'] as List<dynamic>?;
+      final devNotesList = devNotesListDynamic
+              ?.map((e) => e.toString().trim())
+              .where((e) => e.isNotEmpty)
+              .toSet()
+              .toList() ??
+          const <String>[];
+      _taskNotesControllers[notesKey] = TextEditingController(text: devNotesList.join('\n'));
+    }
+    final controller = _taskNotesControllers[notesKey]!;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          left: BorderSide(color: statusColor, width: 4),
-          bottom: BorderSide(
-              color: Theme.of(context).dividerColor.withOpacity(0.5)),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+    return IntrinsicHeight(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      taskName,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        status,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: statusColor,
-                        ),
-                      ),
+          // Timeline line + dot
+          Column(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3A62FF),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF3A62FF).withOpacity(0.6),
+                      blurRadius: 8,
+                      spreadRadius: 2,
                     ),
                   ],
                 ),
-                if (taskDescription.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    taskDescription,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.6),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-                const SizedBox(height: 8),
-                Builder(
-                  builder: (context) {
-                    final notesKey = task['notes_key']?.toString();
-                    if (notesKey == null) return const SizedBox.shrink();
-
-                    if (!_taskNotesControllers.containsKey(notesKey)) {
-                      String initialText = '';
-                      if (devNotesList.isNotEmpty) {
-                        initialText = devNotesList.join('\n');
-                      }
-                      _taskNotesControllers[notesKey] =
-                          TextEditingController(text: initialText);
-                    }
-
-                    return TextField(
-                      controller: _taskNotesControllers[notesKey],
-                      maxLines: null,
-                      minLines: 1,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      decoration: InputDecoration(
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
-                        hintText: 'Add notes...',
-                        filled: true,
-                        fillColor: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest
-                            .withOpacity(0.3),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
-                        ),
-                        prefixIcon: Icon(
-                          Icons.edit_note_rounded,
-                          size: 16,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withOpacity(0.4),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                _formatDetailedTime(hours, minutes, seconds),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'Monospace',
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
               ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(Icons.login,
-                      size: 12, color: Theme.of(context).colorScheme.outline),
-                  const SizedBox(width: 4),
-                  Text(
-                    firstClockIn != null ? _formatTime(firstClockIn) : '--:--',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
+              if (!isLast)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: const Color(0xFF1E2B5C),
                   ),
-                ],
-              ),
+                ),
             ],
+          ),
+          const SizedBox(width: 20),
+          // Task Card
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF171926),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF1E2135),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Task Title & Status Tag
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                taskName,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: statusColor.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(50),
+                                  border: Border.all(
+                                    color: statusColor.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  status.toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    color: statusColor,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Worked time + Clock-in Time
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              durationStr,
+                              style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.access_time_filled_rounded,
+                                  size: 12,
+                                  color: Color(0xFF8F93A4),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  firstClockIn != null ? _formatTime(firstClockIn) : '--:--',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF8F93A4),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Checkbox icon + editable description
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(top: 2),
+                          child: Icon(
+                            Icons.check_box_outline_blank_rounded,
+                            size: 16,
+                            color: Color(0xFF8F93A4),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: TextField(
+                            controller: controller,
+                            maxLines: null,
+                            minLines: 1,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF8F93A4),
+                            ),
+                            decoration: const InputDecoration(
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                              hintText: 'Enter developer notes here...',
+                              hintStyle: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF4A4E61),
+                              ),
+                              filled: false,
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -3177,25 +2780,29 @@ class _ReportsScreenState extends State<ReportsScreen>
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => onTap(),
-      backgroundColor: Theme.of(context).cardColor,
-      selectedColor: Theme.of(context).colorScheme.primaryContainer,
-      labelStyle: TextStyle(
-        color: isSelected
-            ? Theme.of(context).colorScheme.onPrimaryContainer
-            : Theme.of(context).colorScheme.onSurface,
-        fontSize: 13,
-        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-      ),
-      shape: RoundedRectangleBorder(
+    return Material(
+      color: isSelected ? const Color(0xFF3B62FF) : const Color(0xFF171926),
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: isSelected
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-              : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected ? const Color(0xFF3B62FF) : const Color(0xFF1E2135),
+              width: 1,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : const Color(0xFF8F93A4),
+              fontSize: 13,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            ),
+          ),
         ),
       ),
     );
@@ -3259,9 +2866,9 @@ class _ReportsScreenState extends State<ReportsScreen>
             Text(
               'Report History',
               style: TextStyle(
-                fontSize: isDesktop ? 24 : 20,
+                fontSize: isDesktop ? 22 : 18,
                 fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: Colors.white,
                 letterSpacing: -0.3,
               ),
             ),
@@ -3330,56 +2937,76 @@ class _ReportsScreenState extends State<ReportsScreen>
               ),
               const SizedBox(width: 8),
               // Custom Date Range
-              ActionChip(
-                label: Text(_isCustomDateRange()
-                    ? '${DateFormat('MMM dd').format(_reportViewModel.historyDateRange!.start)} - ${DateFormat('MMM dd').format(_reportViewModel.historyDateRange!.end)}'
-                    : 'Custom'),
-                onPressed: () async {
-                  final picked = await showDateRangePicker(
-                    context: context,
-                    firstDate: DateTime(2023),
-                    lastDate: DateTime.now(),
-                    initialDateRange: _reportViewModel.historyDateRange,
-                    builder: (context, child) {
-                      return Theme(
-                        data: Theme.of(context).copyWith(
-                          colorScheme: Theme.of(context).colorScheme.copyWith(
-                                primary: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
-                        child: child!,
-                      );
-                    },
-                  );
-                  if (picked != null) {
-                    final startOfDay = picked.start;
-                    final endOfDay = DateTime(
-                      picked.end.year,
-                      picked.end.month,
-                      picked.end.day,
-                      23,
-                      59,
-                      59,
+              Material(
+                color: _isCustomDateRange() ? const Color(0xFF3B62FF) : const Color(0xFF171926),
+                borderRadius: BorderRadius.circular(20),
+                child: InkWell(
+                  onTap: () async {
+                    final picked = await showDateRangePicker(
+                      context: context,
+                      firstDate: DateTime(2023),
+                      lastDate: DateTime.now(),
+                      initialDateRange: _reportViewModel.historyDateRange,
+                      builder: (context, child) {
+                        return Theme(
+                          data: ThemeData.dark().copyWith(
+                            colorScheme: const ColorScheme.dark(
+                              primary: Color(0xFF3B62FF),
+                              onPrimary: Colors.white,
+                              surface: Color(0xFF111321),
+                              onSurface: Colors.white,
+                            ),
+                            dialogBackgroundColor: const Color(0xFF111321),
+                          ),
+                          child: child!,
+                        );
+                      },
                     );
-                    _reportViewModelRead.setHistoryDateRange(
-                        DateTimeRange(start: startOfDay, end: endOfDay));
-                  }
-                },
-                avatar: const Icon(Icons.date_range, size: 16),
-                backgroundColor: _isCustomDateRange()
-                    ? Theme.of(context).colorScheme.primaryContainer
-                    : Theme.of(context).cardColor,
-                labelStyle: TextStyle(
-                  color: _isCustomDateRange()
-                      ? Theme.of(context).colorScheme.onPrimaryContainer
-                      : Theme.of(context).colorScheme.onSurface,
-                  fontSize: 13,
-                ),
-                shape: RoundedRectangleBorder(
+                    if (picked != null) {
+                      final startOfDay = picked.start;
+                      final endOfDay = DateTime(
+                        picked.end.year,
+                        picked.end.month,
+                        picked.end.day,
+                        23,
+                        59,
+                        59,
+                      );
+                      _reportViewModelRead.setHistoryDateRange(
+                          DateTimeRange(start: startOfDay, end: endOfDay));
+                    }
+                  },
                   borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(
-                    color:
-                        Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: _isCustomDateRange() ? const Color(0xFF3B62FF) : const Color(0xFF1E2135),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.date_range,
+                          size: 16,
+                          color: _isCustomDateRange() ? Colors.white : const Color(0xFF8F93A4),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _isCustomDateRange()
+                              ? '${DateFormat('MMM dd').format(_reportViewModel.historyDateRange!.start)} - ${DateFormat('MMM dd').format(_reportViewModel.historyDateRange!.end)}'
+                              : 'Custom',
+                          style: TextStyle(
+                            color: _isCustomDateRange() ? Colors.white : const Color(0xFF8F93A4),
+                            fontSize: 13,
+                            fontWeight: _isCustomDateRange() ? FontWeight.w600 : FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -3401,12 +3028,12 @@ class _ReportsScreenState extends State<ReportsScreen>
             ),
           ),
         ] else ...[
-          Text(
+          const Text(
             'Recent Reports',
             style: TextStyle(
-              fontSize: isDesktop ? 20 : 18,
+              fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 16),
@@ -3465,15 +3092,15 @@ class _ReportsScreenState extends State<ReportsScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: const Color(0xFF111321),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.08),
+          color: const Color(0xFF1E2135),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.06),
+            color: Colors.black.withOpacity(0.2),
             blurRadius: 12,
             offset: const Offset(0, 4),
             spreadRadius: 0,
@@ -3510,15 +3137,12 @@ class _ReportsScreenState extends State<ReportsScreen>
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withOpacity(0.1),
+                        color: const Color(0xFF3B62FF).withOpacity(0.12),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.description_outlined,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: Color(0xFF3B62FF),
                         size: 20,
                       ),
                     ),
@@ -3532,18 +3156,15 @@ class _ReportsScreenState extends State<ReportsScreen>
                             style: TextStyle(
                               fontSize: isDesktop ? 18 : 16,
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurface,
+                              color: Colors.white,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             'Submitted on $formattedDate',
-                            style: TextStyle(
-                              fontSize: isDesktop ? 12 : 11,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.5),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF8F93A4),
                             ),
                           ),
                         ],
@@ -3553,10 +3174,10 @@ class _ReportsScreenState extends State<ReportsScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
+                        color: statusColor.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: statusColor.withOpacity(0.2),
+                          color: statusColor.withOpacity(0.3),
                           width: 1,
                         ),
                       ),
@@ -3588,9 +3209,9 @@ class _ReportsScreenState extends State<ReportsScreen>
                 ),
                 const SizedBox(height: 20),
                 // Divider
-                Divider(
+                const Divider(
                   height: 1,
-                  color: Theme.of(context).dividerColor.withOpacity(0.5),
+                  color: Color(0xFF1E2135),
                 ),
                 const SizedBox(height: 20),
                 // Metrics Row
@@ -3602,7 +3223,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                       Icons.access_time_filled_rounded,
                       '${(report['total_hours'] ?? 0).toStringAsFixed(1)}h',
                       'Total Time',
-                      Theme.of(context).colorScheme.primary,
+                      const Color(0xFF3B62FF),
                     ),
                     const SizedBox(width: 24),
                     _buildHistoryMetric(
@@ -3611,22 +3232,22 @@ class _ReportsScreenState extends State<ReportsScreen>
                       Icons.check_circle_rounded,
                       '${report['tasks_count'] ?? 0}',
                       'Tasks',
-                      Colors.green,
+                      const Color(0xFF22C55E),
                     ),
                     const Spacer(),
-                    Text(
+                    const Text(
                       'View Details',
                       style: TextStyle(
-                        fontSize: isDesktop ? 14 : 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: Color(0xFF3B62FF),
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Icon(
+                    const Icon(
                       Icons.arrow_forward_rounded,
                       size: 16,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: Color(0xFF3B62FF),
                     ),
                   ],
                 ),
@@ -3645,7 +3266,7 @@ class _ReportsScreenState extends State<ReportsScreen>
         Icon(
           icon,
           size: 18,
-          color: color.withOpacity(0.8),
+          color: color,
         ),
         const SizedBox(width: 8),
         Column(
@@ -3653,17 +3274,17 @@ class _ReportsScreenState extends State<ReportsScreen>
           children: [
             Text(
               value,
-              style: TextStyle(
-                fontSize: isDesktop ? 16 : 14,
+              style: const TextStyle(
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: Colors.white,
               ),
             ),
             Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 11,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Color(0xFF8F93A4),
                 height: 1.0,
               ),
             ),
@@ -3692,13 +3313,17 @@ class _ReportsScreenState extends State<ReportsScreen>
                 maxHeight: MediaQuery.of(context).size.height * 0.85,
               ),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
+                color: const Color(0xFF111321),
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: const Color(0xFF1E2135),
+                  width: 1.5,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+                    color: Colors.black.withOpacity(0.4),
+                    blurRadius: 32,
+                    offset: const Offset(0, 16),
                   ),
                 ],
               ),
@@ -3707,11 +3332,10 @@ class _ReportsScreenState extends State<ReportsScreen>
                   // --- Header Section ---
                   Container(
                     padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       border: Border(
                         bottom: BorderSide(
-                          color:
-                              Theme.of(context).dividerColor.withOpacity(0.5),
+                          color: Color(0xFF1E2135),
                           width: 1,
                         ),
                       ),
@@ -3722,16 +3346,13 @@ class _ReportsScreenState extends State<ReportsScreen>
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withOpacity(0.1),
+                            color: const Color(0xFF3B62FF).withOpacity(0.12),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.description_outlined,
                             size: 28,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: Color(0xFF3B62FF),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -3739,15 +3360,12 @@ class _ReportsScreenState extends State<ReportsScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              const Text(
                                 'DAILY REPORT',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withOpacity(0.8),
+                                  color: Color(0xFF3B62FF),
                                   letterSpacing: 1.2,
                                 ),
                               ),
@@ -3757,8 +3375,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                                 style: TextStyle(
                                   fontSize: isDesktop ? 22 : 18,
                                   fontWeight: FontWeight.bold,
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
+                                  color: Colors.white,
                                   letterSpacing: -0.5,
                                 ),
                               ),
@@ -3767,7 +3384,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                         ),
                         IconButton(
                           onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.close),
+                          icon: const Icon(Icons.close, color: Colors.white),
                           tooltip: 'Close',
                         ),
                       ],
@@ -3790,7 +3407,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                                   'Total Time',
                                   '${totalHours.toStringAsFixed(1)}h',
                                   Icons.access_time_filled,
-                                  Theme.of(context).colorScheme.primary,
+                                  const Color(0xFF3B62FF),
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -3800,7 +3417,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                                   'Tasks Completed',
                                   '${tasks.length}',
                                   Icons.check_circle,
-                                  Colors.green,
+                                  const Color(0xFF22C55E),
                                 ),
                               ),
                             ],
@@ -3808,15 +3425,12 @@ class _ReportsScreenState extends State<ReportsScreen>
 
                           const SizedBox(height: 24),
 
-                          Text(
+                          const Text(
                             'TASK TIMELINE',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.6),
+                              color: Color(0xFF8F93A4),
                               letterSpacing: 0.8,
                             ),
                           ),
@@ -3824,16 +3438,13 @@ class _ReportsScreenState extends State<ReportsScreen>
 
                           // Task List (Using existing card for detailed view)
                           if (tasks.isEmpty)
-                            Center(
+                            const Center(
                               child: Padding(
-                                padding: const EdgeInsets.all(32.0),
+                                padding: EdgeInsets.all(32.0),
                                 child: Text(
                                   'No specific tasks recorded for this report.',
                                   style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withOpacity(0.5),
+                                    color: Color(0xFF8F93A4),
                                   ),
                                 ),
                               ),
@@ -3848,45 +3459,35 @@ class _ReportsScreenState extends State<ReportsScreen>
                           if (additionalNotes != null &&
                               additionalNotes.isNotEmpty) ...[
                             const SizedBox(height: 24),
-                            Text(
+                            const Text(
                               'ADDITIONAL NOTES',
                               style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withOpacity(0.6),
-                                letterSpacing: 0.8,
-                              ),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF8F93A4),
+                                  letterSpacing: 0.8,
+                                ),
                             ),
                             const SizedBox(height: 12),
                             Container(
                               width: double.infinity,
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .surfaceVariant
-                                    .withOpacity(0.3),
+                                color: const Color(0xFF171926),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .outline
-                                      .withOpacity(0.2),
+                                  color: const Color(0xFF1E2135),
                                   width: 1,
                                 ),
                               ),
                               child: Text(
-                                additionalNotes,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  height: 1.5,
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
+                                  additionalNotes,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    height: 1.5,
+                                    color: Color(0xFF8F93A4),
+                                  ),
                                 ),
-                              ),
                             ),
                           ],
                         ],
@@ -3897,11 +3498,10 @@ class _ReportsScreenState extends State<ReportsScreen>
                   // --- Footer Actions ---
                   Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       border: Border(
                         top: BorderSide(
-                          color:
-                              Theme.of(context).dividerColor.withOpacity(0.5),
+                          color: Color(0xFF1E2135),
                           width: 1,
                         ),
                       ),
@@ -3915,13 +3515,10 @@ class _ReportsScreenState extends State<ReportsScreen>
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 24, vertical: 12),
                           ),
-                          child: Text(
+                          child: const Text(
                             'Close',
                             style: TextStyle(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.7),
+                              color: Color(0xFF8F93A4),
                             ),
                           ),
                         ),
@@ -3939,14 +3536,45 @@ class _ReportsScreenState extends State<ReportsScreen>
 
   Widget _buildDetailMetricCard(BuildContext context, String title,
       String value, IconData icon, Color color) {
+    Color iconColor;
+    Color iconBgColor;
+    Color borderColor;
+    LinearGradient gradientBg;
+
+    if (title.contains('Time')) {
+      iconColor = const Color(0xFF3A62FF);
+      iconBgColor = const Color(0xFF1F2B5E);
+      borderColor = const Color(0xFF1E2B5C);
+      gradientBg = LinearGradient(
+        colors: [
+          const Color(0xFF141A33),
+          const Color(0xFF13192F).withOpacity(0.8),
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    } else {
+      iconColor = const Color(0xFF8C5CF6);
+      iconBgColor = const Color(0xFF351F4E);
+      borderColor = const Color(0xFF3E235F);
+      gradientBg = LinearGradient(
+        colors: [
+          const Color(0xFF201430),
+          const Color(0xFF1F142E).withOpacity(0.8),
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        gradient: gradientBg,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: color.withOpacity(0.2),
-          width: 1,
+          color: borderColor,
+          width: 1.5,
         ),
       ),
       child: Row(
@@ -3954,13 +3582,13 @@ class _ReportsScreenState extends State<ReportsScreen>
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.5),
+              color: iconBgColor,
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
               size: 20,
-              color: color,
+              color: iconColor,
             ),
           ),
           const SizedBox(width: 12),
@@ -3969,18 +3597,17 @@ class _ReportsScreenState extends State<ReportsScreen>
             children: [
               Text(
                 value,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: Colors.white,
                 ),
               ),
               Text(
                 title,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 11,
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: Color(0xFF8F93A4),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -4067,36 +3694,16 @@ class _ReportsScreenState extends State<ReportsScreen>
       margin: const EdgeInsets.only(bottom: 16),
       padding: EdgeInsets.all(isDesktop ? 20 : 16),
       decoration: BoxDecoration(
-        color: isDailyAttendance
-            ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.3)
-            : isUnknownTask
-                ? Theme.of(context).colorScheme.errorContainer.withOpacity(0.1)
-                : Theme.of(context).colorScheme.surface,
+        color: const Color(0xFF171926),
         borderRadius: BorderRadius.circular(16),
-        border: isDailyAttendance
-            ? Border.all(
-                color: Theme.of(context).colorScheme.secondary.withOpacity(0.5),
-                width: 2,
-              )
-            : isUnknownTask
-                ? Border.all(
-                    color: Theme.of(context).colorScheme.error.withOpacity(0.3),
-                    width: 1.5,
-                  )
-                : Border.all(
-                    color:
-                        Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                    width: 1,
-                  ),
-        boxShadow: [
-          BoxShadow(
-            color: isDailyAttendance
-                ? Theme.of(context).colorScheme.secondary.withOpacity(0.1)
-                : Theme.of(context).shadowColor.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(
+          color: isDailyAttendance
+              ? const Color(0xFF10B981).withOpacity(0.5)
+              : isUnknownTask
+                  ? const Color(0xFFEF4444).withOpacity(0.3)
+                  : const Color(0xFF1E2135),
+          width: isDailyAttendance ? 2 : 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -4105,25 +3712,27 @@ class _ReportsScreenState extends State<ReportsScreen>
           Row(
             children: [
               // Icon for Daily Attendance or Unknown Task
-              if (isDailyAttendance || isUnknownTask) ...[
-                Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isDailyAttendance
-                        ? Theme.of(context).colorScheme.secondary
-                        : Theme.of(context).colorScheme.error.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    isDailyAttendance ? Icons.access_time : Icons.help_outline,
-                    color: isDailyAttendance
-                        ? Theme.of(context).colorScheme.onSecondary
-                        : Theme.of(context).colorScheme.error,
-                    size: 20,
-                  ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isDailyAttendance
+                      ? const Color(0xFF102A24)
+                      : isUnknownTask
+                          ? const Color(0xFF3C181E)
+                          : const Color(0xFF1F2B5E),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                SizedBox(width: 12),
-              ],
+                child: Icon(
+                  isDailyAttendance ? Icons.access_time : (isUnknownTask ? Icons.help_outline : Icons.task),
+                  color: isDailyAttendance
+                      ? const Color(0xFF10B981)
+                      : isUnknownTask
+                          ? const Color(0xFFEF4444)
+                          : const Color(0xFF3B62FF),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -4134,10 +3743,10 @@ class _ReportsScreenState extends State<ReportsScreen>
                         fontSize: isDesktop ? 18 : 16,
                         fontWeight: FontWeight.bold,
                         color: isDailyAttendance
-                            ? Theme.of(context).colorScheme.secondary
+                            ? const Color(0xFF10B981)
                             : isUnknownTask
-                                ? Theme.of(context).colorScheme.error
-                                : Theme.of(context).colorScheme.onSurface,
+                                ? const Color(0xFFEF4444)
+                                : Colors.white,
                       ),
                     ),
                     if (displayDescription.isNotEmpty) ...[
@@ -4145,11 +3754,8 @@ class _ReportsScreenState extends State<ReportsScreen>
                       Text(
                         displayDescription,
                         style: TextStyle(
-                          fontSize: isDesktop ? 14 : 12,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withOpacity(0.7),
+                          fontSize: 14,
+                          color: const Color(0xFF8F93A4),
                           fontStyle: isUnknownTask
                               ? FontStyle.italic
                               : FontStyle.normal,
@@ -4162,23 +3768,32 @@ class _ReportsScreenState extends State<ReportsScreen>
                 ),
               ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: isDailyAttendance
-                      ? Theme.of(context).colorScheme.secondary
+                      ? const Color(0xFF10B981).withOpacity(0.12)
                       : isUnknownTask
-                          ? Theme.of(context).colorScheme.error.withOpacity(0.8)
-                          : Theme.of(context).colorScheme.primary,
+                          ? const Color(0xFFEF4444).withOpacity(0.12)
+                          : const Color(0xFF3B62FF).withOpacity(0.12),
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDailyAttendance
+                        ? const Color(0xFF10B981).withOpacity(0.3)
+                        : isUnknownTask
+                            ? const Color(0xFFEF4444).withOpacity(0.3)
+                            : const Color(0xFF3B62FF).withOpacity(0.3),
+                  ),
                 ),
                 child: Text(
                   displayDuration > 0
                       ? _formatDetailedTimeFromHours(displayDuration)
                       : '0s',
                   style: TextStyle(
-                    color: isDailyAttendance || isUnknownTask
-                        ? Colors.white
-                        : Theme.of(context).colorScheme.onPrimary,
+                    color: isDailyAttendance
+                        ? const Color(0xFF10B981)
+                        : isUnknownTask
+                            ? const Color(0xFFEF4444)
+                            : const Color(0xFF3B62FF),
                     fontSize: isDesktop ? 14 : 12,
                     fontWeight: FontWeight.bold,
                   ),
@@ -4191,23 +3806,16 @@ class _ReportsScreenState extends State<ReportsScreen>
 
           // Clock In/Out Times Section - Different styling for Daily Attendance
           Container(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDailyAttendance
-                  ? Theme.of(context).colorScheme.secondary.withOpacity(0.1)
-                  : isUnknownTask
-                      ? Theme.of(context).colorScheme.error.withOpacity(0.05)
-                      : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: const Color(0xFF111321),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isDailyAttendance
-                    ? Theme.of(context).colorScheme.secondary.withOpacity(0.3)
+                    ? const Color(0xFF10B981).withOpacity(0.3)
                     : isUnknownTask
-                        ? Theme.of(context).colorScheme.error.withOpacity(0.2)
-                        : Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withOpacity(0.3),
+                        ? const Color(0xFFEF4444).withOpacity(0.3)
+                        : const Color(0xFF3B62FF).withOpacity(0.3),
                 width: 1,
               ),
             ),
@@ -4224,12 +3832,12 @@ class _ReportsScreenState extends State<ReportsScreen>
                               : Icons.task,
                       size: 16,
                       color: isDailyAttendance
-                          ? Theme.of(context).colorScheme.secondary
+                          ? const Color(0xFF10B981)
                           : isUnknownTask
-                              ? Theme.of(context).colorScheme.error
-                              : Theme.of(context).colorScheme.primary,
+                              ? const Color(0xFFEF4444)
+                              : const Color(0xFF3B62FF),
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Text(
                       isDailyAttendance
                           ? 'Employee Attendance'
@@ -4240,10 +3848,10 @@ class _ReportsScreenState extends State<ReportsScreen>
                         fontSize: isDesktop ? 14 : 12,
                         fontWeight: FontWeight.w600,
                         color: isDailyAttendance
-                            ? Theme.of(context).colorScheme.secondary
+                            ? const Color(0xFF10B981)
                             : isUnknownTask
-                                ? Theme.of(context).colorScheme.error
-                                : Theme.of(context).colorScheme.primary,
+                                ? const Color(0xFFEF4444)
+                                : const Color(0xFF3B62FF),
                       ),
                     ),
                   ],
@@ -4257,10 +3865,10 @@ class _ReportsScreenState extends State<ReportsScreen>
                         hasTimeData ? _formatTime(startTime) : 'Not Started',
                         Icons.login,
                         isDailyAttendance
-                            ? Theme.of(context).colorScheme.secondary
+                            ? const Color(0xFF10B981)
                             : isUnknownTask
-                                ? Theme.of(context).colorScheme.error
-                                : Theme.of(context).colorScheme.primary,
+                                ? const Color(0xFFEF4444)
+                                : const Color(0xFF3B62FF),
                         isDesktop,
                       ),
                     ),
@@ -4275,10 +3883,10 @@ class _ReportsScreenState extends State<ReportsScreen>
                                 : 'Not Completed'),
                         Icons.logout,
                         endTime != null && endTime != 'Ongoing'
-                            ? Theme.of(context).colorScheme.error
+                            ? const Color(0xFFEF4444)
                             : (isDailyAttendance
-                                ? Theme.of(context).colorScheme.secondary
-                                : Theme.of(context).colorScheme.primary),
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFF3B62FF)),
                         isDesktop,
                       ),
                     ),
@@ -4289,15 +3897,16 @@ class _ReportsScreenState extends State<ReportsScreen>
           ),
           const SizedBox(height: 16),
 
-          if (!isDailyAttendance) ...[],
-
           // Task Stats
           Container(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color:
-                  Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+              color: const Color(0xFF111321),
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF1E2135),
+                width: 1,
+              ),
             ),
             child: Row(
               children: [
@@ -4309,48 +3918,56 @@ class _ReportsScreenState extends State<ReportsScreen>
                             ? _formatDetailedTimeFromHours(displayDuration)
                             : '0s',
                         style: TextStyle(
-                          fontSize: isDesktop ? 18 : 16,
+                          fontSize: isDesktop ? 16 : 14,
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: const Color(0xFF3B62FF),
                         ),
                       ),
+                      const SizedBox(height: 4),
                       Text(
                         'Total Duration',
                         style: TextStyle(
-                          fontSize: isDesktop ? 12 : 11,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withOpacity(0.7),
+                          fontSize: isDesktop ? 11 : 10,
+                          color: const Color(0xFF8F93A4),
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
                 ),
                 if (!isDailyAttendance) ...[
+                  Container(
+                    height: 32,
+                    width: 1,
+                    color: const Color(0xFF1E2135),
+                  ),
                   Expanded(
                     child: Column(
                       children: [
                         Text(
                           '$sessionsCount',
                           style: TextStyle(
-                            fontSize: isDesktop ? 18 : 16,
+                            fontSize: isDesktop ? 16 : 14,
                             fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: const Color(0xFF8C5CF6),
                           ),
                         ),
+                        const SizedBox(height: 4),
                         Text(
-                          'Times',
+                          'Sessions',
                           style: TextStyle(
-                            fontSize: isDesktop ? 12 : 11,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withOpacity(0.7),
+                            fontSize: isDesktop ? 11 : 10,
+                            color: const Color(0xFF8F93A4),
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
                     ),
+                  ),
+                  Container(
+                    height: 32,
+                    width: 1,
+                    color: const Color(0xFF1E2135),
                   ),
                   Expanded(
                     child: Column(
@@ -4361,19 +3978,18 @@ class _ReportsScreenState extends State<ReportsScreen>
                                   displayDuration / sessionsCount)
                               : '0s',
                           style: TextStyle(
-                            fontSize: isDesktop ? 18 : 16,
+                            fontSize: isDesktop ? 16 : 14,
                             fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: const Color(0xFF10B981),
                           ),
                         ),
+                        const SizedBox(height: 4),
                         Text(
-                          'Avg/Time',
+                          'Avg/Session',
                           style: TextStyle(
-                            fontSize: isDesktop ? 12 : 11,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withOpacity(0.7),
+                            fontSize: isDesktop ? 11 : 10,
+                            color: const Color(0xFF8F93A4),
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -4388,15 +4004,12 @@ class _ReportsScreenState extends State<ReportsScreen>
           if (displayNotes != null && displayNotes.isNotEmpty) ...[
             const SizedBox(height: 16),
             Container(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .surfaceVariant
-                    .withOpacity(0.2),
+                color: const Color(0xFF111321),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                  color: const Color(0xFF1E2135),
                   width: 1,
                 ),
               ),
@@ -4405,18 +4018,18 @@ class _ReportsScreenState extends State<ReportsScreen>
                 children: [
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.note_alt_outlined,
                         size: 16,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: Color(0xFF3B62FF),
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text(
                         'Notes',
                         style: TextStyle(
                           fontSize: isDesktop ? 14 : 12,
                           fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: const Color(0xFF3B62FF),
                         ),
                       ),
                     ],
@@ -4426,10 +4039,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                     displayNotes,
                     style: TextStyle(
                       fontSize: isDesktop ? 13 : 12,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.8),
+                      color: const Color(0xFFE2E8F0),
                       height: 1.4,
                     ),
                   ),
@@ -4451,12 +4061,12 @@ class _ReportsScreenState extends State<ReportsScreen>
     bool isDesktop,
   ) {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: const Color(0xFF171926),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withOpacity(0.2),
           width: 1,
         ),
       ),
@@ -4480,10 +4090,10 @@ class _ReportsScreenState extends State<ReportsScreen>
           const SizedBox(height: 8),
           Text(
             time,
-            style: TextStyle(
-              fontSize: isDesktop ? 16 : 14,
+            style: const TextStyle(
+              fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
+              color: Colors.white,
             ),
           ),
         ],

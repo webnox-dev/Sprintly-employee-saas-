@@ -12,6 +12,9 @@ import '../dashboard/modern_dashboard_screen.dart';
 import 'package:form_validator/form_validator.dart';
 import '../../widgets/otp_verification_dialog.dart';
 import '../../widgets/session_limit_dialog.dart';
+import '../../theme/app_theme.dart';
+import 'dart:ui';
+
 
 @RoutePage()
 class LoginScreen extends HookWidget {
@@ -25,8 +28,27 @@ class LoginScreen extends HookWidget {
     // Pre-cache login images for instant display
     useEffect(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        precacheImage(const AssetImage('assets/images/login.png'), context);
-        precacheImage(const AssetImage('assets/images/login_img.png'), context);
+        precacheImage(
+          const AssetImage('assets/images/login_image.png'),
+          context,
+          onError: (exception, stackTrace) {
+            // Suppress error so cascading fallbacks handle it
+          },
+        );
+        precacheImage(
+          const AssetImage('assets/images/login_img.png'),
+          context,
+          onError: (exception, stackTrace) {
+            // Suppress error
+          },
+        );
+        precacheImage(
+          const AssetImage('assets/images/login.png'),
+          context,
+          onError: (exception, stackTrace) {
+            // Suppress error
+          },
+        );
       });
       return null;
     }, []);
@@ -69,8 +91,8 @@ class LoginScreen extends HookWidget {
       final isMobile = constraints.maxWidth < 600;
       return SingleChildScrollView(
         padding: EdgeInsets.symmetric(
-          vertical: isMobile ? 3.h : (isShortViewport ? 24 : 40),
-          horizontal: isMobile ? 5.w : (isShortViewport ? 60 : 80),
+          vertical: isMobile ? 3.h : (isShortViewport ? 32 : 48),
+          horizontal: isMobile ? 5.w : (isShortViewport ? 32 : 44),
         ),
         child: Form(
           key: formKey,
@@ -81,7 +103,7 @@ class LoginScreen extends HookWidget {
               Row(
                 children: [
                   Image.asset(
-                    'assets/logo/logo.png',
+                    'assets/logo/rathz_app_logo.png',
                     width: isMobile ? 48 : (isShortViewport ? 42 : 56),
                     height: isMobile ? 48 : (isShortViewport ? 42 : 56),
                     fit: BoxFit.contain,
@@ -125,10 +147,10 @@ class LoginScreen extends HookWidget {
                   ? 'Welcome to Rathz' 
                   : (currentStep.value == 1 ? 'Select Workspace' : 'Log in to your Account'),
                 style: TextStyle(
-                  color: Theme.of(context).textTheme.titleLarge?.color,
-                  fontSize: isMobile ? 30 : (isShortViewport ? 34 : 40),
+                  color: Colors.white,
+                  fontSize: isMobile ? 26 : (isShortViewport ? 28 : 32),
                   fontWeight: FontWeight.w800,
-                  letterSpacing: -1.0,
+                  letterSpacing: -0.5,
                   height: 1.1,
                 ),
               ),
@@ -140,12 +162,8 @@ class LoginScreen extends HookWidget {
                   ? 'Enter your work email to find your workspaces.' 
                   : (currentStep.value == 1 ? 'Choose the workspace you want to sign in to.' : 'Welcome back! Please enter your password.'),
                 style: TextStyle(
-                  color: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.color
-                      ?.withOpacity(0.65),
-                  fontSize: isMobile ? 15 : (isShortViewport ? 15 : 17),
+                  color: const Color(0xFF94A3B8),
+                  fontSize: isMobile ? 14 : (isShortViewport ? 14 : 15),
                   height: 1.5,
                 ),
               ),
@@ -351,159 +369,274 @@ class LoginScreen extends HookWidget {
       );
     }
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth < 600) {
-              // Mobile layout - Premium, layered design
-              return Column(
-                children: [
-                  // Illustration Header with subtle background depth
-                  Container(
-                    height: 32.h,
-                    width: double.infinity,
-                    color: Colors.transparent,
-                    child: SafeArea(
-                      bottom: false,
-                      child: Center(
-                        child: Hero(
-                          tag: 'login_illustration',
-                          child: Image.asset(
-                            'assets/images/login.png',
-                            height: 25.h,
-                            fit: BoxFit.contain,
-                            gaplessPlayback: true,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Image.asset(
-                                'assets/images/login_img.png',
-                                height: 25.h,
-                                fit: BoxFit.contain,
-                                gaplessPlayback: true,
-                              );
-                            },
-                          ),
-                        ),
-                      ),
+    final localTheme = AppTheme.darkTheme.copyWith(
+      scaffoldBackgroundColor: const Color(0xFF070B19),
+      cardColor: const Color(0xFF0D1226),
+      dividerColor: const Color(0xFF1E293B),
+      cardTheme: AppTheme.darkTheme.cardTheme.copyWith(
+        color: const Color(0xFF161E35),
+      ),
+      colorScheme: AppTheme.darkTheme.colorScheme.copyWith(
+        primary: const Color(0xFF3B82F6),
+        onPrimary: Colors.white,
+        secondary: const Color(0xFF3B82F6),
+        surface: const Color(0xFF090D1E),
+        onSurface: const Color(0xFF94A3B8),
+      ),
+      textTheme: AppTheme.darkTheme.textTheme.copyWith(
+        bodyMedium: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
+          color: Colors.white,
+        ),
+      ),
+    );
+
+    return Theme(
+      data: localTheme,
+      child: Scaffold(
+        backgroundColor: localTheme.scaffoldBackgroundColor,
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 600) {
+                // Mobile layout - Premium, layered design with dark gradients
+                return Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0xFF0C152B),
+                        Color(0xFF070B19),
+                      ],
                     ),
                   ),
-                  Expanded(
-                    child: Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        borderRadius: const BorderRadius.only(
-                          topRight: Radius.circular(32.0),
-                          topLeft: Radius.circular(32.0),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 30,
-                            offset: const Offset(0, -10),
-                            spreadRadius: -5,
-                          ),
-                        ],
-                      ),
-                      child: buildLoginForm(constraints),
-                    ),
-                  ),
-                ],
-              );
-            } else {
-              return Container(
-                width: double.infinity,
-                height: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Theme.of(context).scaffoldBackgroundColor,
-                      Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                      Theme.of(context).scaffoldBackgroundColor,
-                    ],
-                  ),
-                ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: 1150,
-                      maxHeight: isShortViewport ? 680 : 750,
-                    ),
-                    child: Container(
-                      margin: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        borderRadius: BorderRadius.circular(28.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.12),
-                            blurRadius: 40,
-                            offset: const Offset(0, 15),
-                            spreadRadius: -5,
-                          ),
-                          BoxShadow(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withOpacity(0.04),
-                            blurRadius: 20,
-                            offset: const Offset(0, 5),
-                            spreadRadius: 0,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          // Left Section - Login Form
-                          Expanded(
-                            flex: 6, // 6 out of 13
-                            child: Container(
-                              alignment: Alignment.center,
-                              child: buildLoginForm(constraints),
+                  child: Stack(
+                    children: [
+                      // Figma Glow orb behind top illustration on Mobile (Native gradient for web HTML compatibility)
+                      Positioned(
+                        top: -100,
+                        left: -50,
+                        right: -50,
+                        height: 350,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                const Color(0xFF3B82F6).withOpacity(0.24),
+                                const Color(0xFF3B82F6).withOpacity(0.08),
+                                const Color(0xFF3B82F6).withOpacity(0.0),
+                              ],
+                              stops: const [0.0, 0.4, 1.0],
                             ),
                           ),
-                          // Right Section - Image with sophisticated fit
-                          Expanded(
-                            flex:
-                                7, // 7 out of 13 - More breathing room for illustration
-                            child: Container(
-                              alignment: Alignment.center,
-                              color: Colors.transparent,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(20.0),
-                                child: Stack(
-                                  children: [
-                                    Positioned.fill(
-                                      child: Image.asset(
-                                        'assets/images/login.png',
+                        ),
+                      ),
+                      Column(
+                        children: [
+                          // Illustration Header with subtle background depth
+                          Container(
+                            height: 32.h,
+                            width: double.infinity,
+                            color: Colors.transparent,
+                            child: SafeArea(
+                              bottom: false,
+                              child: Center(
+                                child: Hero(
+                                  tag: 'login_illustration',
+                                  child: Image.asset(
+                                    'assets/images/login.png',
+                                    height: 25.h,
+                                    fit: BoxFit.contain,
+                                    gaplessPlayback: true,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Image.asset(
+                                        'assets/images/login_img.png',
+                                        height: 25.h,
                                         fit: BoxFit.contain,
                                         gaplessPlayback: true,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          return Image.asset(
-                                            'assets/images/login_img.png',
-                                            fit: BoxFit.contain,
-                                            gaplessPlayback: true,
-                                          );
-                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: const BorderRadius.only(
+                                  topRight: Radius.circular(32.0),
+                                  topLeft: Radius.circular(32.0),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 30,
+                                    offset: const Offset(0, -5),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: const BorderRadius.only(
+                                  topRight: Radius.circular(32.0),
+                                  topLeft: Radius.circular(32.0),
+                                ),
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
+                                  child: Container(
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF0D1226).withOpacity(0.75),
+                                      borderRadius: const BorderRadius.only(
+                                        topRight: Radius.circular(32.0),
+                                        topLeft: Radius.circular(32.0),
+                                      ),
+                                      border: Border(
+                                        top: BorderSide(
+                                          color: const Color(0xFF1E293B).withOpacity(0.6),
+                                          width: 1.5,
+                                        ),
                                       ),
                                     ),
-                                  ],
+                                    child: buildLoginForm(constraints),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ],
                       ),
+                    ],
+                  ),
+                );
+              } else {
+                // Desktop / Web layout with swapped columns and beautiful glassmorphism
+                return Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF0C152B),
+                        Color(0xFF070B19),
+                        Color(0xFF04060D),
+                      ],
                     ),
                   ),
-                ),
-              );
-            }
-          },
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: 1200,
+                            maxHeight: isShortViewport ? 680 : 750,
+                          ),
+                          child: Row(
+                            children: [
+                              // Left Section - Illustration with Figma Glow orb behind it
+                              Expanded(
+                                flex: 7,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    // Glow orb from Figma spec (Native gradient for maximum compatibility with Web HTML/CanvasKit)
+                                    Container(
+                                      width: 440,
+                                      height: 440,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: RadialGradient(
+                                          colors: [
+                                            const Color(0xFF3B82F6).withOpacity(0.24),
+                                            const Color(0xFF3B82F6).withOpacity(0.08),
+                                            const Color(0xFF3B82F6).withOpacity(0.0),
+                                          ],
+                                          stops: const [0.0, 0.4, 1.0],
+                                        ),
+                                      ),
+                                    ),
+                                    
+                                    // Illustration Image
+                                    Container(
+                                      alignment: Alignment.center,
+                                      padding: const EdgeInsets.all(40),
+                                      child: Hero(
+                                        tag: 'login_illustration',
+                                        child: Image.asset(
+                                          'assets/images/login_image.png',
+                                          fit: BoxFit.contain,
+                                          gaplessPlayback: true,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return Image.asset(
+                                              'assets/images/login_img.png',
+                                              fit: BoxFit.contain,
+                                              gaplessPlayback: true,
+                                              errorBuilder: (context, error, stackTrace) {
+                                                return Image.asset(
+                                                  'assets/images/login.png',
+                                                  fit: BoxFit.contain,
+                                                  gaplessPlayback: true,
+                                                );
+                                              },
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Right Section - Form in premium glassmorphic card
+                              Expanded(
+                                flex: 6,
+                                child: Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(24.0),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.3),
+                                            blurRadius: 40,
+                                            offset: const Offset(0, 15),
+                                          ),
+                                        ],
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(24.0),
+                                        child: BackdropFilter(
+                                          filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF0F172A).withOpacity(0.35),
+                                              borderRadius: BorderRadius.circular(24.0),
+                                              border: Border.all(
+                                                color: const Color(0xFF1E293B).withOpacity(0.6),
+                                                width: 1.5,
+                                              ),
+                                            ),
+                                            child: buildLoginForm(constraints),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            },
+          ),
         ),
       ),
     );
