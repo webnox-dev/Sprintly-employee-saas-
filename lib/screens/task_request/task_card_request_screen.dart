@@ -5,6 +5,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import '../../model/task_card_request_model.dart';
 import '../../view_model/task_card_request_view_model.dart';
 import '../../view_model/attendance_view_model.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class TaskCardRequestScreen extends HookWidget {
   const TaskCardRequestScreen({super.key});
@@ -34,25 +35,26 @@ class TaskCardRequestScreen extends HookWidget {
         ResponsiveUtils.isDesktop(context) || ResponsiveUtils.isLaptop(context);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: const Color(0xFF0B0F19),
       appBar: isDesktop
           ? null
           : AppBar(
-              backgroundColor: Theme.of(context).colorScheme.surface,
+              backgroundColor: const Color(0xFF0F172A),
               elevation: 0,
               leading: IconButton(
                 onPressed: () => Navigator.of(context).pop(),
-                icon: Icon(
+                icon: const Icon(
                   Icons.arrow_back_ios,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: Colors.white,
                 ),
               ),
               title: Text(
                 'Task Requests',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
               ),
               centerTitle: true,
             ),
@@ -112,10 +114,16 @@ class TaskCardRequestScreen extends HookWidget {
         Container(
           width: 360,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: const Color(0xFF0F172A),
+            border: const Border(
+              right: BorderSide(
+                color: Color(0xFF1E293B),
+                width: 1,
+              ),
+            ),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).shadowColor.withOpacity(0.08),
+                color: Colors.black.withOpacity(0.2),
                 blurRadius: 20,
                 offset: const Offset(4, 0),
               ),
@@ -125,9 +133,9 @@ class TaskCardRequestScreen extends HookWidget {
             child: Column(
               children: [
                 _buildDesktopHeader(context),
-                const Divider(height: 1),
+                const Divider(height: 1, color: Color(0xFF1E293B)),
                 _buildDesktopStats(context),
-                const Divider(height: 1),
+                const Divider(height: 1, color: Color(0xFF1E293B)),
                 _buildDesktopTabs(context, currentTab),
               ],
             ),
@@ -197,18 +205,11 @@ class TaskCardRequestScreen extends HookWidget {
   Widget _buildDesktopHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).colorScheme.surface,
-            Theme.of(context).colorScheme.surface,
-          ],
-        ),
+      decoration: const BoxDecoration(
+        color: Color(0xFF0F172A),
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).dividerColor.withOpacity(0.1),
+            color: Color(0xFF1E293B),
             width: 1,
           ),
         ),
@@ -221,13 +222,13 @@ class TaskCardRequestScreen extends HookWidget {
               // Back Button
               IconButton(
                 onPressed: () => Navigator.of(context).pop(),
-                icon: Icon(
+                icon: const Icon(
                   Icons.close,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: Colors.white70,
                 ),
                 style: IconButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  foregroundColor: Theme.of(context).colorScheme.onSurface,
+                  backgroundColor: const Color(0xFF1E293B),
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -237,20 +238,18 @@ class TaskCardRequestScreen extends HookWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                      Color(0xFF3B82F6),
+                      Color(0xFF1D4ED8),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withOpacity(0.3),
+                      color: const Color(0xFF3B82F6).withOpacity(0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -269,22 +268,21 @@ class TaskCardRequestScreen extends HookWidget {
                   children: [
                     Text(
                       'Task Requests',
-                      style:
-                          Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: Theme.of(context).colorScheme.onSurface,
-                                letterSpacing: -0.5,
-                              ),
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        fontSize: 22,
+                        letterSpacing: -0.5,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Submit and manage your task requests',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withOpacity(0.6),
-                            height: 1.4,
-                          ),
+                      style: GoogleFonts.outfit(
+                        color: Colors.white.withOpacity(0.5),
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
                     ),
                   ],
                 ),
@@ -299,22 +297,21 @@ class TaskCardRequestScreen extends HookWidget {
   Widget _buildMobileHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+      decoration: const BoxDecoration(
+        color: Color(0xFF0F172A),
+        border: Border(
+          bottom: BorderSide(
+            color: Color(0xFF1E293B),
+            width: 1,
           ),
-        ],
+        ),
       ),
       child: SafeArea(
         child: Row(
           children: [
             IconButton(
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back),
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -323,17 +320,19 @@ class TaskCardRequestScreen extends HookWidget {
                 children: [
                   Text(
                     'Task Requests',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20,
+                    ),
                   ),
+                  const SizedBox(height: 4),
                   Text(
                     'Submit and manage requests',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.7),
-                        ),
+                    style: GoogleFonts.outfit(
+                      color: Colors.white.withOpacity(0.5),
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),
@@ -360,51 +359,71 @@ class TaskCardRequestScreen extends HookWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  color: const Color(0xFF3B82F6).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withOpacity(0.2),
+                    color: const Color(0xFF3B82F6).withOpacity(0.2),
                     width: 1,
                   ),
                 ),
                 child: Text(
                   'OVERVIEW',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.primary,
-                        letterSpacing: 0.5,
-                      ),
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 10,
+                    color: const Color(0xFF3B82F6),
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
-              _buildStatCard(
-                'Total',
-                stats['total'] ?? 0,
-                Icons.assignment,
-                Theme.of(context).primaryColor,
-              ),
+              _buildStatCounterRow('Total', stats['total'] ?? 0, Icons.assignment_outlined, const Color(0xFF3B82F6)),
               const SizedBox(height: 16),
-              _buildStatCard(
-                'Pending',
-                stats['pending'] ?? 0,
-                Icons.pending_actions,
-                Theme.of(context).primaryColor,
-              ),
+              _buildStatCounterRow('Pending', stats['pending'] ?? 0, Icons.pending_actions_outlined, const Color(0xFFF59E0B)),
               const SizedBox(height: 16),
-              _buildStatCard(
-                'Approved',
-                stats['approved'] ?? 0,
-                Icons.check_circle,
-                Theme.of(context).primaryColor,
-              ),
+              _buildStatCounterRow('Approved', stats['approved'] ?? 0, Icons.check_circle_outline, const Color(0xFF10B981)),
               const SizedBox(height: 16),
-              _buildStatCard(
-                'Rejected',
-                stats['rejected'] ?? 0,
-                Icons.cancel,
-                Theme.of(context).colorScheme.error,
+              // Rejected stat: translucent red card container with red cancel icon
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFEF4444).withOpacity(0.2),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.cancel,
+                          size: 20,
+                          color: Color(0xFFEF4444),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Rejected',
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFFFCA5A5),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      (stats['rejected'] ?? 0).toString(),
+                      style: GoogleFonts.outfit(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFFEF4444),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -413,64 +432,35 @@ class TaskCardRequestScreen extends HookWidget {
     );
   }
 
-  Widget _buildStatCard(String label, int value, IconData icon, Color color) {
-    return Builder(
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [color.withOpacity(0.05), color.withOpacity(0.02)],
+  Widget _buildStatCounterRow(String label, int value, IconData icon, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 20, color: color.withOpacity(0.8)),
+              const SizedBox(width: 12),
+              Text(
+                label,
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white.withOpacity(0.6),
+                ),
+              ),
+            ],
           ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.1), width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+          Text(
+            value.toString(),
+            style: GoogleFonts.outfit(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, size: 20, color: color),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    value.toString(),
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: Theme.of(context).colorScheme.onSurface,
-                          letterSpacing: -0.5,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    label,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.6),
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -487,20 +477,21 @@ class TaskCardRequestScreen extends HookWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: const Color(0xFF3B82F6).withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                color: const Color(0xFF3B82F6).withOpacity(0.2),
                 width: 1,
               ),
             ),
             child: Text(
               'NAVIGATION',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary,
-                    letterSpacing: 0.5,
-                  ),
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.w600,
+                fontSize: 10,
+                color: const Color(0xFF3B82F6),
+                letterSpacing: 0.5,
+              ),
             ),
           ),
           const SizedBox(height: 24),
@@ -520,22 +511,22 @@ class TaskCardRequestScreen extends HookWidget {
 
   Widget _buildMobileTabs(BuildContext context, ValueNotifier<int> currentTab) {
     return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+      decoration: const BoxDecoration(
+        color: Color(0xFF0F172A),
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+            color: Color(0xFF1E293B),
             width: 1,
           ),
         ),
       ),
       child: TabBar(
         onTap: (index) => currentTab.value = index,
-        labelColor: Theme.of(context).primaryColor,
-        unselectedLabelColor: Theme.of(
-          context,
-        ).colorScheme.onSurface.withOpacity(0.6),
-        indicatorColor: Theme.of(context).primaryColor,
+        labelColor: const Color(0xFF3B82F6),
+        unselectedLabelColor: Colors.white.withOpacity(0.5),
+        indicatorColor: const Color(0xFF3B82F6),
+        labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 14),
+        unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 14),
         tabs: const [
           Tab(text: 'New Request'),
           Tab(text: 'My Requests'),
@@ -555,20 +546,20 @@ class TaskCardRequestScreen extends HookWidget {
 
     return GestureDetector(
       onTap: () => currentTab.value = index,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          border: Border(
-            left: BorderSide(
-              color: isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.transparent,
-              width: 3,
-            ),
-          ),
+          borderRadius: BorderRadius.circular(30),
           color: isSelected
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.05)
+              ? const Color(0xFF3B82F6).withOpacity(0.15)
               : Colors.transparent,
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFF3B82F6).withOpacity(0.3)
+                : Colors.transparent,
+            width: 1,
+          ),
         ),
         child: Row(
           children: [
@@ -576,21 +567,17 @@ class TaskCardRequestScreen extends HookWidget {
               icon,
               size: 20,
               color: isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  ? const Color(0xFF3B82F6)
+                  : Colors.white.withOpacity(0.5),
             ),
             const SizedBox(width: 12),
             Text(
               title,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    color: isSelected
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withOpacity(0.8),
-                  ),
+              style: GoogleFonts.outfit(
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
+                fontSize: 14,
+              ),
             ),
           ],
         ),
@@ -613,25 +600,28 @@ class TaskCardRequestScreen extends HookWidget {
     ValueNotifier<int> currentTab,
     bool isDesktop,
   ) {
-    return IndexedStack(
-      index: currentTab.value,
-      children: [
-        _buildNewRequestForm(
-          context,
-          taskNameController,
-          taskDescriptionController,
-          taskDurationController,
-          statusReasonController,
-          estimatedDaysController,
-          selectedProject,
-          selectedTaskType,
-          selectedPriority,
-          fromDate,
-          toDate,
-          isDesktop,
-        ),
-        _buildRequestsList(context, isDesktop),
-      ],
+    return Container(
+      color: const Color(0xFF0B0F19),
+      child: IndexedStack(
+        index: currentTab.value,
+        children: [
+          _buildNewRequestForm(
+            context,
+            taskNameController,
+            taskDescriptionController,
+            taskDurationController,
+            statusReasonController,
+            estimatedDaysController,
+            selectedProject,
+            selectedTaskType,
+            selectedPriority,
+            fromDate,
+            toDate,
+            isDesktop,
+          ),
+          _buildRequestsList(context, isDesktop),
+        ],
+      ),
     );
   }
 
@@ -659,9 +649,11 @@ class TaskCardRequestScreen extends HookWidget {
               if (!isDesktop) ...[
                 Text(
                   'New Task Request',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(height: 24),
               ],
@@ -798,46 +790,68 @@ class TaskCardRequestScreen extends HookWidget {
               const SizedBox(height: 32),
 
               // Submit Button
-              SizedBox(
+              Container(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: viewModel.isLoading
-                      ? null
-                      : () => _submitRequest(
-                            context,
-                            viewModel,
-                            taskNameController,
-                            taskDescriptionController,
-                            taskDurationController,
-                            statusReasonController,
-                            estimatedDaysController,
-                            selectedProject,
-                            selectedTaskType,
-                            selectedPriority,
-                            fromDate,
-                            toDate,
-                          ),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(
-                      vertical: isDesktop ? 16 : 14,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF3B82F6).withOpacity(0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: viewModel.isLoading
+                        ? null
+                        : () => _submitRequest(
+                              context,
+                              viewModel,
+                              taskNameController,
+                              taskDescriptionController,
+                              taskDurationController,
+                              statusReasonController,
+                              estimatedDaysController,
+                              selectedProject,
+                              selectedTaskType,
+                              selectedPriority,
+                              fromDate,
+                              toDate,
+                            ),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: isDesktop ? 18 : 14,
+                      ),
+                      child: Center(
+                        child: viewModel.isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : Text(
+                                'Submit Request',
+                                style: GoogleFonts.outfit(
+                                  fontSize: isDesktop ? 16 : 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
                     ),
                   ),
-                  child: viewModel.isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(
-                          'Submit Request',
-                          style: TextStyle(
-                            fontSize: isDesktop ? 16 : 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
                 ),
               ),
 
@@ -846,27 +860,25 @@ class TaskCardRequestScreen extends HookWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                    color: const Color(0xFFEF4444).withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.error.withOpacity(0.3),
+                      color: const Color(0xFFEF4444).withOpacity(0.3),
                     ),
                   ),
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.error_outline,
-                        color: Theme.of(context).colorScheme.error,
+                        color: Color(0xFFEF4444),
                         size: 20,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           viewModel.error!,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
+                          style: GoogleFonts.outfit(
+                            color: const Color(0xFFFCA5A5),
                             fontSize: 14,
                           ),
                         ),
@@ -886,7 +898,11 @@ class TaskCardRequestScreen extends HookWidget {
     return Consumer<TaskCardRequestViewModel>(
       builder: (context, viewModel, child) {
         if (viewModel.isLoading && viewModel.requests.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+            ),
+          );
         }
 
         if (viewModel.requests.isEmpty) {
@@ -897,27 +913,24 @@ class TaskCardRequestScreen extends HookWidget {
                 Icon(
                   Icons.assignment_outlined,
                   size: 64,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withOpacity(0.3),
+                  color: Colors.white.withOpacity(0.2),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'No Requests Yet',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.7),
-                      ),
+                  style: GoogleFonts.outfit(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Submit your first task request to get started',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.5),
-                      ),
+                  style: GoogleFonts.outfit(
+                    color: Colors.white.withOpacity(0.4),
+                    fontSize: 14,
+                  ),
                 ),
               ],
             ),
@@ -936,25 +949,48 @@ class TaskCardRequestScreen extends HookWidget {
     );
   }
 
+  Color _getPriorityColor(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'high':
+        return const Color(0xFFEF4444); // Red
+      case 'medium':
+        return const Color(0xFFF59E0B); // Amber
+      case 'low':
+        return const Color(0xFF10B981); // Green
+      default:
+        return const Color(0xFF3B82F6); // Blue
+    }
+  }
+
   Widget _buildRequestCard(
     BuildContext context,
     TaskCardRequest request,
     bool isDesktop,
   ) {
+    final priorityColor = _getPriorityColor(request.priorityLevel ?? 'Medium');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: EdgeInsets.all(isDesktop ? 24 : 16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+        color: const Color(0xFF0F172A),
+        borderRadius: const BorderRadius.only(
+          topRight: Radius.circular(16),
+          bottomRight: Radius.circular(16),
+          topLeft: Radius.circular(4),
+          bottomLeft: Radius.circular(4),
+        ),
+        border: Border(
+          left: BorderSide(color: priorityColor, width: 4),
+          top: const BorderSide(color: Color(0xFF1E293B)),
+          right: const BorderSide(color: Color(0xFF1E293B)),
+          bottom: const BorderSide(color: Color(0xFF1E293B)),
         ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -966,9 +1002,11 @@ class TaskCardRequestScreen extends HookWidget {
               Expanded(
                 child: Text(
                   request.taskName ?? 'Untitled Task',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
                 ),
               ),
               _buildStatusChip(context, request.workflowStatus ?? 'Pending'),
@@ -978,12 +1016,10 @@ class TaskCardRequestScreen extends HookWidget {
           if (request.taskDescription != null) ...[
             Text(
               request.taskDescription!,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withOpacity(0.7),
-                  ),
+              style: GoogleFonts.outfit(
+                color: Colors.white.withOpacity(0.6),
+                fontSize: 14,
+              ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -1013,17 +1049,16 @@ class TaskCardRequestScreen extends HookWidget {
             children: [
               Icon(
                 Icons.access_time,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                size: 14,
+                color: Colors.white.withOpacity(0.4),
               ),
               const SizedBox(width: 4),
               Text(
                 'Requested ${_formatDate(request.requestedOn)}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
-                    ),
+                style: GoogleFonts.outfit(
+                  color: Colors.white.withOpacity(0.4),
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -1036,29 +1071,29 @@ class TaskCardRequestScreen extends HookWidget {
     Color color;
     switch (status.toLowerCase()) {
       case 'pending':
-        color = Colors.orange;
+        color = const Color(0xFFF59E0B);
         break;
       case 'approved':
-        color = Colors.green;
+        color = const Color(0xFF10B981);
         break;
       case 'rejected':
-        color = Colors.red;
+        color = const Color(0xFFEF4444);
         break;
       default:
         color = Colors.grey;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
       ),
       child: Text(
         status,
-        style: TextStyle(
-          fontSize: 12,
+        style: GoogleFonts.outfit(
+          fontSize: 11,
           fontWeight: FontWeight.w600,
           color: color,
         ),
@@ -1070,25 +1105,29 @@ class TaskCardRequestScreen extends HookWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+        color: const Color(0xFF1E293B).withOpacity(0.5),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: const Color(0xFF1E293B),
+          width: 0.8,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             icon,
-            size: 14,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            size: 12,
+            color: Colors.white.withOpacity(0.6),
           ),
           const SizedBox(width: 4),
           Text(
             text,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                  fontWeight: FontWeight.w500,
-                ),
+            style: GoogleFonts.outfit(
+              color: Colors.white.withOpacity(0.6),
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -1109,22 +1148,35 @@ class TaskCardRequestScreen extends HookWidget {
       children: [
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 14,
+          ),
         ),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           maxLines: maxLines,
+          style: GoogleFonts.outfit(
+            color: Colors.white,
+            fontSize: 14,
+          ),
           decoration: InputDecoration(
             hintText: hint,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            hintStyle: GoogleFonts.outfit(
+              color: Colors.white.withOpacity(0.3),
+              fontSize: 14,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF1E293B)),
+            ),
             errorBorder: isRequired && controller.text.trim().isEmpty
                 ? OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.error,
+                    borderSide: const BorderSide(
+                      color: Color(0xFFEF4444),
                     ),
                   )
                 : null,
@@ -1133,17 +1185,17 @@ class TaskCardRequestScreen extends HookWidget {
               vertical: isDesktop ? 20 : 16,
             ),
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surface,
+            fillColor: const Color(0xFF0F172A),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).dividerColor.withOpacity(0.1),
+              borderSide: const BorderSide(
+                color: Color(0xFF1E293B),
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
+              borderSide: const BorderSide(
+                color: Color(0xFF3B82F6),
                 width: 1.5,
               ),
             ),
@@ -1165,21 +1217,39 @@ class TaskCardRequestScreen extends HookWidget {
       children: [
         Text(
           isRequired ? 'Project *' : 'Project',
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 14,
+          ),
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: selectedProject.value,
+          dropdownColor: const Color(0xFF0F172A),
+          style: GoogleFonts.outfit(
+            color: Colors.white,
+            fontSize: 14,
+          ),
+          icon: const Icon(
+            Icons.keyboard_arrow_down,
+            color: Colors.white54,
+          ),
           decoration: InputDecoration(
             hintText: 'Select a project',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            hintStyle: GoogleFonts.outfit(
+              color: Colors.white.withOpacity(0.3),
+              fontSize: 14,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF1E293B)),
+            ),
             errorBorder: isRequired && selectedProject.value == null
                 ? OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.error,
+                    borderSide: const BorderSide(
+                      color: Color(0xFFEF4444),
                     ),
                   )
                 : null,
@@ -1188,17 +1258,17 @@ class TaskCardRequestScreen extends HookWidget {
               vertical: isDesktop ? 20 : 16,
             ),
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surface,
+            fillColor: const Color(0xFF0F172A),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).dividerColor.withOpacity(0.1),
+              borderSide: const BorderSide(
+                color: Color(0xFF1E293B),
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
+              borderSide: const BorderSide(
+                color: Color(0xFF3B82F6),
                 width: 1.5,
               ),
             ),
@@ -1206,7 +1276,10 @@ class TaskCardRequestScreen extends HookWidget {
           items: viewModel.projects.map((project) {
             return DropdownMenuItem<String>(
               value: project.projectId,
-              child: Text(project.projectName),
+              child: Text(
+                project.projectName,
+                style: GoogleFonts.outfit(color: Colors.white),
+              ),
             );
           }).toList(),
           onChanged: (value) => selectedProject.value = value,
@@ -1229,20 +1302,34 @@ class TaskCardRequestScreen extends HookWidget {
       children: [
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 14,
+          ),
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: value,
+          dropdownColor: const Color(0xFF0F172A),
+          style: GoogleFonts.outfit(
+            color: Colors.white,
+            fontSize: 14,
+          ),
+          icon: const Icon(
+            Icons.keyboard_arrow_down,
+            color: Colors.white54,
+          ),
           decoration: InputDecoration(
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF1E293B)),
+            ),
             errorBorder: isRequired && value.isEmpty
                 ? OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.error,
+                    borderSide: const BorderSide(
+                      color: Color(0xFFEF4444),
                     ),
                   )
                 : null,
@@ -1251,23 +1338,29 @@ class TaskCardRequestScreen extends HookWidget {
               vertical: isDesktop ? 20 : 16,
             ),
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surface,
+            fillColor: const Color(0xFF0F172A),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).dividerColor.withOpacity(0.1),
+              borderSide: const BorderSide(
+                color: Color(0xFF1E293B),
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
+              borderSide: const BorderSide(
+                color: Color(0xFF3B82F6),
                 width: 1.5,
               ),
             ),
           ),
           items: options.map((option) {
-            return DropdownMenuItem<String>(value: option, child: Text(option));
+            return DropdownMenuItem<String>(
+              value: option,
+              child: Text(
+                option,
+                style: GoogleFonts.outfit(color: Colors.white),
+              ),
+            );
           }).toList(),
           onChanged: onChanged,
         ),
@@ -1288,9 +1381,11 @@ class TaskCardRequestScreen extends HookWidget {
       children: [
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 14,
+          ),
         ),
         const SizedBox(height: 8),
         InkWell(
@@ -1300,6 +1395,20 @@ class TaskCardRequestScreen extends HookWidget {
               initialDate: value ?? DateTime.now(),
               firstDate: DateTime.now(),
               lastDate: DateTime.now().add(const Duration(days: 365)),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: const ColorScheme.dark(
+                      primary: Color(0xFF3B82F6),
+                      onPrimary: Colors.white,
+                      surface: Color(0xFF0F172A),
+                      onSurface: Colors.white,
+                    ),
+                    dialogBackgroundColor: const Color(0xFF0B0F19),
+                  ),
+                  child: child!,
+                );
+              },
             );
             if (date != null) {
               onChanged(date);
@@ -1311,11 +1420,11 @@ class TaskCardRequestScreen extends HookWidget {
               vertical: isDesktop ? 20 : 16,
             ),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
+              color: const Color(0xFF0F172A),
               border: Border.all(
                 color: isRequired && value == null
-                    ? Theme.of(context).colorScheme.error
-                    : Theme.of(context).dividerColor.withOpacity(0.1),
+                    ? const Color(0xFFEF4444)
+                    : const Color(0xFF1E293B),
               ),
               borderRadius: BorderRadius.circular(12),
             ),
@@ -1324,21 +1433,18 @@ class TaskCardRequestScreen extends HookWidget {
                 Expanded(
                   child: Text(
                     value != null ? _formatDate(value) : 'Select date',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: value != null
-                              ? Theme.of(context).colorScheme.onSurface
-                              : Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withOpacity(0.6),
-                        ),
+                    style: GoogleFonts.outfit(
+                      color: value != null
+                          ? Colors.white
+                          : Colors.white.withOpacity(0.3),
+                      fontSize: 14,
+                    ),
                   ),
                 ),
-                Icon(
+                const Icon(
                   Icons.calendar_today,
                   size: 20,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withOpacity(0.6),
+                  color: Color(0xFF3B82F6),
                 ),
               ],
             ),
@@ -1359,9 +1465,7 @@ class TaskCardRequestScreen extends HookWidget {
     TextEditingController estimatedDaysController,
   ) {
     if (fromDate != null && toDate != null) {
-      // Calculate estimated days
-      final days = toDate.difference(fromDate).inDays +
-          1; // +1 to include both start and end day
+      final days = toDate.difference(fromDate).inDays + 1;
       estimatedDaysController.text = days.toString();
     } else {
       estimatedDaysController.clear();
@@ -1380,22 +1484,35 @@ class TaskCardRequestScreen extends HookWidget {
       children: [
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 14,
+          ),
         ),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
-          readOnly: true, // Auto-calculated, not editable
+          readOnly: true,
+          style: GoogleFonts.outfit(
+            color: Colors.white,
+            fontSize: 14,
+          ),
           decoration: InputDecoration(
             hintText: 'Auto-calculated',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            hintStyle: GoogleFonts.outfit(
+              color: Colors.white.withOpacity(0.3),
+              fontSize: 14,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF1E293B)),
+            ),
             errorBorder: isRequired && controller.text.trim().isEmpty
                 ? OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.error,
+                    borderSide: const BorderSide(
+                      color: Color(0xFFEF4444),
                     ),
                   )
                 : null,
@@ -1404,29 +1521,30 @@ class TaskCardRequestScreen extends HookWidget {
               vertical: isDesktop ? 20 : 16,
             ),
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surface,
+            fillColor: const Color(0xFF0F172A),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).dividerColor.withOpacity(0.1),
+              borderSide: const BorderSide(
+                color: Color(0xFF1E293B),
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
+              borderSide: const BorderSide(
+                color: Color(0xFF3B82F6),
                 width: 1.5,
               ),
             ),
-            suffixIcon: Icon(
+            suffixIcon: const Icon(
               Icons.calculate,
-              color: Theme.of(context).colorScheme.primary,
+              color: Color(0xFF3B82F6),
             ),
           ),
         ),
       ],
     );
   }
+
 
   Future<void> _submitRequest(
     BuildContext context,

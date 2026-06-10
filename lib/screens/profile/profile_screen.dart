@@ -9,6 +9,7 @@ import 'package:webnox_taskops/view_model/auth_view_model.dart';
 import 'package:webnox_taskops/view_model/leave_policy_view_model.dart';
 import 'package:webnox_taskops/widgets/custom_profile_image_upload.dart';
 import 'package:webnox_taskops/screens/profile/components/document_tab.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ProfileScreen extends HookWidget {
   const ProfileScreen({super.key});
@@ -48,6 +49,7 @@ class ProfileScreen extends HookWidget {
     final roleCtrl = useTextEditingController();
     final designationCtrl = useTextEditingController();
     final bloodGroupCtrl = useTextEditingController();
+    final joinDateCtrl = useTextEditingController();
 
     // Refs to track previous values for controller updates
     final prevPersonalEmployeeDetails = useRef<Map<String, dynamic>?>(null);
@@ -169,6 +171,7 @@ class ProfileScreen extends HookWidget {
           emergencyContactCtrl.text =
               currentData['employee_emergency_contact_number'] ?? '';
           bloodGroupCtrl.text = currentData['employee_blood_group'] ?? '';
+          joinDateCtrl.text = _formatDate(currentData['employee_doj']) ?? '';
           prevPersonalEmployeeDetails.value = Map<String, dynamic>.from(
             currentData,
           );
@@ -221,7 +224,10 @@ class ProfileScreen extends HookWidget {
       roleCtrl: roleCtrl,
       designationCtrl: designationCtrl,
       bloodGroupCtrl: bloodGroupCtrl,
+      joinDateCtrl: joinDateCtrl,
     );
+
+    final tabBar = _buildTabBar(context, selectedTab);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -231,146 +237,148 @@ class ProfileScreen extends HookWidget {
             ? _buildLoadingState()
             : employeeDetails.value == null
             ? _buildErrorState()
-            : Stack(
-                children: [
-                  // Cover Photo Section at the top
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: _buildCoverPhotoSection(
-                      context,
-                      authViewModel,
-                      employeeDetails,
-                    ),
+            : SingleChildScrollView(
+                child: Padding(
+                  padding: ResponsiveUtils.getResponsivePadding(
+                    context,
+                    mobile: const EdgeInsets.all(16),
+                    tablet: const EdgeInsets.all(20),
+                    laptop: const EdgeInsets.all(22),
+                    desktop: const EdgeInsets.all(24),
                   ),
-                  // Scrollable content with top padding
-                  SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Spacer for cover photo (reduced to allow overlap)
-                        SizedBox(
-                          height: isDesktop
-                              ? 160
-                              : isLaptop
-                              ? 170
-                              : isTablet
-                              ? 200
-                              : 240,
-                        ),
-                        // Profile Content
-                        Padding(
-                          padding: ResponsiveUtils.getResponsivePadding(
-                            context,
-                            mobile: const EdgeInsets.all(16),
-                            tablet: const EdgeInsets.all(20),
-                            laptop: const EdgeInsets.all(22),
-                            desktop: const EdgeInsets.all(24),
-                          ),
-                          child: isDesktop
-                              ? _buildDesktopLayout(profileCard, settingsCard)
-                              : isLaptop
-                              ? _buildLaptopLayout(profileCard, settingsCard)
-                              : isTablet
-                              ? _buildTabletLayout(profileCard, settingsCard)
-                              : _buildMobileLayout(profileCard, settingsCard),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  child: isDesktop
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(flex: 1, child: profileCard),
+                            const SizedBox(width: 24),
+                            Expanded(
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  tabBar,
+                                  const SizedBox(height: 20),
+                                  settingsCard,
+                                ],
+                              ),
+                            ),
+                          ],
+                        )
+                      : isLaptop
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(flex: 2, child: profileCard),
+                                const SizedBox(width: 20),
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      tabBar,
+                                      const SizedBox(height: 20),
+                                      settingsCard,
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            )
+                          : isTablet
+                              ? Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(flex: 1, child: profileCard),
+                                    const SizedBox(width: 20),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          tabBar,
+                                          const SizedBox(height: 20),
+                                          settingsCard,
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Column(
+                                  children: [
+                                    profileCard,
+                                    const SizedBox(height: 20),
+                                    tabBar,
+                                    const SizedBox(height: 20),
+                                    settingsCard,
+                                  ],
+                                ),
+                ),
               ),
       ),
     );
   }
 
-  Widget _buildCoverPhotoSection(
-    BuildContext context,
-    AuthViewModel authViewModel,
-    ValueNotifier<Map<String, dynamic>?> employeeDetails,
-  ) {
+  Widget _buildTabBar(BuildContext context, ValueNotifier<int> selectedTab) {
+    final tabs = [
+      'Personal Info',
+      'Professional',
+      'Leave Details',
+      'Documents',
+    ];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      height: 300,
-      width: double.infinity,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Background image with error handling
-          Image.asset(
-            'assets/images/profile_bg.jpg',
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              // Fallback gradient if image fails to load
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      CommonColors.primary.withOpacity(0.8),
-                      CommonColors.primary.withOpacity(0.6),
-                      CommonColors.primary.withOpacity(0.4),
-                    ],
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFF1E293B),
+          width: 1.2,
+        ),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(tabs.length, (index) {
+            final isSelected = selectedTab.value == index;
+            return Padding(
+              padding: EdgeInsets.only(right: index == tabs.length - 1 ? 0 : 8),
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () {
+                    selectedTab.value = index;
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    decoration: BoxDecoration(
+                      color: isSelected ? const Color(0xFF3B82F6) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    child: Text(
+                      tabs[index],
+                      style: GoogleFonts.outfit(
+                        color: isSelected
+                            ? Colors.white
+                            : (isDark ? Colors.white60 : Colors.black54),
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        fontSize: 13,
+                      ),
+                    ),
                   ),
                 ),
-              );
-            },
-          ),
-          // Gradient overlay
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Colors.black.withOpacity(0.3)],
               ),
-            ),
-          ),
-        ],
+            );
+          }),
+        ),
       ),
     );
-  }
-
-  Widget _buildDesktopLayout(Widget profileCard, Widget settingsCard) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Left Column - Profile Card
-        Expanded(flex: 1, child: profileCard),
-        const SizedBox(width: 24),
-        // Right Column - Account Settings
-        Expanded(flex: 2, child: settingsCard),
-      ],
-    );
-  }
-
-  Widget _buildLaptopLayout(Widget profileCard, Widget settingsCard) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Left Column - Profile Card (slightly wider than desktop's 1:2)
-        Expanded(flex: 2, child: profileCard),
-        const SizedBox(width: 20),
-        // Right Column - Account Settings
-        Expanded(flex: 3, child: settingsCard),
-      ],
-    );
-  }
-
-  Widget _buildTabletLayout(Widget profileCard, Widget settingsCard) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(flex: 1, child: profileCard),
-        const SizedBox(width: 20),
-        Expanded(flex: 1, child: settingsCard),
-      ],
-    );
-  }
-
-  Widget _buildMobileLayout(Widget profileCard, Widget settingsCard) {
-    return Column(children: [profileCard, settingsCard]);
   }
 
   Widget _buildProfileSummaryCard(
@@ -392,125 +400,178 @@ class ProfileScreen extends HookWidget {
       return 'JD';
     }
 
+    final statusVal = employeeDetails.value?['employee_status'] ?? 'Active';
+
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.1),
-          width: 1,
+          color: const Color(0xFF1E293B),
+          width: 1.2,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-            spreadRadius: 0,
-          ),
-        ],
       ),
       child: Column(
         children: [
-          // Avatar with upload capability
-          CustomProfileImageUpload(
-            currentImageUrl: employeeDetails.value?['employee_img'] as String?,
-            radius: 60,
-            initials: getInitials(),
-            primaryColor: Theme.of(context).colorScheme.primary,
-            onImageUploaded: (imageUrl) async {
-              // Update employee profile with new image URL
-              final success = await authViewModel.updateEmployeeProfile({
-                'employee_img': imageUrl,
-              });
-              if (success) {
-                // Refresh employee details to show updated image
-                final details = await authViewModel.getCurrentEmployeeDetails();
-                if (details != null) {
-                  employeeDetails.value = Map<String, dynamic>.from(details);
+          // Avatar with glowing ring
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: const Color(0xFF3B82F6).withOpacity(0.5),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF3B82F6).withOpacity(0.25),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: CustomProfileImageUpload(
+              currentImageUrl: employeeDetails.value?['employee_img'] as String?,
+              radius: 64,
+              initials: getInitials(),
+              primaryColor: const Color(0xFF3B82F6),
+              onImageUploaded: (imageUrl) async {
+                // Update employee profile with new image URL
+                final success = await authViewModel.updateEmployeeProfile({
+                  'employee_img': imageUrl,
+                });
+                if (success) {
+                  // Refresh employee details to show updated image
+                  final details = await authViewModel.getCurrentEmployeeDetails();
+                  if (details != null) {
+                    employeeDetails.value = Map<String, dynamic>.from(details);
+                  }
                 }
-              }
-            },
+              },
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          // Name and Company
+          // Name and Designation
           Text(
             employeeDetails.value?['employee_name'] ?? 'Employee Name',
-            style: TextStyle(
-              fontSize: 24,
+            style: GoogleFonts.outfit(
+              fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Theme.of(context).textTheme.titleLarge?.color,
+              color: Colors.white,
             ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
-            employeeDetails.value?['employee_designation'] ?? 'Company Name',
-            style: TextStyle(
-              fontSize: 16,
-              color: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+            employeeDetails.value?['employee_designation'] ?? 'Visual Designer',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: Colors.white54,
+              fontWeight: FontWeight.w500,
             ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
 
-          // Statistics
+          const Divider(
+            color: Color(0xFF1E293B),
+            height: 32,
+            thickness: 1.2,
+          ),
+
+          // Statistics rows
           _buildStatRow(
             context,
             'Employee ID',
             employeeDetails.value?['employee_id'] ?? 'N/A',
-            Theme.of(context).colorScheme.primary,
+            const Color(0xFF3B82F6),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
           _buildStatRow(
             context,
             'Age',
-            '${employeeDetails.value?['employee_age'] ?? 'N/A'} years',
-            Theme.of(context).colorScheme.primary,
+            employeeDetails.value?['employee_age'] != null
+                ? '${employeeDetails.value!['employee_age']} years'
+                : 'N/A',
+            const Color(0xFF3B82F6),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
           _buildStatRow(
             context,
             'Blood Group',
-            employeeDetails.value?['employee_blood_group'] ?? 'N/A',
-            Theme.of(context).colorScheme.primary,
+            employeeDetails.value?['employee_blood_group'] ?? '-',
+            const Color(0xFF3B82F6),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
           _buildStatRow(
             context,
             'Phone Number',
             employeeDetails.value?['employee_phone_num'] ?? 'N/A',
-            Theme.of(context).colorScheme.primary,
+            const Color(0xFF3B82F6),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
           _buildStatRow(
             context,
             'Gender',
             employeeDetails.value?['employee_gender'] ?? 'N/A',
-            Theme.of(context).colorScheme.primary,
+            const Color(0xFF3B82F6),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
           _buildStatRow(
             context,
             'Designation',
             employeeDetails.value?['employee_designation'] ?? 'N/A',
-            Theme.of(context).colorScheme.primary,
+            const Color(0xFF3B82F6),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
           _buildStatRow(
             context,
             'Role',
             employeeDetails.value?['employee_role'] ?? 'N/A',
-            Theme.of(context).colorScheme.primary,
+            const Color(0xFF3B82F6),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
+          _buildStatRow(
+            context,
+            'Status',
+            '',
+            const Color(0xFF3B82F6),
+            customValueWidget: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF064E3B).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFF10B981).withOpacity(0.4),
+                  width: 1.0,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF10B981),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    statusVal,
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFF34D399),
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -520,30 +581,30 @@ class ProfileScreen extends HookWidget {
     BuildContext context,
     String label,
     String value,
-    Color color,
-  ) {
+    Color color, {
+    Widget? customValueWidget,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: GoogleFonts.outfit(
             fontSize: 14,
-            color: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+            color: Colors.white60,
             fontWeight: FontWeight.w500,
           ),
         ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: color,
-            letterSpacing: 0.2,
-          ),
-        ),
+        customValueWidget ??
+            Text(
+              value,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: color,
+                letterSpacing: 0.2,
+              ),
+            ),
       ],
     );
   }
@@ -569,98 +630,21 @@ class ProfileScreen extends HookWidget {
     required TextEditingController roleCtrl,
     required TextEditingController designationCtrl,
     required TextEditingController bloodGroupCtrl,
+    required TextEditingController joinDateCtrl,
   }) {
-    final tabs = [
-      'Personal Info',
-      'Professional',
-      'Leave Details',
-      'Documents',
-    ];
-
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.1),
-          width: 1,
+          color: const Color(0xFF1E293B),
+          width: 1.2,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-            spreadRadius: 0,
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Tabs
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: List.generate(tabs.length, (index) {
-                final isSelected = selectedTab.value == index;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          selectedTab.value = index;
-                        },
-                        borderRadius: BorderRadius.circular(10),
-                        splashColor: Theme.of(
-                          context,
-                        ).colorScheme.primary.withOpacity(0.2),
-                        highlightColor: Theme.of(
-                          context,
-                        ).colorScheme.primary.withOpacity(0.1),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          child: Text(
-                            tabs[index],
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium?.color,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-          const SizedBox(height: 24),
-
           // Tab Content
           if (selectedTab.value == 0)
             _buildPersonalInfoForm(
@@ -681,6 +665,7 @@ class ProfileScreen extends HookWidget {
               qualificationCtrl: qualificationCtrl,
               emergencyContactCtrl: emergencyContactCtrl,
               bloodGroupCtrl: bloodGroupCtrl,
+              joinDateCtrl: joinDateCtrl,
             )
           else if (selectedTab.value == 1)
             _buildProfessionalInfoForm(
@@ -719,6 +704,7 @@ class ProfileScreen extends HookWidget {
     required TextEditingController qualificationCtrl,
     required TextEditingController emergencyContactCtrl,
     required TextEditingController bloodGroupCtrl,
+    required TextEditingController joinDateCtrl,
   }) {
     // Update controllers when employeeDetails changes (using ref to track changes)
     final prevEmployeeDetails = prevEmployeeDetailsRef;
@@ -745,6 +731,8 @@ class ProfileScreen extends HookWidget {
           employeeDetails.value?['employee_emergency_contact_number'] ?? '';
       bloodGroupCtrl.text =
           employeeDetails.value?['employee_blood_group'] ?? '';
+      joinDateCtrl.text =
+          _formatDate(employeeDetails.value?['employee_doj']) ?? '';
       prevEmployeeDetails.value = employeeDetails.value;
     }
 
@@ -752,30 +740,49 @@ class ProfileScreen extends HookWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Edit Button Row
+          // Header Row with inline Edit Profile button
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Personal Information',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).textTheme.titleLarge?.color,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Personal Information',
+                      style: GoogleFonts.outfit(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Update your personal details and contact information.',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: Colors.white54,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               if (!isEditing.value)
                 ElevatedButton.icon(
                   onPressed: () => isEditing.value = true,
-                  icon: const Icon(Icons.edit, size: 18),
-                  label: const Text('Edit'),
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  label: Text(
+                    'Edit Profile',
+                    style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                  ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: const Color(0xFF3B82F6),
                     foregroundColor: Colors.white,
-                    elevation: 1,
+                    elevation: 0,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 10,
+                      vertical: 12,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -784,7 +791,9 @@ class ProfileScreen extends HookWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 28),
+
+          // Fields Grid
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -793,7 +802,7 @@ class ProfileScreen extends HookWidget {
                   context,
                   'First Name',
                   firstNameCtrl,
-                  Icons.person,
+                  Icons.person_outline,
                   enabled: isEditing.value,
                 ),
               ),
@@ -803,7 +812,7 @@ class ProfileScreen extends HookWidget {
                   context,
                   'Last Name',
                   lastNameCtrl,
-                  Icons.person,
+                  Icons.person_outline,
                   enabled: isEditing.value,
                 ),
               ),
@@ -818,7 +827,7 @@ class ProfileScreen extends HookWidget {
                   context,
                   'Phone Number',
                   phoneCtrl,
-                  Icons.phone,
+                  Icons.phone_outlined,
                   enabled: isEditing.value,
                 ),
               ),
@@ -828,7 +837,7 @@ class ProfileScreen extends HookWidget {
                   context,
                   'Gender',
                   genderCtrl,
-                  Icons.person_outline,
+                  Icons.wc_outlined,
                   enabled: isEditing.value,
                 ),
               ),
@@ -843,7 +852,7 @@ class ProfileScreen extends HookWidget {
                   context,
                   'Personal Email',
                   personalEmailCtrl,
-                  Icons.email,
+                  Icons.email_outlined,
                   enabled: isEditing.value,
                 ),
               ),
@@ -853,7 +862,7 @@ class ProfileScreen extends HookWidget {
                   context,
                   'Company Email',
                   companyEmailCtrl,
-                  Icons.business,
+                  Icons.business_outlined,
                   enabled: isEditing.value,
                 ),
               ),
@@ -868,7 +877,7 @@ class ProfileScreen extends HookWidget {
                   context,
                   'Date of Birth',
                   dobCtrl,
-                  Icons.calendar_today,
+                  Icons.calendar_today_outlined,
                   enabled: isEditing.value,
                 ),
               ),
@@ -878,8 +887,33 @@ class ProfileScreen extends HookWidget {
                   context,
                   'Qualification',
                   qualificationCtrl,
-                  Icons.school,
+                  Icons.school_outlined,
                   enabled: isEditing.value,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: _buildFormField(
+                  context,
+                  'Emergency Contact',
+                  emergencyContactCtrl,
+                  Icons.phone_iphone_outlined,
+                  enabled: isEditing.value,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildFormField(
+                  context,
+                  'Join Date',
+                  joinDateCtrl,
+                  Icons.calendar_month_outlined,
+                  enabled: false,
                 ),
               ),
             ],
@@ -889,16 +923,8 @@ class ProfileScreen extends HookWidget {
             context,
             'Address',
             addressCtrl,
-            Icons.location_on,
+            Icons.location_on_outlined,
             maxLines: 2,
-            enabled: isEditing.value,
-          ),
-          const SizedBox(height: 16),
-          _buildFormField(
-            context,
-            'Emergency Contact Number',
-            emergencyContactCtrl,
-            Icons.emergency,
             enabled: isEditing.value,
           ),
           const SizedBox(height: 16),
@@ -906,153 +932,139 @@ class ProfileScreen extends HookWidget {
             context,
             'Blood Group',
             bloodGroupCtrl,
-            Icons.bloodtype,
+            Icons.bloodtype_outlined,
             enabled: isEditing.value,
           ),
+          
           if (isEditing.value) ...[
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
             Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      // Reset to original values
-                      firstNameCtrl.text = _getFirstName(
-                        employeeDetails.value?['employee_name'] ?? '',
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    // Show loading indicator
+                    if (context.mounted) {
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) =>
+                            const Center(child: CircularProgressIndicator()),
                       );
-                      lastNameCtrl.text = _getLastName(
-                        employeeDetails.value?['employee_name'] ?? '',
-                      );
-                      phoneCtrl.text =
-                          employeeDetails.value?['employee_phone_num'] ?? '';
-                      personalEmailCtrl.text =
-                          employeeDetails.value?['employee_personal_email'] ??
-                          '';
-                      companyEmailCtrl.text =
-                          employeeDetails.value?['employee_company_email'] ??
-                          '';
-                      addressCtrl.text =
-                          employeeDetails.value?['employee_address'] ?? '';
-                      genderCtrl.text =
-                          employeeDetails.value?['employee_gender'] ?? '';
-                      dobCtrl.text =
-                          _formatDate(employeeDetails.value?['employee_dob']) ??
-                          '';
-                      qualificationCtrl.text =
-                          employeeDetails.value?['employee_qualification'] ??
-                          '';
-                      emergencyContactCtrl.text =
-                          employeeDetails
-                              .value?['employee_emergency_contact_number'] ??
-                          '';
-                      bloodGroupCtrl.text =
-                          employeeDetails.value?['employee_blood_group'] ?? '';
-                      isEditing.value = false;
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text('Cancel'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      // Show loading indicator
+                    }
+
+                    try {
+                      final ok = await authViewModel.updateEmployeeProfile({
+                        'employee_name':
+                            '${firstNameCtrl.text.trim()} ${lastNameCtrl.text.trim()}',
+                        'employee_phone_num': phoneCtrl.text.trim(),
+                        'employee_personal_email': personalEmailCtrl.text.trim(),
+                        'employee_company_email': companyEmailCtrl.text.trim(),
+                        'employee_address': addressCtrl.text.trim(),
+                        'employee_gender': genderCtrl.text.trim(),
+                        'employee_qualification': qualificationCtrl.text.trim(),
+                        'employee_emergency_contact_number':
+                            emergencyContactCtrl.text.trim(),
+                        'employee_blood_group': bloodGroupCtrl.text.trim(),
+                      });
+
+                      // Close loading indicator
                       if (context.mounted) {
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (context) =>
-                              const Center(child: CircularProgressIndicator()),
-                        );
+                        Navigator.of(context).pop();
                       }
 
-                      try {
-                        final ok = await authViewModel.updateEmployeeProfile({
-                          'employee_name':
-                              '${firstNameCtrl.text.trim()} ${lastNameCtrl.text.trim()}',
-                          'employee_phone_num': phoneCtrl.text.trim(),
-                          'employee_personal_email': personalEmailCtrl.text
-                              .trim(),
-                          'employee_company_email': companyEmailCtrl.text
-                              .trim(),
-                          'employee_address': addressCtrl.text.trim(),
-                          'employee_gender': genderCtrl.text.trim(),
-                          'employee_qualification': qualificationCtrl.text
-                              .trim(),
-                          'employee_emergency_contact_number':
-                              emergencyContactCtrl.text.trim(),
-                          'employee_blood_group': bloodGroupCtrl.text.trim(),
-                        });
-
-                        // Close loading indicator
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
+                      if (ok) {
+                        final refreshed = await authViewModel.getCurrentEmployeeDetails();
+                        if (refreshed != null) {
+                          employeeDetails.value = Map<String, dynamic>.from(refreshed);
                         }
-
-                        if (ok) {
-                          final refreshed = await authViewModel
-                              .getCurrentEmployeeDetails();
-                          if (refreshed != null) {
-                            employeeDetails.value = Map<String, dynamic>.from(
-                              refreshed,
-                            );
-                          }
-                          isEditing.value = false;
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Personal information updated successfully',
-                                ),
-                              ),
-                            );
-                          }
-                        } else {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Failed to update profile. Please try again.',
-                                ),
-                              ),
-                            );
-                          }
-                        }
-                      } catch (e) {
-                        // Close loading indicator
+                        isEditing.value = false;
                         if (context.mounted) {
-                          Navigator.of(context).pop();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Error updating profile: ${e.toString()}',
-                              ),
+                            const SnackBar(
+                              content: Text('Personal information updated successfully'),
+                            ),
+                          );
+                        }
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Failed to update profile. Please try again.'),
                             ),
                           );
                         }
                       }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                    } catch (e) {
+                      // Close loading indicator
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error updating profile: ${e.toString()}'),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  label: Text(
+                    'Save Changes',
+                    style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3B82F6),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      'Update',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    // Reset to original values
+                    firstNameCtrl.text = _getFirstName(
+                      employeeDetails.value?['employee_name'] ?? '',
+                    );
+                    lastNameCtrl.text = _getLastName(
+                      employeeDetails.value?['employee_name'] ?? '',
+                    );
+                    phoneCtrl.text =
+                        employeeDetails.value?['employee_phone_num'] ?? '';
+                    personalEmailCtrl.text =
+                        employeeDetails.value?['employee_personal_email'] ?? '';
+                    companyEmailCtrl.text =
+                        employeeDetails.value?['employee_company_email'] ?? '';
+                    addressCtrl.text =
+                        employeeDetails.value?['employee_address'] ?? '';
+                    genderCtrl.text =
+                        employeeDetails.value?['employee_gender'] ?? '';
+                    dobCtrl.text =
+                        _formatDate(employeeDetails.value?['employee_dob']) ?? '';
+                    qualificationCtrl.text =
+                        employeeDetails.value?['employee_qualification'] ?? '';
+                    emergencyContactCtrl.text =
+                        employeeDetails.value?['employee_emergency_contact_number'] ?? '';
+                    bloodGroupCtrl.text =
+                        employeeDetails.value?['employee_blood_group'] ?? '';
+                    isEditing.value = false;
+                  },
+                  icon: const Icon(Icons.close, size: 18, color: Colors.white70),
+                  label: Text(
+                    'Cancel',
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    side: const BorderSide(color: Color(0xFF1E293B), width: 1.2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                 ),
@@ -1087,76 +1099,49 @@ class ProfileScreen extends HookWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Read-only Information Card
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Theme.of(context).dividerColor.withOpacity(0.2),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Employee Information',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).textTheme.titleMedium?.color,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildInfoRow(context, 'Employee ID', employeeId, Icons.badge),
-                const SizedBox(height: 12),
-                _buildInfoRow(
-                  context,
-                  'Date of Joining',
-                  doj,
-                  Icons.calendar_today,
-                ),
-                const SizedBox(height: 12),
-                _buildInfoRow(
-                  context,
-                  'Salary',
-                  '₹$salary',
-                  Icons.attach_money,
-                ),
-                const SizedBox(height: 12),
-                _buildInfoRow(context, 'Last Login', lastLogin, Icons.login),
-                const SizedBox(height: 12),
-                _buildInfoRow(context, 'Last Logout', lastLogout, Icons.logout),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Editable Fields Section
+          // Header Row with inline Edit button
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Professional Details',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).textTheme.titleLarge?.color,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Professional Details',
+                      style: GoogleFonts.outfit(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Update your professional role and designation.',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: Colors.white54,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               if (!isEditing.value)
                 ElevatedButton.icon(
                   onPressed: () => isEditing.value = true,
-                  icon: const Icon(Icons.edit, size: 18),
-                  label: const Text('Edit'),
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  label: Text(
+                    'Edit Details',
+                    style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                  ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: const Color(0xFF3B82F6),
                     foregroundColor: Colors.white,
-                    elevation: 1,
+                    elevation: 0,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 10,
+                      vertical: 12,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -1165,7 +1150,56 @@ class ProfileScreen extends HookWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 28),
+
+          // Read-only Information Card
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0B0F19),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF1E293B),
+                width: 1.2,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Employee Information',
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildInfoRow(context, 'Employee ID', employeeId, Icons.badge_outlined),
+                const SizedBox(height: 12),
+                _buildInfoRow(
+                  context,
+                  'Date of Joining',
+                  doj,
+                  Icons.calendar_today_outlined,
+                ),
+                const SizedBox(height: 12),
+                _buildInfoRow(
+                  context,
+                  'Salary',
+                  '₹$salary',
+                  Icons.currency_rupee_rounded,
+                ),
+                const SizedBox(height: 12),
+                _buildInfoRow(context, 'Last Login', lastLogin, Icons.login_rounded),
+                const SizedBox(height: 12),
+                _buildInfoRow(context, 'Last Logout', lastLogout, Icons.logout_rounded),
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
+
+          // Editable Fields Section
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1174,7 +1208,7 @@ class ProfileScreen extends HookWidget {
                   context,
                   'Designation',
                   designationCtrl,
-                  Icons.badge,
+                  Icons.badge_outlined,
                   enabled: isEditing.value,
                 ),
               ),
@@ -1190,164 +1224,113 @@ class ProfileScreen extends HookWidget {
               ),
             ],
           ),
+          
           if (isEditing.value) ...[
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
             Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      // Reset to original values
-                      roleCtrl.text =
-                          employeeDetails.value?['employee_role'] ?? '';
-                      designationCtrl.text =
-                          employeeDetails.value?['employee_designation'] ?? '';
-                      isEditing.value = false;
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text('Cancel'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      // Show loading indicator
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    // Show loading indicator
+                    if (context.mounted) {
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) =>
+                            const Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    try {
+                      final ok = await authViewModel.updateEmployeeProfile({
+                        'employee_role': roleCtrl.text.trim(),
+                        'employee_designation': designationCtrl.text.trim(),
+                      });
+
+                      // Close loading indicator
                       if (context.mounted) {
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (context) =>
-                              const Center(child: CircularProgressIndicator()),
-                        );
+                        Navigator.of(context).pop();
                       }
 
-                      try {
-                        final ok = await authViewModel.updateEmployeeProfile({
-                          'employee_role': roleCtrl.text.trim(),
-                          'employee_designation': designationCtrl.text.trim(),
-                        });
-
-                        // Close loading indicator
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
+                      if (ok) {
+                        final refreshed = await authViewModel.getCurrentEmployeeDetails();
+                        if (refreshed != null) {
+                          employeeDetails.value = Map<String, dynamic>.from(refreshed);
                         }
-
-                        if (ok) {
-                          final refreshed = await authViewModel
-                              .getCurrentEmployeeDetails();
-                          if (refreshed != null) {
-                            employeeDetails.value = Map<String, dynamic>.from(
-                              refreshed,
-                            );
-                          }
-                          isEditing.value = false;
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Professional information updated successfully',
-                                ),
-                              ),
-                            );
-                          }
-                        } else {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Failed to update profile. Please try again.',
-                                ),
-                              ),
-                            );
-                          }
-                        }
-                      } catch (e) {
-                        // Close loading indicator
+                        isEditing.value = false;
                         if (context.mounted) {
-                          Navigator.of(context).pop();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Error updating profile: ${e.toString()}',
-                              ),
+                            const SnackBar(
+                              content: Text('Professional information updated successfully'),
+                            ),
+                          );
+                        }
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Failed to update profile. Please try again.'),
                             ),
                           );
                         }
                       }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                    } catch (e) {
+                      // Close loading indicator
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error updating profile: ${e.toString()}'),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  label: Text(
+                    'Save Changes',
+                    style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3B82F6),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      'Update',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    // Reset to original values
+                    roleCtrl.text =
+                        employeeDetails.value?['employee_role'] ?? '';
+                    designationCtrl.text =
+                        employeeDetails.value?['employee_designation'] ?? '';
+                    isEditing.value = false;
+                  },
+                  icon: const Icon(Icons.close, size: 18, color: Colors.white70),
+                  label: Text(
+                    'Cancel',
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    side: const BorderSide(color: Color(0xFF1E293B), width: 1.2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                 ),
               ],
             ),
           ],
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () async {
-                final ok = await authViewModel.updateEmployeeProfile({
-                  'employee_role': roleCtrl.text.trim(),
-                  'employee_designation': designationCtrl.text.trim(),
-                });
-                if (ok) {
-                  final refreshed = await authViewModel
-                      .getCurrentEmployeeDetails();
-                  if (refreshed != null) {
-                    employeeDetails.value = Map<String, dynamic>.from(
-                      refreshed,
-                    );
-                  }
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Professional information updated successfully',
-                        ),
-                      ),
-                    );
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-                elevation: 2,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Update Professional Info',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -1393,21 +1376,21 @@ class ProfileScreen extends HookWidget {
             children: [
               Text(
                 'Leave Policy & Usage (${status.monthName} ${status.year})',
-                style: TextStyle(
-                  fontSize: 18,
+                style: GoogleFonts.outfit(
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).textTheme.titleLarge?.color,
+                  color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
 
               _buildUsageCard(
                 context,
                 title: 'Casual/Sick Leaves',
                 usage: status.leaves,
                 unit: 'Days',
-                icon: Icons.calendar_month,
-                color: Colors.blue,
+                icon: Icons.calendar_month_outlined,
+                color: const Color(0xFF3B82F6),
               ),
               const SizedBox(height: 16),
 
@@ -1416,8 +1399,8 @@ class ProfileScreen extends HookWidget {
                 title: 'Permissions',
                 usage: status.permissions,
                 unit: 'Hours',
-                icon: Icons.access_time_filled,
-                color: Colors.orange,
+                icon: Icons.access_time_filled_outlined,
+                color: const Color(0xFFF59E0B),
               ),
               const SizedBox(height: 16),
 
@@ -1426,29 +1409,34 @@ class ProfileScreen extends HookWidget {
                 title: 'Work From Home',
                 usage: status.wfh,
                 unit: 'Days',
-                icon: Icons.home_work,
-                color: Colors.green,
+                icon: Icons.home_work_outlined,
+                color: const Color(0xFF10B981),
               ),
 
               const SizedBox(height: 24),
               // Original yearly balance for context
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
+                  color: const Color(0xFF0B0F19),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Theme.of(context).dividerColor.withOpacity(0.1),
+                    color: const Color(0xFF1E293B),
+                    width: 1.2,
                   ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Yearly Summary',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     _buildInfoRow(
                       context,
                       'Total Annual Leaves',
@@ -1456,7 +1444,7 @@ class ProfileScreen extends HookWidget {
                               .value?['employee_total_leave_days_in_year']
                               ?.toString() ??
                           'N/A',
-                      Icons.event_available,
+                      Icons.event_available_outlined,
                     ),
                   ],
                 ),
@@ -1484,20 +1472,14 @@ class ProfileScreen extends HookWidget {
         : 0.0;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: const Color(0xFF0B0F19),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.1),
+          color: const Color(0xFF1E293B),
+          width: 1.2,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1516,40 +1498,47 @@ class ProfileScreen extends HookWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style: GoogleFonts.outfit(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
+                    color: Colors.white,
                   ),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: remaining > 0
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.red.withOpacity(0.1),
+                      ? const Color(0xFF064E3B).withOpacity(0.2)
+                      : const Color(0xFF7F1D1D).withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: remaining > 0 
+                        ? const Color(0xFF10B981).withOpacity(0.4) 
+                        : const Color(0xFFEF4444).withOpacity(0.4),
+                    width: 1,
+                  ),
                 ),
                 child: Text(
                   '$remaining $unit Left',
-                  style: TextStyle(
-                    color: remaining > 0 ? Colors.green : Colors.red,
+                  style: GoogleFonts.inter(
+                    color: remaining > 0 ? const Color(0xFF34D399) : const Color(0xFFF87171),
                     fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                    fontSize: 11,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           LinearProgressIndicator(
             value: progress,
-            backgroundColor: Theme.of(context).dividerColor.withOpacity(0.1),
+            backgroundColor: const Color(0xFF1E293B),
             valueColor: AlwaysStoppedAnimation<Color>(color),
-            minHeight: 8,
+            minHeight: 6,
             borderRadius: BorderRadius.circular(4),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1569,12 +1558,16 @@ class ProfileScreen extends HookWidget {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+          style: GoogleFonts.outfit(fontSize: 11, color: Colors.white54),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 4),
         Text(
           '$value $unit',
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: Colors.white,
+          ),
         ),
       ],
     );
@@ -1588,7 +1581,11 @@ class ProfileScreen extends HookWidget {
   ) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+        Icon(
+          icon,
+          size: 20,
+          color: const Color(0xFF3B82F6),
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -1596,18 +1593,18 @@ class ProfileScreen extends HookWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(
+                style: GoogleFonts.outfit(
                   fontSize: 12,
-                  color: Theme.of(context).textTheme.bodySmall?.color,
+                  color: Colors.white60,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 value,
-                style: TextStyle(
-                  fontSize: 16,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                  color: Colors.white,
                 ),
               ),
             ],
@@ -1630,10 +1627,10 @@ class ProfileScreen extends HookWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: 14,
+          style: GoogleFonts.outfit(
+            fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Theme.of(context).textTheme.bodyMedium?.color,
+            color: Colors.white70,
           ),
         ),
         const SizedBox(height: 8),
@@ -1642,36 +1639,46 @@ class ProfileScreen extends HookWidget {
           maxLines: maxLines,
           enabled: enabled,
           readOnly: !enabled,
-          style: TextStyle(
-            color: enabled
-                ? Theme.of(context).textTheme.bodyLarge?.color
-                : Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.color?.withOpacity(0.6),
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: enabled ? Colors.white : Colors.white60,
           ),
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, size: 20),
+            prefixIcon: Icon(
+              icon,
+              size: 18,
+              color: enabled ? Colors.white54 : Colors.white30,
+            ),
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surface,
+            fillColor: const Color(0xFF0B0F19),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                color: Theme.of(context).dividerColor.withOpacity(0.2),
+              borderSide: const BorderSide(
+                color: Color(0xFF1E293B),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                color: Theme.of(context).dividerColor.withOpacity(0.2),
+              borderSide: const BorderSide(
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(
+                color: Color(0xFF1E293B),
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: CommonColors.primary, width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFF3B82F6),
+                width: 1.5,
+              ),
             ),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 12,
+              horizontal: 16,
+              vertical: 14,
             ),
           ),
         ),

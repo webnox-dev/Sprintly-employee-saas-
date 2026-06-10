@@ -6,7 +6,6 @@ import 'package:webnox_taskops/view_model/auth_view_model.dart';
 import 'package:webnox_taskops/services/local_storage_service.dart';
 import 'package:webnox_taskops/providers/theme_provider.dart';
 import 'package:webnox_taskops/screens/settings/documentation_screen.dart';
-import 'package:webnox_taskops/screens/settings/widgets/active_sessions_card.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -56,15 +55,15 @@ class SettingsScreen extends StatelessWidget {
 
                 // Settings Content
                 if (isDesktop)
-                  Column(
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Left Column - General Settings
-                          Expanded(
-                            flex: 1,
-                            child: _buildGeneralSettings(
+                      // Left Column - General Settings & Version Info
+                      Expanded(
+                        flex: 1,
+                        child: Column(
+                          children: [
+                            _buildGeneralSettings(
                               context,
                               isDesktop,
                               isTablet,
@@ -72,12 +71,8 @@ class SettingsScreen extends StatelessWidget {
                               isSmallMobile,
                               isVerySmallMobile,
                             ),
-                          ),
-                          SizedBox(width: 24),
-                          // Right Column - Account Settings
-                          Expanded(
-                            flex: 1,
-                            child: _buildAccountSettings(
+                            const SizedBox(height: 24),
+                            _buildVersionInfo(
                               context,
                               isDesktop,
                               isTablet,
@@ -85,18 +80,21 @@ class SettingsScreen extends StatelessWidget {
                               isSmallMobile,
                               isVerySmallMobile,
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                      SizedBox(height: 24),
-                      // Version Info Section
-                      _buildVersionInfo(
-                        context,
-                        isDesktop,
-                        isTablet,
-                        isMobile,
-                        isSmallMobile,
-                        isVerySmallMobile,
+                      const SizedBox(width: 24),
+                      // Right Column - Account Settings
+                      Expanded(
+                        flex: 1,
+                        child: _buildAccountSettings(
+                          context,
+                          isDesktop,
+                          isTablet,
+                          isMobile,
+                          isSmallMobile,
+                          isVerySmallMobile,
+                        ),
                       ),
                     ],
                   )
@@ -111,7 +109,7 @@ class SettingsScreen extends StatelessWidget {
                         isSmallMobile,
                         isVerySmallMobile,
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       _buildAccountSettings(
                         context,
                         isDesktop,
@@ -120,7 +118,7 @@ class SettingsScreen extends StatelessWidget {
                         isSmallMobile,
                         isVerySmallMobile,
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       _buildVersionInfo(
                         context,
                         isDesktop,
@@ -147,13 +145,14 @@ class SettingsScreen extends StatelessWidget {
     bool isSmallMobile,
     bool isVerySmallMobile,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Settings',
           style: TextStyle(
-            color: Theme.of(context).textTheme.headlineLarge?.color,
+            color: isDark ? Colors.white : Colors.black87,
             fontSize: isVerySmallMobile
                 ? 24
                 : isSmallMobile
@@ -178,9 +177,9 @@ class SettingsScreen extends StatelessWidget {
         Text(
           'Manage your account settings and preferences',
           style: TextStyle(
-            color: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.color?.withOpacity(0.7),
+            color: isDark
+                ? Colors.white.withOpacity(0.5)
+                : Colors.black54,
             fontSize: isVerySmallMobile
                 ? 12
                 : isSmallMobile
@@ -204,6 +203,7 @@ class SettingsScreen extends StatelessWidget {
     bool isSmallMobile,
     bool isVerySmallMobile,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: EdgeInsets.all(
         isDesktop
@@ -213,33 +213,43 @@ class SettingsScreen extends StatelessWidget {
                 : 16,
       ),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(isMobile ? 8 : 12),
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.1),
+          color: isDark ? const Color(0xFF1E293B) : Colors.grey.withOpacity(0.2),
           width: 1,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'General Settings',
-            style: TextStyle(
-              color: Theme.of(context).textTheme.titleLarge?.color,
-              fontSize: isVerySmallMobile
-                  ? 16
-                  : isSmallMobile
-                      ? 17
-                      : isMobile
-                          ? 18
-                          : isTablet
-                              ? 20
-                              : 22,
-              fontWeight: FontWeight.w600,
-            ),
+          Row(
+            children: [
+              const Icon(
+                Icons.tune_outlined,
+                color: Color(0xFF38BDF8),
+                size: 22,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'General Settings',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontSize: isVerySmallMobile
+                      ? 16
+                      : isSmallMobile
+                          ? 17
+                          : isMobile
+                              ? 18
+                              : isTablet
+                                  ? 20
+                                  : 22,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           _GranularNotificationSettings(
             isDesktop: isDesktop,
             isTablet: isTablet,
@@ -258,7 +268,7 @@ class SettingsScreen extends StatelessWidget {
             context,
             'Documentation',
             'Learn how to use the app',
-            Icons.menu_book,
+            Icons.description_outlined,
             () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -285,6 +295,7 @@ class SettingsScreen extends StatelessWidget {
     bool isSmallMobile,
     bool isVerySmallMobile,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: EdgeInsets.all(
         isDesktop
@@ -294,38 +305,48 @@ class SettingsScreen extends StatelessWidget {
                 : 16,
       ),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(isMobile ? 8 : 12),
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.1),
+          color: isDark ? const Color(0xFF1E293B) : Colors.grey.withOpacity(0.2),
           width: 1,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Account Settings',
-            style: TextStyle(
-              color: Theme.of(context).textTheme.titleLarge?.color,
-              fontSize: isVerySmallMobile
-                  ? 16
-                  : isSmallMobile
-                      ? 17
-                      : isMobile
-                          ? 18
-                          : isTablet
-                              ? 20
-                              : 22,
-              fontWeight: FontWeight.w600,
-            ),
+          Row(
+            children: [
+              const Icon(
+                Icons.manage_accounts_outlined,
+                color: Color(0xFF38BDF8),
+                size: 22,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Account Settings',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontSize: isVerySmallMobile
+                      ? 16
+                      : isSmallMobile
+                          ? 17
+                          : isMobile
+                              ? 18
+                              : isTablet
+                                  ? 20
+                                  : 22,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           _buildSettingItem(
             context,
             'Profile',
             'Edit your profile information',
-            Icons.person,
+            Icons.person_outline_rounded,
             () {
               Navigator.of(context).pushReplacementNamed('/profile');
             },
@@ -339,7 +360,7 @@ class SettingsScreen extends StatelessWidget {
             context,
             'Security',
             'Change password and security settings',
-            Icons.security,
+            Icons.shield_outlined,
             () {
               Navigator.of(context).pushReplacementNamed('/change-password');
             },
@@ -356,72 +377,37 @@ class SettingsScreen extends StatelessWidget {
             isSmallMobile,
             isVerySmallMobile,
           ),
-          SizedBox(height: 20),
-          const ActiveSessionsCard(),
-          SizedBox(height: 20),
+          const SizedBox(height: 24),
           Consumer<AuthViewModel>(
             builder: (context, authViewModel, child) {
               return SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () async {
+                    // Navigate through the ViewModel's confirm logout dialog
                     await authViewModel.logoutWithAppNavigation(context);
                   },
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.logout,
-                    color: CommonColors.dangerRed,
-                    size: isVerySmallMobile
-                        ? 16
-                        : isSmallMobile
-                            ? 18
-                            : isMobile
-                                ? 20
-                                : 22,
+                    color: Colors.white,
+                    size: 20,
                   ),
-                  label: Text(
+                  label: const Text(
                     'Sign Out',
                     style: TextStyle(
-                      color: CommonColors.white,
-                      fontSize: isVerySmallMobile
-                          ? 12
-                          : isSmallMobile
-                              ? 14
-                              : isMobile
-                                  ? 16
-                                  : 18,
+                      color: Colors.white,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: CommonColors.dangerRed,
+                    backgroundColor: const Color(0xFFEF4444),
                     foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: EdgeInsets.symmetric(
-                      vertical: isVerySmallMobile
-                          ? 12
-                          : isSmallMobile
-                              ? 14
-                              : isMobile
-                                  ? 16
-                                  : 18,
-                      horizontal: isVerySmallMobile
-                          ? 16
-                          : isSmallMobile
-                              ? 18
-                              : isMobile
-                                  ? 20
-                                  : 24,
-                    ),
+                    elevation: 4,
+                    shadowColor: const Color(0xFFEF4444).withOpacity(0.3),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        isVerySmallMobile
-                            ? 6
-                            : isSmallMobile
-                                ? 8
-                                : isMobile
-                                    ? 10
-                                    : 12,
-                      ),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
@@ -445,93 +431,61 @@ class SettingsScreen extends StatelessWidget {
     bool isSmallMobile,
     bool isVerySmallMobile,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: ListTile(
         contentPadding: EdgeInsets.zero,
         horizontalTitleGap: 16,
         leading: Container(
-          padding: EdgeInsets.all(
-            isVerySmallMobile
-                ? 6
-                : isSmallMobile
-                    ? 8
-                    : isMobile
-                        ? 10
-                        : 12,
-          ),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: CommonColors.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(
-              isVerySmallMobile
-                  ? 6
-                  : isSmallMobile
-                      ? 8
-                      : isMobile
-                          ? 10
-                          : 12,
+            color: const Color(0xFF38BDF8).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: const Color(0xFF38BDF8).withOpacity(0.2),
+              width: 1,
             ),
           ),
           child: Icon(
             icon,
-            color: CommonColors.primary,
-            size: isVerySmallMobile
-                ? 16
-                : isSmallMobile
-                    ? 18
-                    : isMobile
-                        ? 20
-                        : 22,
+            color: const Color(0xFF38BDF8),
+            size: 20,
           ),
         ),
         title: Text(
           title,
           style: TextStyle(
-            color: Theme.of(context).textTheme.titleMedium?.color,
+            color: isDark ? Colors.white : Colors.black87,
             fontSize: isVerySmallMobile
-                ? 12
+                ? 13
                 : isSmallMobile
-                    ? 13
-                    : isMobile
-                        ? 14
-                        : isTablet
-                            ? 15
-                            : 16,
+                    ? 14
+                    : 15,
             fontWeight: FontWeight.w600,
           ),
         ),
         subtitle: Text(
           subtitle,
           style: TextStyle(
-            color: Theme.of(
-              context,
-            ).textTheme.bodySmall?.color?.withOpacity(0.7),
+            color: isDark ? Colors.white.withOpacity(0.5) : Colors.black54,
             fontSize: isVerySmallMobile
-                ? 10
+                ? 11
                 : isSmallMobile
-                    ? 11
-                    : isMobile
-                        ? 12
-                        : isTablet
-                            ? 13
-                            : 14,
+                    ? 12
+                    : 13,
           ),
         ),
         trailing: Icon(
           Icons.arrow_forward_ios,
-          color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5),
-          size: isVerySmallMobile
-              ? 12
-              : isSmallMobile
-                  ? 14
-                  : isMobile
-                      ? 16
-                      : isTablet
-                          ? 18
-                          : 20,
+          color: isDark ? Colors.white.withOpacity(0.3) : Colors.black38,
+          size: 14,
         ),
         onTap: onTap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -544,6 +498,7 @@ class SettingsScreen extends StatelessWidget {
     bool isSmallMobile,
     bool isVerySmallMobile,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: EdgeInsets.all(
         isDesktop
@@ -553,10 +508,10 @@ class SettingsScreen extends StatelessWidget {
                 : 16,
       ),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(isMobile ? 8 : 12),
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.1),
+          color: isDark ? const Color(0xFF1E293B) : Colors.grey.withOpacity(0.2),
           width: 1,
         ),
       ),
@@ -566,7 +521,7 @@ class SettingsScreen extends StatelessWidget {
           Text(
             'Version & Build Information',
             style: TextStyle(
-              color: Theme.of(context).textTheme.titleLarge?.color,
+              color: isDark ? Colors.white : Colors.black87,
               fontSize: isVerySmallMobile
                   ? 16
                   : isSmallMobile
@@ -579,58 +534,12 @@ class SettingsScreen extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(height: 20),
-          // TODO: Update version information manually
-          // Update the values below when releasing new versions
+          const SizedBox(height: 20),
           _buildVersionItem(
             context,
             'App Version',
-            '1.0.0 (Build 1)', // Update this version number
+            '1.0.0 (Build 124) • Last updated: Oct 24, 2023',
             Icons.info_outline,
-            isDesktop,
-            isTablet,
-            isMobile,
-            isSmallMobile,
-            isVerySmallMobile,
-          ),
-          _buildVersionItem(
-            context,
-            'Commit Hash',
-            'a1b2c3d4e5f6', // Update this commit hash
-            Icons.code,
-            isDesktop,
-            isTablet,
-            isMobile,
-            isSmallMobile,
-            isVerySmallMobile,
-          ),
-          _buildVersionItem(
-            context,
-            'Last Commit',
-            'Task status fixes and improvements', // Update this commit message
-            Icons.message,
-            isDesktop,
-            isTablet,
-            isMobile,
-            isSmallMobile,
-            isVerySmallMobile,
-          ),
-          _buildVersionItem(
-            context,
-            'Build Date',
-            'December 15, 2024', // Update this build date
-            Icons.calendar_today,
-            isDesktop,
-            isTablet,
-            isMobile,
-            isSmallMobile,
-            isVerySmallMobile,
-          ),
-          _buildVersionItem(
-            context,
-            'Environment',
-            'Production', // Update this environment (Development/Staging/Production)
-            Icons.security,
             isDesktop,
             isTablet,
             isMobile,
@@ -653,87 +562,46 @@ class SettingsScreen extends StatelessWidget {
     bool isSmallMobile,
     bool isVerySmallMobile,
   ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(
-              isVerySmallMobile
-                  ? 6
-                  : isSmallMobile
-                      ? 8
-                      : isMobile
-                          ? 10
-                          : 12,
-            ),
-            decoration: BoxDecoration(
-              color: CommonColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(
-                isVerySmallMobile
-                    ? 6
-                    : isSmallMobile
-                        ? 8
-                        : isMobile
-                            ? 10
-                            : 12,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.04),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            color: isDark ? Colors.white70 : Colors.black54,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            child: Icon(
-              icon,
-              color: CommonColors.primary,
-              size: isVerySmallMobile
-                  ? 16
-                  : isSmallMobile
-                      ? 18
-                      : isMobile
-                          ? 20
-                          : 22,
-            ),
-          ),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.titleMedium?.color,
-                    fontSize: isVerySmallMobile
-                        ? 12
-                        : isSmallMobile
-                            ? 13
-                            : isMobile
-                                ? 14
-                                : isTablet
-                                    ? 15
-                                    : 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  color: isDark ? Colors.white.withOpacity(0.5) : Colors.black54,
+                  fontSize: 12,
                 ),
-                Text(
-                  value,
-                  style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.color?.withOpacity(0.7),
-                    fontSize: isVerySmallMobile
-                        ? 10
-                        : isSmallMobile
-                            ? 11
-                            : isMobile
-                                ? 12
-                                : isTablet
-                                    ? 13
-                                    : 14,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -764,6 +632,7 @@ class _GranularNotificationSettingsState
   bool _notifyOnMessage = true;
   bool _notifyOnAssignment = true;
   bool _notifyOnUpdate = true;
+  bool _isExpanded = false;
 
   @override
   void initState() {
@@ -790,50 +659,44 @@ class _GranularNotificationSettingsState
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
+          initiallyExpanded: true,
+          onExpansionChanged: (expanded) {
+            setState(() {
+              _isExpanded = expanded;
+            });
+          },
           tilePadding: EdgeInsets.zero,
+          trailing: Icon(
+            _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+            color: isDark ? Colors.white.withOpacity(0.4) : Colors.black38,
+            size: 20,
+          ),
           title: Row(
             children: [
               Container(
-                padding: EdgeInsets.all(
-                  widget.isVerySmallMobile
-                      ? 6
-                      : widget.isSmallMobile
-                          ? 8
-                          : widget.isMobile
-                              ? 10
-                              : 12,
-                ),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: CommonColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(
-                    widget.isVerySmallMobile
-                        ? 6
-                        : widget.isSmallMobile
-                            ? 8
-                            : widget.isMobile
-                                ? 10
-                                : 12,
+                  color: const Color(0xFF38BDF8).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF38BDF8).withOpacity(0.2),
+                    width: 1,
                   ),
                 ),
-                child: Icon(
-                  Icons.notifications,
-                  color: CommonColors.primary,
-                  size: widget.isVerySmallMobile
-                      ? 16
-                      : widget.isSmallMobile
-                          ? 18
-                          : widget.isMobile
-                              ? 20
-                              : 22,
+                child: const Icon(
+                  Icons.notifications_none_outlined,
+                  color: Color(0xFF38BDF8),
+                  size: 20,
                 ),
               ),
               const SizedBox(width: 16),
@@ -844,36 +707,16 @@ class _GranularNotificationSettingsState
                     Text(
                       'Notifications',
                       style: TextStyle(
-                        color: Theme.of(context).textTheme.titleMedium?.color,
-                        fontSize: widget.isVerySmallMobile
-                            ? 12
-                            : widget.isSmallMobile
-                                ? 13
-                                : widget.isMobile
-                                    ? 14
-                                    : widget.isTablet
-                                        ? 15
-                                        : 16,
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
                       'Manage notification preferences',
                       style: TextStyle(
-                        color: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.color
-                            ?.withOpacity(0.7),
-                        fontSize: widget.isVerySmallMobile
-                            ? 10
-                            : widget.isSmallMobile
-                                ? 11
-                                : widget.isMobile
-                                    ? 12
-                                    : widget.isTablet
-                                        ? 13
-                                        : 14,
+                        color: isDark ? Colors.white.withOpacity(0.5) : Colors.black54,
+                        fontSize: 13,
                       ),
                     ),
                   ],
@@ -883,35 +726,58 @@ class _GranularNotificationSettingsState
           ),
           children: [
             Padding(
-              padding:
-                  const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
+              padding: const EdgeInsets.only(left: 48, right: 8, top: 4, bottom: 8),
               child: Column(
                 children: [
                   SwitchListTile(
-                    title: const Text('Messages & Chat',
-                        style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w500)),
+                    title: Text(
+                      'Messages & Chat',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.white.withOpacity(0.8) : Colors.black87,
+                      ),
+                    ),
                     value: _notifyOnMessage,
                     onChanged: _toggleMessage,
-                    activeColor: CommonColors.primary,
+                    activeColor: Colors.white,
+                    activeTrackColor: const Color(0xFF3B82F6),
+                    inactiveThumbColor: isDark ? const Color(0xFF64748B) : Colors.grey.shade400,
+                    inactiveTrackColor: isDark ? const Color(0xFF1E293B) : Colors.grey.shade200,
                     contentPadding: EdgeInsets.zero,
                   ),
                   SwitchListTile(
-                    title: const Text('Task & Project Assignments',
-                        style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w500)),
+                    title: Text(
+                      'Task & Project Assignments',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.white.withOpacity(0.8) : Colors.black87,
+                      ),
+                    ),
                     value: _notifyOnAssignment,
                     onChanged: _toggleAssignment,
-                    activeColor: CommonColors.primary,
+                    activeColor: Colors.white,
+                    activeTrackColor: const Color(0xFF3B82F6),
+                    inactiveThumbColor: isDark ? const Color(0xFF64748B) : Colors.grey.shade400,
+                    inactiveTrackColor: isDark ? const Color(0xFF1E293B) : Colors.grey.shade200,
                     contentPadding: EdgeInsets.zero,
                   ),
                   SwitchListTile(
-                    title: const Text('Attendance and Report',
-                        style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w500)),
+                    title: Text(
+                      'Attendance and Report',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.white.withOpacity(0.8) : Colors.black87,
+                      ),
+                    ),
                     value: _notifyOnUpdate,
                     onChanged: _toggleUpdate,
-                    activeColor: CommonColors.primary,
+                    activeColor: Colors.white,
+                    activeTrackColor: const Color(0xFF3B82F6),
+                    inactiveThumbColor: isDark ? const Color(0xFF64748B) : Colors.grey.shade400,
+                    inactiveTrackColor: isDark ? const Color(0xFF1E293B) : Colors.grey.shade200,
                     contentPadding: EdgeInsets.zero,
                   ),
                 ],
@@ -947,13 +813,16 @@ class _PrivacySettingsState extends State<_PrivacySettings> {
   final LocalStorageService _storage = LocalStorageService();
   bool _useGPS = true;
   bool _useIP = true;
+  bool _isExpanded = true;
 
   @override
   void initState() {
     super.initState();
     _loadPrivacySettings();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AuthViewModel>().fetchSessions();
+      if (mounted) {
+        context.read<AuthViewModel>().fetchSessions();
+      }
     });
   }
 
@@ -997,16 +866,15 @@ class _PrivacySettingsState extends State<_PrivacySettings> {
       Duration diff = DateTime.now().difference(lastActive);
 
       if (diff.isNegative) return "Just now";
-
       if (diff.inSeconds < 60) return "Just now";
       if (diff.inMinutes < 60) {
-        return "Last active ${diff.inMinutes} minutes ago";
+        return "Last active ${diff.inMinutes}m ago";
       }
       if (diff.inHours < 24) {
-        return "Last active ${diff.inHours} hours ago";
+        return "Last active ${diff.inHours}h ago";
       }
       if (diff.inDays < 30) {
-        return "Last active ${diff.inDays} days ago";
+        return "Last active ${diff.inDays}d ago";
       }
 
       return "Last active ${lastActive.day}/${lastActive.month}/${lastActive.year}";
@@ -1017,50 +885,57 @@ class _PrivacySettingsState extends State<_PrivacySettings> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(widget.isMobile ? 8 : 12),
+        color: _isExpanded
+            ? (isDark ? const Color(0xFF162032) : const Color(0xFFF8FAFC))
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _isExpanded
+              ? (isDark ? const Color(0xFF38BDF8).withOpacity(0.3) : const Color(0xFF38BDF8).withOpacity(0.5))
+              : Colors.transparent,
+          width: 1.5,
+        ),
+      ),
+      padding: EdgeInsets.symmetric(
+        horizontal: _isExpanded ? 16 : 0,
+        vertical: _isExpanded ? 8 : 0,
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
+          initiallyExpanded: true,
+          onExpansionChanged: (expanded) {
+            setState(() {
+              _isExpanded = expanded;
+            });
+          },
           tilePadding: EdgeInsets.zero,
+          trailing: Icon(
+            _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+            color: isDark ? Colors.white.withOpacity(0.4) : Colors.black38,
+            size: 20,
+          ),
           title: Row(
             children: [
               Container(
-                padding: EdgeInsets.all(
-                  widget.isVerySmallMobile
-                      ? 6
-                      : widget.isSmallMobile
-                          ? 8
-                          : widget.isMobile
-                              ? 10
-                              : 12,
-                ),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: CommonColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(
-                    widget.isVerySmallMobile
-                        ? 6
-                        : widget.isSmallMobile
-                            ? 8
-                            : widget.isMobile
-                                ? 10
-                                : 12,
+                  color: const Color(0xFF38BDF8).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF38BDF8).withOpacity(0.2),
+                    width: 1,
                   ),
                 ),
-                child: Icon(
-                  Icons.privacy_tip,
-                  color: CommonColors.primary,
-                  size: widget.isVerySmallMobile
-                      ? 16
-                      : widget.isSmallMobile
-                          ? 18
-                          : widget.isMobile
-                              ? 20
-                              : 22,
+                child: const Icon(
+                  Icons.lock_outline_rounded,
+                  color: Color(0xFF38BDF8),
+                  size: 20,
                 ),
               ),
               const SizedBox(width: 16),
@@ -1071,36 +946,16 @@ class _PrivacySettingsState extends State<_PrivacySettings> {
                     Text(
                       'Privacy & Security',
                       style: TextStyle(
-                        color: Theme.of(context).textTheme.titleMedium?.color,
-                        fontSize: widget.isVerySmallMobile
-                            ? 12
-                            : widget.isSmallMobile
-                                ? 13
-                                : widget.isMobile
-                                    ? 14
-                                    : widget.isTablet
-                                        ? 15
-                                        : 16,
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
-                      'Manage tracking and account security',
+                      'Manage privacy and data settings',
                       style: TextStyle(
-                        color: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.color
-                            ?.withOpacity(0.7),
-                        fontSize: widget.isVerySmallMobile
-                            ? 10
-                            : widget.isSmallMobile
-                                ? 11
-                                : widget.isMobile
-                                    ? 12
-                                    : widget.isTablet
-                                        ? 13
-                                        : 14,
+                        color: isDark ? Colors.white.withOpacity(0.5) : Colors.black54,
+                        fontSize: 13,
                       ),
                     ),
                   ],
@@ -1110,266 +965,261 @@ class _PrivacySettingsState extends State<_PrivacySettings> {
           ),
           children: [
             Padding(
-              padding: const EdgeInsets.only(
-                  left: 16, right: 16, top: 8, bottom: 16),
+              padding: const EdgeInsets.only(top: 8, bottom: 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Location & Tracking',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
                       letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   SwitchListTile(
-                    title: const Text('Use GPS for Attendance',
-                        style: TextStyle(fontSize: 14)),
-                    subtitle: const Text(
-                        'Validate location via GPS coordinates',
-                        style: TextStyle(fontSize: 12)),
+                    title: Text(
+                      'Use GPS for Attendance',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.white.withOpacity(0.8) : Colors.black87,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Validate location via GPS coordinates',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? Colors.white.withOpacity(0.5) : Colors.black54,
+                      ),
+                    ),
                     value: _useGPS,
                     onChanged: (value) async {
                       await _storage.saveUseGPS(value);
                       setState(() => _useGPS = value);
                     },
+                    activeColor: Colors.white,
+                    activeTrackColor: const Color(0xFF3B82F6),
+                    inactiveThumbColor: isDark ? const Color(0xFF64748B) : Colors.grey.shade400,
+                    inactiveTrackColor: isDark ? const Color(0xFF1E293B) : Colors.grey.shade200,
                     contentPadding: EdgeInsets.zero,
-                    activeColor: CommonColors.primary,
                   ),
                   SwitchListTile(
-                    title: const Text('Use IP for Attendance',
-                        style: TextStyle(fontSize: 14)),
-                    subtitle: const Text('Validate location via office network',
-                        style: TextStyle(fontSize: 12)),
+                    title: Text(
+                      'Use IP for Attendance',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.white.withOpacity(0.8) : Colors.black87,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Validate location via office network',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? Colors.white.withOpacity(0.5) : Colors.black54,
+                      ),
+                    ),
                     value: _useIP,
                     onChanged: (value) async {
                       await _storage.saveUseIP(value);
                       setState(() => _useIP = value);
                     },
+                    activeColor: Colors.white,
+                    activeTrackColor: const Color(0xFF3B82F6),
+                    inactiveThumbColor: isDark ? const Color(0xFF64748B) : Colors.grey.shade400,
+                    inactiveTrackColor: isDark ? const Color(0xFF1E293B) : Colors.grey.shade200,
                     contentPadding: EdgeInsets.zero,
-                    activeColor: CommonColors.primary,
                   ),
-                  const Divider(height: 32),
-                  const Text(
-                    'Account Security',
+                  const Divider(height: 24),
+                  Text(
+                    'Active Sessions',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white.withOpacity(0.6) : Colors.black54,
                       letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Consumer<AuthViewModel>(
                     builder: (context, authVM, child) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (authVM.isLoadingSessions)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              child: Center(
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2)),
-                            )
-                          else if (authVM.activeSessions.isEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              child: Text(
-                                'No other active sessions found.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withOpacity(0.5),
-                                ),
-                              ),
-                            )
-                          else
-                            ListView.separated(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: authVM.activeSessions.length,
-                              separatorBuilder: (context, index) =>
-                                  const Divider(height: 1),
-                              itemBuilder: (context, index) {
-                                final session = authVM.activeSessions[index];
-                                String deviceName =
-                                    session['device_name'] ?? 'Unknown Device';
-                                String platform =
-                                    session['platform'] ?? 'Unknown Platform';
-
-                                // Improved fallback if literally "Unknown"
-                                if (deviceName == 'Unknown') {
-                                  deviceName = 'Unknown Device';
-                                }
-                                if (platform == 'Unknown') {
-                                  platform = 'Connected Device';
-                                }
-                                final isCurrentDevice = session['jwt_token'] ==
-                                    authVM.localStorage.accessToken;
-
-                                return Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 10),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Device Icon Container
-                                      Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context)
-                                              .dividerColor
-                                              .withOpacity(0.05),
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
-                                        child: Icon(
-                                          _getDeviceIcon(platform, session),
-                                          size: 22,
-                                          color: isCurrentDevice
-                                              ? CommonColors.primary
-                                              : Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface
-                                                  .withOpacity(0.6),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-
-                                      // Session Details
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Flexible(
-                                                  child: Text(
-                                                    session['browser'] != null
-                                                        ? "${session['browser']} on $platform"
-                                                        : deviceName,
-                                                    style: const TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                                if (isCurrentDevice) ...[
-                                                  const SizedBox(width: 8),
-                                                  Container(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        horizontal: 6,
-                                                        vertical: 2),
-                                                    decoration: BoxDecoration(
-                                                      color: CommonColors
-                                                          .primary
-                                                          .withOpacity(0.1),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              4),
-                                                      border: Border.all(
-                                                          color: CommonColors
-                                                              .primary
-                                                              .withOpacity(
-                                                                  0.2)),
-                                                    ),
-                                                    child: const Text(
-                                                      'CURRENT',
-                                                      style: TextStyle(
-                                                        fontSize: 8,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: CommonColors
-                                                            .primary,
-                                                        letterSpacing: 0.5,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ],
-                                            ),
-                                            const SizedBox(height: 6),
-
-                                            // Location
-                                            _buildSessionSubtitle(
-                                              context,
-                                              Icons.location_on_outlined,
-                                              _getLocationString(session),
-                                            ),
-
-                                            // Browser
-                                            _buildSessionSubtitle(
-                                              context,
-                                              Icons.language_rounded,
-                                              session['browser'] ??
-                                                  'Unknown Browser',
-                                            ),
-
-                                            // Last Active
-                                            _buildSessionSubtitle(
-                                              context,
-                                              Icons.access_time_rounded,
-                                              _getTimeAgo(
-                                                  session['updated_at']),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-
-                                      // Logout Button
-                                      if (!isCurrentDevice)
-                                        IconButton(
-                                          icon: const Icon(
-                                              Icons.delete_outline_rounded,
-                                              size: 20,
-                                              color: Colors.grey),
-                                          onPressed: () {
-                                            _showLogoutSpecificDeviceDialog(
-                                                context, session);
-                                          },
-                                        ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              onPressed: authVM.activeSessions.isEmpty
-                                  ? null
-                                  : () {
-                                      _showLogoutDevicesDialog(context);
-                                    },
-                              icon: const Icon(Icons.devices, size: 18),
-                              label: const Text('Logout from other devices'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: CommonColors.dangerRed,
-                                side: BorderSide(
-                                    color: authVM.activeSessions.isEmpty
-                                        ? Colors.grey.withOpacity(0.3)
-                                        : CommonColors.dangerRed),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
+                      if (authVM.isLoadingSessions) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        );
+                      } else if (authVM.activeSessions.isEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            'No other active sessions found.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.white30 : Colors.black38,
                             ),
                           ),
-                        ],
-                      );
+                        );
+                      } else {
+                        return Column(
+                          children: authVM.activeSessions.map((session) {
+                            String deviceName =
+                                session['device_name'] ?? 'Unknown Device';
+                            String platform =
+                                session['platform'] ?? 'Unknown Platform';
+
+                            if (deviceName == 'Unknown') {
+                              deviceName = 'Unknown Device';
+                            }
+                            if (platform == 'Unknown') {
+                              platform = 'Connected Device';
+                            }
+                            final isCurrentDevice = session['jwt_token'] ==
+                                authVM.localStorage.accessToken;
+
+                            return Container(
+                              margin: const EdgeInsets.only(top: 8),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF090E1A) : const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  // Device Icon Container
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? const Color(0xFF0D1527) : Colors.white,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      _getDeviceIcon(platform, session),
+                                      size: 20,
+                                      color: const Color(0xFF38BDF8),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  // Session Info
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                session['browser'] != null
+                                                    ? "${session['browser']} on $platform"
+                                                    : deviceName,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: isDark ? Colors.white : Colors.black87,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            if (isCurrentDevice) ...[
+                                              const SizedBox(width: 6),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 5,
+                                                  vertical: 1.5,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFF38BDF8).withOpacity(0.1),
+                                                  borderRadius: BorderRadius.circular(4),
+                                                  border: Border.all(
+                                                    color: const Color(0xFF38BDF8).withOpacity(0.2),
+                                                  ),
+                                                ),
+                                                child: const Text(
+                                                  'ACTIVE NOW',
+                                                  style: TextStyle(
+                                                    fontSize: 7,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFF38BDF8),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          "${_getLocationString(session)} • ${isCurrentDevice ? 'Active now' : _getTimeAgo(session['updated_at'])}",
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: isDark ? Colors.white.withOpacity(0.5) : Colors.black54,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  // Refresh Button
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: isDark ? null : Border.all(color: const Color(0xFFE2E8F0)),
+                                    ),
+                                    child: IconButton(
+                                      padding: EdgeInsets.zero,
+                                      icon: const Icon(
+                                        Icons.refresh_rounded,
+                                        size: 16,
+                                        color: Color(0xFF38BDF8),
+                                      ),
+                                      onPressed: () {
+                                        authVM.fetchSessions();
+                                      },
+                                    ),
+                                  ),
+                                  if (!isCurrentDevice) ...[
+                                    const SizedBox(width: 8),
+                                    // Revoke Button
+                                    Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: isDark ? null : Border.all(color: const Color(0xFFE2E8F0)),
+                                      ),
+                                      child: IconButton(
+                                        padding: EdgeInsets.zero,
+                                        icon: const Icon(
+                                          Icons.close_rounded,
+                                          size: 16,
+                                          color: Color(0xFFEF4444),
+                                        ),
+                                        onPressed: () {
+                                          _showLogoutSpecificDeviceDialog(context, session);
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      }
                     },
                   ),
                 ],
@@ -1377,73 +1227,6 @@ class _PrivacySettingsState extends State<_PrivacySettings> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSessionSubtitle(
-      BuildContext context, IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 14,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 11,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showLogoutDevicesDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Security Check'),
-        content: const Text(
-            'This will sign you out from all other active devices. Continue?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              final success = await context
-                  .read<AuthViewModel>()
-                  .logoutFromAllOtherDevices();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text(success
-                          ? 'Logged out from other devices successfully'
-                          : 'Failed to logout from other devices')),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: CommonColors.dangerRed,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Confirm'),
-          ),
-        ],
       ),
     );
   }
@@ -1470,9 +1253,10 @@ class _PrivacySettingsState extends State<_PrivacySettings> {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text(success
-                          ? 'Device removed successfully'
-                          : 'Failed to remove device')),
+                    content: Text(success
+                        ? 'Device removed successfully'
+                        : 'Failed to remove device'),
+                  ),
                 );
               }
             },
@@ -1505,13 +1289,14 @@ class _ThemeSettings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
             color: Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -1520,39 +1305,19 @@ class _ThemeSettings extends StatelessWidget {
               title: Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.all(
-                      isVerySmallMobile
-                          ? 6
-                          : isSmallMobile
-                              ? 8
-                              : isMobile
-                                  ? 10
-                                  : 12,
-                    ),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: CommonColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(
-                        isVerySmallMobile
-                            ? 6
-                            : isSmallMobile
-                                ? 8
-                                : isMobile
-                                    ? 10
-                                    : 12,
+                      color: const Color(0xFF38BDF8).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFF38BDF8).withOpacity(0.2),
+                        width: 1,
                       ),
                     ),
-                    child: Icon(
-                      themeProvider.isDarkMode
-                          ? Icons.dark_mode
-                          : Icons.light_mode,
-                      color: CommonColors.primary,
-                      size: isVerySmallMobile
-                          ? 16
-                          : isSmallMobile
-                              ? 18
-                              : isMobile
-                                  ? 20
-                                  : 22,
+                    child: const Icon(
+                      Icons.settings_outlined,
+                      color: Color(0xFF38BDF8),
+                      size: 20,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -1563,37 +1328,16 @@ class _ThemeSettings extends StatelessWidget {
                         Text(
                           'App Theme',
                           style: TextStyle(
-                            color:
-                                Theme.of(context).textTheme.titleMedium?.color,
-                            fontSize: isVerySmallMobile
-                                ? 12
-                                : isSmallMobile
-                                    ? 13
-                                    : isMobile
-                                        ? 14
-                                        : isTablet
-                                            ? 15
-                                            : 16,
+                            color: isDark ? Colors.white : Colors.black87,
+                            fontSize: 15,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
                           'Choose light or dark theme',
                           style: TextStyle(
-                            color: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.color
-                                ?.withOpacity(0.7),
-                            fontSize: isVerySmallMobile
-                                ? 10
-                                : isSmallMobile
-                                    ? 11
-                                    : isMobile
-                                        ? 12
-                                        : isTablet
-                                            ? 13
-                                            : 14,
+                            color: isDark ? Colors.white.withOpacity(0.5) : Colors.black54,
+                            fontSize: 13,
                           ),
                         ),
                       ],
@@ -1603,44 +1347,58 @@ class _ThemeSettings extends StatelessWidget {
               ),
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(
-                      left: 16, right: 16, top: 8, bottom: 8),
+                  padding: const EdgeInsets.only(left: 48, right: 8, top: 4, bottom: 8),
                   child: Column(
                     children: [
                       RadioListTile<ThemeMode>(
-                        title: const Text('Light Mode',
-                            style: TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.w500)),
+                        title: Text(
+                          'Light Mode',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: isDark ? Colors.white.withOpacity(0.8) : Colors.black87,
+                          ),
+                        ),
                         value: ThemeMode.light,
                         groupValue: themeProvider.themeMode,
                         onChanged: (value) {
                           if (value != null) themeProvider.setTheme(value);
                         },
-                        activeColor: CommonColors.primary,
+                        activeColor: const Color(0xFF3B82F6),
                         contentPadding: EdgeInsets.zero,
                       ),
                       RadioListTile<ThemeMode>(
-                        title: const Text('Dark Mode',
-                            style: TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.w500)),
+                        title: Text(
+                          'Dark Mode',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: isDark ? Colors.white.withOpacity(0.8) : Colors.black87,
+                          ),
+                        ),
                         value: ThemeMode.dark,
                         groupValue: themeProvider.themeMode,
                         onChanged: (value) {
                           if (value != null) themeProvider.setTheme(value);
                         },
-                        activeColor: CommonColors.primary,
+                        activeColor: const Color(0xFF3B82F6),
                         contentPadding: EdgeInsets.zero,
                       ),
                       RadioListTile<ThemeMode>(
-                        title: const Text('System Default',
-                            style: TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.w500)),
+                        title: Text(
+                          'System Default',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: isDark ? Colors.white.withOpacity(0.8) : Colors.black87,
+                          ),
+                        ),
                         value: ThemeMode.system,
                         groupValue: themeProvider.themeMode,
                         onChanged: (value) {
                           if (value != null) themeProvider.setTheme(value);
                         },
-                        activeColor: CommonColors.primary,
+                        activeColor: const Color(0xFF3B82F6),
                         contentPadding: EdgeInsets.zero,
                       ),
                     ],

@@ -330,38 +330,7 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
     }
   }
 
-  Color _getPriorityBgColor(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final priorityLevel =
-        widget.task.priorityLevel?.toString().toLowerCase() ?? '';
-    switch (priorityLevel) {
-      case 'high':
-      case '1':
-      case 'urgent':
-      case 'critical':
-        return isDark
-            ? const Color(0xFFB71C1C).withOpacity(0.3)
-            : const Color(0xFFFFEBEE); // Soft red
-      case 'medium':
-      case '2':
-      case 'normal':
-      case 'standard':
-        return isDark
-            ? const Color(0xFF4D3800)
-            : const Color(0xFFFFF3E0); // Soft orange
-      case 'low':
-      case '3':
-      case 'minor':
-      case 'lowest':
-        return isDark
-            ? const Color(0xFF1B5E20).withOpacity(0.3)
-            : const Color(0xFFE8F5E9); // Soft green
-      default:
-        return isDark
-            ? const Color(0xFF1B5E20).withOpacity(0.3)
-            : const Color(0xFFE8F5E9);
-    }
-  }
+
 
   String _getPriorityText() {
     final priorityLevel =
@@ -387,46 +356,7 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
     }
   }
 
-  String _getTaskDuration() {
-    // Use task_duration field from the task
-    if (widget.task.taskDuration != null &&
-        widget.task.taskDuration!.isNotEmpty) {
-      return widget.task.taskDuration!;
-    }
 
-    // Fallback: calculate duration from total dev hours if available
-    if (widget.task.totalDevHours != null && widget.task.totalDevHours! > 0) {
-      final hours = widget.task.totalDevHours!;
-      if (hours >= 24) {
-        final days = hours ~/ 24;
-        final remainingHours = hours % 24;
-        return remainingHours > 0
-            ? '$days days $remainingHours hours'
-            : '$days days';
-      } else {
-        return '$hours hours';
-      }
-    }
-
-    return 'N/A';
-  }
-
-  String _getDateRange() {
-    // Show assigned date and dev completion date if available
-    if (widget.task.assignedAt != null && widget.task.devCompletedAt != null) {
-      return '${_formatDate(widget.task.assignedAt!)} - ${_formatDate(widget.task.devCompletedAt!)}';
-    } else if (widget.task.assignedAt != null) {
-      return 'Assigned: ${_formatDate(widget.task.assignedAt!)}';
-    } else if (widget.task.devCompletedAt != null) {
-      return 'Due: ${_formatDate(widget.task.devCompletedAt!)}';
-    } else {
-      return 'N/A';
-    }
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
-  }
 
   String _getElapsedTimeDisplay() {
     if (widget.isCurrentlyClockedIn && widget.startTime != null) {
@@ -841,402 +771,7 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
     );
   }
 
-  Widget _buildEmployeeActionSection() {
-    final status = widget.task.workflowStatus?.toLowerCase() ?? '';
-    final isInQC = status == 'in qc';
-    final isWorkDone = status == 'work done';
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Only show Clock In/Out button if task is not completed (Work Done)
-        if (!isWorkDone) ...[
-          SizedBox(
-            width: double.infinity,
-            child: MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: () {
-                  if (widget.onClockIn != null) {
-                    widget.onClockIn!();
-                  }
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    vertical: ResponsiveUtils.getResponsiveSpacing(
-                      context,
-                      mobile: 4.0,
-                      tablet: 6.0,
-                      desktop: 8.0,
-                    ),
-                    horizontal: ResponsiveUtils.getResponsiveSpacing(
-                      context,
-                      mobile: 8.0,
-                      tablet: 10.0,
-                      desktop: 12.0,
-                    ),
-                  ),
-                  decoration: BoxDecoration(
-                    color: widget.isCurrentlyClockedIn
-                        ? Colors.red[600]
-                        : (Theme.of(context).brightness == Brightness.dark
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.blue[600]),
-                    borderRadius: BorderRadius.circular(
-                      ResponsiveUtils.getResponsiveBorderRadius(
-                        context,
-                        mobile: 8.0,
-                        tablet: 10.0,
-                        desktop: 12.0,
-                      ),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color:
-                            (widget.isCurrentlyClockedIn
-                                    ? Colors.red[600]
-                                    : (Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.primary
-                                          : Colors.blue[600]))!
-                                .withOpacity(0.3),
-                        blurRadius: ResponsiveUtils.getResponsiveSpacing(
-                          context,
-                          mobile: 6.0,
-                          tablet: 7.0,
-                          desktop: 8.0,
-                        ),
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    widget.isCurrentlyClockedIn ? 'Stop Timer' : 'Clock In',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: ResponsiveUtils.getResponsiveFontSize(
-                        context,
-                        mobile: 12.0,
-                        tablet: 13.0,
-                        desktop: 14.0,
-                      ),
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Only show Complete Task button if status is "In QC"
-          if (isInQC) ...[
-            SizedBox(
-              height: ResponsiveUtils.getResponsiveSpacing(
-                context,
-                mobile: 2.0,
-                tablet: 3.0,
-                desktop: 4.0,
-              ),
-            ),
-            SizedBox(
-              width: double.infinity,
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: () => _showQCCompletionDialog(),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      vertical: ResponsiveUtils.getResponsiveSpacing(
-                        context,
-                        mobile: 4.0,
-                        tablet: 6.0,
-                        desktop: 8.0,
-                      ),
-                      horizontal: ResponsiveUtils.getResponsiveSpacing(
-                        context,
-                        mobile: 8.0,
-                        tablet: 10.0,
-                        desktop: 12.0,
-                      ),
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.green[600],
-                      borderRadius: BorderRadius.circular(
-                        ResponsiveUtils.getResponsiveBorderRadius(
-                          context,
-                          mobile: 8.0,
-                          tablet: 10.0,
-                          desktop: 12.0,
-                        ),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.green[600]!.withOpacity(0.3),
-                          blurRadius: ResponsiveUtils.getResponsiveSpacing(
-                            context,
-                            mobile: 6.0,
-                            tablet: 7.0,
-                            desktop: 8.0,
-                          ),
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      'Complete Task',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: ResponsiveUtils.getResponsiveFontSize(
-                          context,
-                          mobile: 12.0,
-                          tablet: 13.0,
-                          desktop: 14.0,
-                        ),
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ],
-    );
-  }
-
-  Widget _buildActionSection() {
-    // Show different buttons based on workflow status and user role
-    String status = widget.task.workflowStatus?.toLowerCase() ?? 'assigned';
-    bool isQAAnalyst =
-        widget.userRole?.toLowerCase().trim().contains('qa analyst') ?? false;
-
-    // QA Analyst specific actions
-    if (isQAAnalyst) {
-      switch (status) {
-        case 'dev completed':
-        case 'dev_completed':
-          return Align(
-            alignment: Alignment.centerLeft,
-            child: MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: ElevatedButton(
-                onPressed: widget.onQAStartTask,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange[600],
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 24,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Start Testing',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ),
-            ),
-          );
-        case 'in qc':
-        case 'in_qc':
-          return _buildEmployeeActionSection();
-        case 'work done':
-        case 'work_done':
-        case 'completed':
-          return const SizedBox.shrink();
-        case 'redo':
-          return _buildEmployeeActionSection();
-        default:
-          return _buildEmployeeActionSection();
-      }
-    }
-
-    // Regular employee actions
-    switch (status) {
-      case 'assigned':
-        return Align(
-          alignment: Alignment.centerLeft,
-          child: MouseRegion(
-            cursor: SystemMouseCursors.click,
-            child: ElevatedButton(
-              onPressed: widget.onStartTask,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 24,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Start Task',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ),
-          ),
-        );
-      case 'in progress':
-        return Row(
-          children: [
-            // Clock In/Clock Out button
-            Expanded(
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (widget.onClockIn != null) {
-                      widget.onClockIn!();
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: widget.isCurrentlyClockedIn
-                        ? Colors.red[600]
-                        : Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 10,
-                      horizontal: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    widget.isCurrentlyClockedIn ? 'Stop Timer' : 'Clock In',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            ),
-            // Complete button
-            if (status != 'work done') ...[
-              const SizedBox(width: 12),
-              Expanded(
-                child: MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      if (widget.onCompleteTask != null) {
-                        widget.onCompleteTask!();
-                      }
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.green[700],
-                      side: BorderSide(color: Colors.green[700]!, width: 1.5),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Complete',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.3,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        );
-      case 'completed':
-      case 'dev completed':
-      case 'work done':
-      case 'workdone':
-      case 'work_done':
-        return Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.green[50],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green[200]!),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.check_circle_rounded,
-                  size: 20,
-                  color: Colors.green[700],
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Completed',
-                  style: TextStyle(
-                    color: Colors.green[700],
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      default:
-        return Align(
-          alignment: Alignment.centerLeft,
-          child: MouseRegion(
-            cursor: SystemMouseCursors.click,
-            child: ElevatedButton(
-              onPressed: widget.onStartTask,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 24,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Start Task',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ),
-          ),
-        );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1272,119 +807,70 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
   }
 
   Widget _buildFrontSide() {
-    final accentColor = _getStatusColor();
+    final statusText = _getStatusText();
+    final statusBgColor = _getStatusBgColor(context);
+    final statusColor = _getStatusColor();
+    final priorityColor = _getPriorityColor();
+    final priorityText = _getPriorityText();
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: () => _showTaskDetailsDialog(),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                accentColor.withOpacity(0.06),
-                Colors.white.withOpacity(0.015),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(
-              ResponsiveUtils.getResponsiveBorderRadius(
-                context,
-                mobile: 16.0,
-                tablet: 20.0,
-                desktop: 24.0,
-              ),
+            color: const Color(0xFF0F172A),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFF1E293B),
+              width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 16,
+                color: Colors.black.withOpacity(0.25),
+                blurRadius: 20,
                 offset: const Offset(0, 8),
-                spreadRadius: 0,
               ),
             ],
-            border: Border.all(
-              color: accentColor.withOpacity(0.2),
-              width: 1.0,
-            ),
           ),
           child: Padding(
-            padding: ResponsiveUtils.getResponsivePadding(
-              context,
-              mobile: const EdgeInsets.all(16),
-              tablet: const EdgeInsets.all(20),
-              desktop: const EdgeInsets.all(20),
-            ),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Header row (avatar + title + subtitle)
+                // Top Row: Icon Box + Title/Due Date + Status Badge
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Avatar
+                    // Icon Box
                     Container(
-                      width: ResponsiveUtils.getResponsiveSpacing(
-                        context,
-                        mobile: 48.0,
-                        tablet: 56.0,
-                        desktop: 56.0,
-                      ),
-                      height: ResponsiveUtils.getResponsiveSpacing(
-                        context,
-                        mobile: 48.0,
-                        tablet: 56.0,
-                        desktop: 56.0,
-                      ),
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Center(
-                        child: Text(
-                          (widget.task.taskName?.isNotEmpty ?? false)
-                              ? widget.task.taskName!
-                                    .substring(0, 1)
-                                    .toUpperCase()
-                              : 'T',
-                          style: GoogleFonts.lexend(
-                            fontWeight: FontWeight.w700,
-                            color: accentColor,
-                            fontSize: ResponsiveUtils.getResponsiveFontSize(
-                              context,
-                              mobile: 20,
-                              tablet: 20,
-                              desktop: 24,
-                            ),
-                          ),
+                        color: const Color(0xFF3B82F6).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFF3B82F6).withOpacity(0.2),
                         ),
                       ),
-                    ),
-                    SizedBox(
-                      width: ResponsiveUtils.getResponsiveSpacing(
-                        context,
-                        mobile: 12.0,
-                        tablet: 16.0,
-                        desktop: 20.0,
+                      child: const Icon(
+                        Icons.code_rounded,
+                        color: Color(0xFF3B82F6),
+                        size: 20,
                       ),
                     ),
-                    // Title + subtitle
+                    const SizedBox(width: 12),
+                    // Title and Due Date
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             widget.task.taskName ?? 'Untitled Task',
-                            style: GoogleFonts.lexend(
-                              fontSize: ResponsiveUtils.getResponsiveFontSize(
-                                context,
-                                mobile: 16,
-                                tablet: 18,
-                                desktop: 18,
-                              ),
-                              fontWeight: FontWeight.bold,
+                            style: GoogleFonts.outfit(
                               color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                               height: 1.2,
                             ),
                             maxLines: 2,
@@ -1392,97 +878,35 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            (widget.task.projectDetails != null &&
-                                    widget
-                                            .task
-                                            .projectDetails!['project_name'] !=
-                                        null &&
-                                    widget.task.projectDetails!['project_name']
-                                        .toString()
-                                        .isNotEmpty)
-                                ? widget.task.projectDetails!['project_name']
-                                      .toString()
-                                : (widget.task.taskType?.isNotEmpty ?? false)
-                                ? widget.task.taskType!
-                                : 'Task',
+                            _formatDueDate(widget.task.devCompletedAt),
                             style: GoogleFonts.inter(
-                              fontSize: ResponsiveUtils.getResponsiveFontSize(
-                                context,
-                                mobile: 12,
-                                tablet: 13,
-                                desktop: 13,
-                              ),
-                              color: Colors.white.withOpacity(0.4),
+                              color: Colors.white38,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-
-                SizedBox(
-                  height: ResponsiveUtils.getResponsiveSpacing(
-                    context,
-                    mobile: 16.0,
-                    tablet: 16.0,
-                    desktop: 16.0,
-                  ),
-                ),
-
-                // Tags row
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    // Status tag
+                    const SizedBox(width: 12),
+                    // Status Badge
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: _getStatusBgColor(context),
-                        borderRadius: BorderRadius.circular(20), // Pill shape
-                      ),
-                      child: Text(
-                        _getStatusText(),
-                        style: GoogleFonts.inter(
-                          color: _getStatusColor(),
-                          fontSize: ResponsiveUtils.getResponsiveFontSize(
-                            context,
-                            mobile: 11,
-                            tablet: 12,
-                            desktop: 13,
-                          ),
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.3,
+                        color: statusBgColor,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: statusColor.withOpacity(0.3),
                         ),
                       ),
-                    ),
-                    // Priority tag
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getPriorityBgColor(context),
-                        borderRadius: BorderRadius.circular(20), // Pill shape
-                      ),
                       child: Text(
-                        _getPriorityText(),
+                        statusText,
                         style: GoogleFonts.inter(
-                          color: _getPriorityColor(),
-                          fontSize: ResponsiveUtils.getResponsiveFontSize(
-                            context,
-                            mobile: 11,
-                            tablet: 12,
-                            desktop: 13,
-                          ),
+                          color: statusColor,
+                          fontSize: 11,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.3,
                         ),
@@ -1491,140 +915,274 @@ class _AnimatedTaskCardState extends State<AnimatedTaskCard>
                   ],
                 ),
 
-                SizedBox(
-                  height: ResponsiveUtils.getResponsiveSpacing(
-                    context,
-                    mobile: 16.0,
-                    tablet: 16.0,
-                    desktop: 16.0,
-                  ),
-                ),
-
-                // Metadata Row (Date + Duration)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.02),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.04),
+                // Description section
+                if (widget.task.taskDescription != null &&
+                    widget.task.taskDescription!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    widget.task.taskDescription!,
+                    style: GoogleFonts.inter(
+                      color: Colors.white60,
+                      fontSize: 13,
+                      height: 1.5,
                     ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  child: Row(
-                    children: [
-                      // Date
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.calendar_today_rounded,
-                              size: 16,
-                              color: Colors.white.withOpacity(0.4),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _getDateRange(),
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white.withOpacity(0.6),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Divider
-                      Container(
-                        height: 16,
-                        width: 1,
-                        margin: const EdgeInsets.symmetric(horizontal: 12),
-                        color: Colors.white.withOpacity(0.06),
-                      ),
-                      // Duration
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.access_time_rounded,
-                              size: 16,
-                              color: Colors.white.withOpacity(0.4),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _getTaskDuration(),
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white.withOpacity(0.6),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(
-                  height: ResponsiveUtils.getResponsiveSpacing(
-                    context,
-                    mobile: 16.0,
-                    tablet: 20.0,
-                    desktop: 24.0,
-                  ),
-                ),
-
-                // Action button or status
-                if (widget.isCurrentlyClockedIn) ...[
-                  // Show flip button when clocked in
-                  // Show flip button when clocked in
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: ElevatedButton(
-                        onPressed: _flipCard,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal: 24,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'View Timer',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ] else ...[
-                  // Show regular action buttons
-                  _buildActionSection(),
                 ],
+
+                const SizedBox(height: 20),
+
+                // Bottom Row: Priority on Left, Action Button on Right
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Priority Level
+                    Row(
+                      children: [
+                        Text(
+                          'Priority:',
+                          style: GoogleFonts.inter(
+                            color: Colors.white38,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: priorityColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: priorityColor.withOpacity(0.25),
+                            ),
+                          ),
+                          child: Text(
+                            priorityText,
+                            style: GoogleFonts.inter(
+                              color: priorityColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Action controls
+                    _buildModernActionSection(),
+                  ],
+                ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  String _formatDueDate(DateTime? date) {
+    if (date == null) return 'Due: N/A';
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return 'Due: ${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
+  Widget _buildCapsuleButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: color.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: color,
+                size: 16,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  color: color,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernActionSection() {
+    if (widget.isCurrentlyClockedIn) {
+      return _buildCapsuleButton(
+        label: 'View Timer',
+        icon: Icons.timer_outlined,
+        color: const Color(0xFF3B82F6),
+        onTap: _flipCard,
+      );
+    }
+
+    String status = widget.task.workflowStatus?.toLowerCase() ?? 'assigned';
+    bool isQAAnalyst =
+        widget.userRole?.toLowerCase().trim().contains('qa analyst') ?? false;
+
+    if (isQAAnalyst) {
+      switch (status) {
+        case 'dev completed':
+        case 'dev_completed':
+          return _buildCapsuleButton(
+            label: 'Start Testing',
+            icon: Icons.science_outlined,
+            color: Colors.orange[600]!,
+            onTap: widget.onQAStartTask ?? () {},
+          );
+        case 'in qc':
+        case 'in_qc':
+          return _buildModernEmployeeActions();
+        case 'work done':
+        case 'work_done':
+        case 'completed':
+          return const SizedBox.shrink();
+        case 'redo':
+          return _buildModernEmployeeActions();
+        default:
+          return _buildModernEmployeeActions();
+      }
+    }
+
+    // Regular employee actions
+    switch (status) {
+      case 'assigned':
+        return _buildCapsuleButton(
+          label: 'Start Task',
+          icon: Icons.play_arrow_rounded,
+          color: const Color(0xFF3B82F6),
+          onTap: widget.onStartTask ?? () {},
+        );
+      case 'in progress':
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildCapsuleButton(
+              label: 'Clock In',
+              icon: Icons.access_time_rounded,
+              color: const Color(0xFF3B82F6),
+              onTap: () {
+                if (widget.onClockIn != null) {
+                  widget.onClockIn!();
+                }
+              },
+            ),
+            const SizedBox(width: 8),
+            _buildCapsuleButton(
+              label: 'Complete',
+              icon: Icons.check_circle_outline_rounded,
+              color: Colors.green[700]!,
+              onTap: () {
+                if (widget.onCompleteTask != null) {
+                  widget.onCompleteTask!();
+                }
+              },
+            ),
+          ],
+        );
+      case 'completed':
+      case 'dev completed':
+      case 'work done':
+      case 'workdone':
+      case 'work_done':
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.green[600]!.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.green[600]!.withOpacity(0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.check_circle_rounded,
+                size: 16,
+                color: Colors.green[600],
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Completed',
+                style: GoogleFonts.inter(
+                  color: Colors.green[600],
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        );
+      default:
+        return _buildCapsuleButton(
+          label: 'Start Task',
+          icon: Icons.play_arrow_rounded,
+          color: const Color(0xFF3B82F6),
+          onTap: widget.onStartTask ?? () {},
+        );
+    }
+  }
+
+  Widget _buildModernEmployeeActions() {
+    final status = widget.task.workflowStatus?.toLowerCase() ?? '';
+    final isInQC = status == 'in qc';
+    final isWorkDone = status == 'work done';
+
+    if (isWorkDone) return const SizedBox.shrink();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildCapsuleButton(
+          label: 'Clock In',
+          icon: Icons.access_time_rounded,
+          color: const Color(0xFF3B82F6),
+          onTap: () {
+            if (widget.onClockIn != null) {
+              widget.onClockIn!();
+            }
+          },
+        ),
+        if (isInQC) ...[
+          const SizedBox(width: 8),
+          _buildCapsuleButton(
+            label: 'Complete Task',
+            icon: Icons.check_circle_outline_rounded,
+            color: Colors.green[700]!,
+            onTap: () => _showQCCompletionDialog(),
+          ),
+        ],
+      ],
     );
   }
 

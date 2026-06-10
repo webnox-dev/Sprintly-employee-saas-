@@ -9,7 +9,6 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../helpers/common_colors.dart';
 import '../../widgets/modern_project_card.dart';
-import '../../widgets/animations/silk_shader_widget.dart';
 
 class ProjectsScreen extends StatefulWidget {
   const ProjectsScreen({super.key});
@@ -59,158 +58,15 @@ class _ProjectsScreenState extends State<ProjectsScreen>
 
     return Column(
       children: [
-        // Compact Header
+        // Compact Header Row (Projects Info Card + 4 Statistics Cards)
         _buildHeader(true),
 
-        // Combined Toolbar (Tabs + Search)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-          child: Row(
-            children: [
-              // Tabs
-              Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(50),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                  border: Border.all(
-                    color: Theme.of(context).dividerColor.withOpacity(0.1),
-                  ),
-                ),
-                padding: const EdgeInsets.all(4),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildNanoTabItem(
-                      context,
-                      'All',
-                      Icons.folder_open_rounded,
-                      0,
-                      true,
-                    ),
-                    _buildNanoTabItem(
-                      context,
-                      'Active',
-                      Icons.play_circle_rounded,
-                      1,
-                      true,
-                    ),
-                    _buildNanoTabItem(
-                      context,
-                      'Completed',
-                      Icons.check_circle_rounded,
-                      2,
-                      true,
-                    ),
-                    _buildNanoTabItem(
-                      context,
-                      'Priority',
-                      Icons.flag_rounded,
-                      3,
-                      true,
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              // Search
-              Container(
-                width: 300,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(50),
-                  border: Border.all(
-                    color: Theme.of(context).dividerColor.withOpacity(0.1),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Search...',
-                    prefixIcon: Icon(
-                      Icons.search_rounded,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 20,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 14,
-                    ),
-                    hintStyle: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.5),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Refresh Button
-              Consumer<ProjectViewModel>(
-                builder: (context, projectViewModel, child) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Theme.of(context).dividerColor.withOpacity(0.1),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 5,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      onPressed: () => projectViewModel.refreshProjects(),
-                      icon: projectViewModel.isLoading
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            )
-                          : Icon(
-                              Icons.refresh_rounded,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 20,
-                            ),
-                      tooltip: 'Refresh',
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
+        // Combined Toolbar (Filters + Search + Refresh)
+        _buildCombinedToolbar(true),
 
-        // Content
-        Expanded(
-          child: TabBarView(
+        // Content Area Container
+        _buildContentContainer(
+          TabBarView(
             controller: _tabController,
             children: [
               _buildDesktopProjectsGrid(),
@@ -230,79 +86,455 @@ class _ProjectsScreenState extends State<ProjectsScreen>
     );
   }
 
-  Widget _buildDesktopProjectsTab(bool Function(Project) filter) {
-    return Consumer<ProjectViewModel>(
-      builder: (context, projectViewModel, child) {
-        if (projectViewModel.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
+  Widget _buildMobileLayout() {
+    return Column(
+      children: [
+        // Header Section
+        _buildHeader(false),
+        // Combined Toolbar
+        _buildCombinedToolbar(false),
+        // Content Area Container
+        _buildContentContainer(
+          TabBarView(
+            controller: _tabController,
+            children: [
+              _buildAllProjectsTab(),
+              _buildActiveProjectsTab(),
+              _buildCompletedProjectsTab(),
+              _buildHighPriorityTab(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
-        if (projectViewModel.error != null) {
-          return Center(child: Text('Error: ${projectViewModel.error}'));
-        }
-
-        List<Project> projects =
-            projectViewModel.projects.where(filter).toList();
-        if (_searchQuery.isNotEmpty) {
-          projects = projectViewModel
-              .searchProjects(_searchQuery)
-              .where(filter)
-              .toList();
-        }
-
-        if (projects.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.folder_off_rounded,
-                  size: 64,
-                  color: Colors.grey[300],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'No projects found',
-                  style: GoogleFonts.lexend(
-                    fontSize: 18,
-                    color: Colors.grey[500],
+  Widget _buildHeader(bool isDesktop) {
+    return Container(
+      margin: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isDesktop)
+            SizedBox(
+              height: 110,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Projects title card
+                  Expanded(
+                    flex: 3,
+                    child: _buildProjectsTitleCard(),
                   ),
+                  const SizedBox(width: 16),
+                  // Statistics Cards
+                  Expanded(
+                    flex: 5,
+                    child: Consumer<ProjectViewModel>(
+                      builder: (context, projectViewModel, child) {
+                        return _buildStatisticsCards(projectViewModel, true);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else ...[
+            _buildProjectsTitleCard(),
+            const SizedBox(height: 16),
+            Consumer<ProjectViewModel>(
+              builder: (context, projectViewModel, child) {
+                return SizedBox(
+                  height: 90,
+                  child: _buildStatisticsCards(projectViewModel, false),
+                );
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProjectsTitleCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade200,
+          width: 1,
+        ),
+        gradient: isDark
+            ? LinearGradient(
+                colors: [
+                  const Color(0xFF1E3A8A).withOpacity(0.25),
+                  const Color(0xFF0F172A),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF38BDF8).withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: const Color(0xFF38BDF8).withOpacity(0.3),
+              ),
+            ),
+            child: const Icon(
+              Icons.folder_rounded,
+              color: Color(0xFF38BDF8),
+              size: 18,
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Projects',
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: isDark ? Colors.white : Colors.black,
+                  height: 1.1,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Manage and track your assigned projects efficiently.',
+                style: GoogleFonts.inter(
+                  color: isDark ? Colors.white.withOpacity(0.5) : Colors.black54,
+                  fontSize: 11,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatisticsCards(
+    ProjectViewModel projectViewModel,
+    bool isDesktop,
+  ) {
+    final stats = projectViewModel.getProjectStatistics();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildStatCard(
+          'TOTAL',
+          stats['total'] ?? 0,
+          const Color(0xFF38BDF8),
+          isDark,
+        ),
+        const SizedBox(width: 12),
+        _buildStatCard(
+          'ACTIVE',
+          stats['active'] ?? 0,
+          const Color(0xFF34D399),
+          isDark,
+        ),
+        const SizedBox(width: 12),
+        _buildStatCard(
+          'COMPLETED',
+          stats['completed'] ?? 0,
+          const Color(0xFFFBBF24),
+          isDark,
+        ),
+        const SizedBox(width: 12),
+        _buildStatCard(
+          'HIGH PRIORITY',
+          stats['high_priority'] ?? 0,
+          const Color(0xFF60A5FA),
+          isDark,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatCard(String label, int value, Color color, bool isDark) {
+    return Expanded(
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0F172A) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade200,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              value.toString(),
+              style: GoogleFonts.outfit(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                color: color,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCombinedToolbar(bool isDesktop) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final projectViewModel = Provider.of<ProjectViewModel>(context, listen: false);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade200,
+          width: 1,
+        ),
+      ),
+      child: isDesktop
+          ? Row(
+              children: [
+                // Tabs
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildFilterChip('All', Icons.folder_open_rounded, 0, isDark),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Active', Icons.play_circle_outline_rounded, 1, isDark),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Completed', Icons.check_circle_outline_rounded, 2, isDark),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Priority', Icons.flag_outlined, 3, isDark),
+                  ],
+                ),
+                const Spacer(),
+                // Search Input
+                _buildSearchField(isDark),
+                const SizedBox(width: 12),
+                // Refresh Button
+                _buildRefreshButton(projectViewModel, isDark),
+              ],
+            )
+          : Column(
+              children: [
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildFilterChip('All', Icons.folder_open_rounded, 0, isDark),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Active', Icons.play_circle_outline_rounded, 1, isDark),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Completed', Icons.check_circle_outline_rounded, 2, isDark),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Priority', Icons.flag_outlined, 3, isDark),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _buildSearchField(isDark)),
+                    const SizedBox(width: 12),
+                    _buildRefreshButton(projectViewModel, isDark),
+                  ],
                 ),
               ],
             ),
-          );
-        }
+    );
+  }
 
-        return AnimationLimiter(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 24,
-                mainAxisSpacing: 24,
-                childAspectRatio: 1.6,
+  Widget _buildFilterChip(String title, IconData icon, int index, bool isDark) {
+    return AnimatedBuilder(
+      animation: _tabController,
+      builder: (context, child) {
+        final isSelected = _tabController.index == index;
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () {
+              _tabController.animateTo(index);
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: isSelected ? CommonColors.primaryGradient : null,
+                color: isSelected ? null : Colors.transparent,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: isSelected
+                      ? Colors.transparent
+                      : (isDark ? const Color(0xFF334155).withOpacity(0.5) : Colors.grey.shade300),
+                  width: 1,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: CommonColors.primary.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
               ),
-              itemCount: projects.length,
-              itemBuilder: (context, index) {
-                return AnimationConfiguration.staggeredGrid(
-                  position: index,
-                  duration: const Duration(milliseconds: 375),
-                  columnCount: 3,
-                  child: ScaleAnimation(
-                    child: FadeInAnimation(
-                      child: ModernProjectCard(
-                        project: projects[index],
-                        onTap: () => _showProjectDetails(projects[index]),
-                      ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    size: 16,
+                    color: isSelected
+                        ? Colors.white
+                        : (isDark ? Colors.white70 : Colors.black87),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      color: isSelected
+                          ? Colors.white
+                          : (isDark ? Colors.white70 : Colors.black87),
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      fontSize: 13,
                     ),
                   ),
-                );
-              },
+                ],
+              ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSearchField(bool isDark) {
+    return Container(
+      width: 260,
+      height: 38,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF070B14) : const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155).withOpacity(0.5) : Colors.grey.shade300,
+          width: 1,
+        ),
+      ),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
+        style: GoogleFonts.inter(
+          fontSize: 13,
+          color: isDark ? Colors.white : Colors.black,
+        ),
+        decoration: InputDecoration(
+          hintText: 'Search projects...',
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            color: isDark ? Colors.white54 : Colors.black45,
+            size: 18,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          hintStyle: GoogleFonts.inter(
+            fontSize: 13,
+            color: isDark ? Colors.white30 : Colors.black38,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRefreshButton(ProjectViewModel projectViewModel, bool isDark) {
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF070B14) : const Color(0xFFF3F4F6),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155).withOpacity(0.5) : Colors.grey.shade300,
+          width: 1,
+        ),
+      ),
+      child: IconButton(
+        padding: EdgeInsets.zero,
+        onPressed: () => projectViewModel.refreshProjects(),
+        icon: projectViewModel.isLoading
+            ? SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: CommonColors.primary,
+                ),
+              )
+            : Icon(
+                Icons.refresh_rounded,
+                color: isDark ? Colors.white70 : Colors.black87,
+                size: 18,
+              ),
+        tooltip: 'Refresh',
+      ),
+    );
+  }
+
+  Widget _buildContentContainer(Widget child) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF090E1A) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade200,
+            width: 1,
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: child,
+        ),
+      ),
     );
   }
 
@@ -355,487 +587,56 @@ class _ProjectsScreenState extends State<ProjectsScreen>
     );
   }
 
-  Widget _buildMobileLayout() {
-    return Column(
-      children: [
-        // Header Section
-        _buildHeader(false),
-        // Search and Filter Section
-        _buildSearchAndFilter(false),
-        // Tab Bar
-        _buildTabBar(false),
-        // Tab Content
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildAllProjectsTab(),
-              _buildActiveProjectsTab(),
-              _buildCompletedProjectsTab(),
-              _buildHighPriorityTab(),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+  Widget _buildDesktopProjectsTab(bool Function(Project) filter) {
+    return Consumer<ProjectViewModel>(
+      builder: (context, projectViewModel, child) {
+        if (projectViewModel.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-  Widget _buildHeader(bool isDesktop) {
-    return SilkShaderWidget(
-      speed: 0.8,
-      scale: 1.2,
-      color: Theme.of(context).colorScheme.primary,
-      noiseIntensity: 1.5,
-      child: Container(
-        margin: isDesktop ? EdgeInsets.zero : const EdgeInsets.all(16),
-        padding: EdgeInsets.symmetric(
-          horizontal: isDesktop ? 32 : 20,
-          vertical: ResponsiveUtils.getResponsiveSize(
-            context,
-            mobile: 16,
-            tablet: 18,
-            laptop: 20, // Reduced from 28
-            desktop: 28,
-          ),
-        ),
-        decoration: BoxDecoration(
-          borderRadius:
-              isDesktop ? BorderRadius.zero : BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: CommonColors.primary.withOpacity(0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    gradient: CommonColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: CommonColors.primary.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.folder_copy_rounded,
-                    size: ResponsiveUtils.getResponsiveSize(
-                      context,
-                      mobile: 20,
-                      tablet: 20,
-                      laptop: 20, // Reduced from 24
-                      desktop: 24,
-                    ),
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(width: isDesktop ? 16 : 12),
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Projects',
-                        style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.bold,
-                          fontSize: ResponsiveUtils.getResponsiveSize(
-                            context,
-                            mobile: 20,
-                            tablet: 20,
-                            laptop: 22, // Reduced from 24
-                            desktop: 24,
-                          ),
-                          color: Colors.white,
-                        ),
-                      ),
-                      if (isDesktop) const SizedBox(height: 2),
-                      Text(
-                        'Manage your assigned projects',
-                        style: GoogleFonts.inter(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: isDesktop ? 13 : 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isDesktop) ...[
-                  const SizedBox(width: 24),
-                  // Compact desktop stats
-                  Expanded(
-                    flex: 3,
-                    child: Consumer<ProjectViewModel>(
-                      builder: (context, projectViewModel, child) {
-                        return _buildStatisticsCards(
-                          projectViewModel,
-                          isDesktop,
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            if (!isDesktop) ...[
-              const SizedBox(height: 16),
-              Consumer<ProjectViewModel>(
-                builder: (context, projectViewModel, child) {
-                  return _buildStatisticsCards(projectViewModel, isDesktop);
-                },
+        if (projectViewModel.error != null) {
+          return Center(child: Text('Error: ${projectViewModel.error}'));
+        }
+
+        List<Project> projects =
+            projectViewModel.projects.where(filter).toList();
+        if (_searchQuery.isNotEmpty) {
+          projects = projectViewModel
+              .searchProjects(_searchQuery)
+              .where(filter)
+              .toList();
+        }
+
+        if (projects.isEmpty) {
+          return _buildEmptyState();
+        }
+
+        return AnimationLimiter(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 24,
+                mainAxisSpacing: 24,
+                childAspectRatio: 1.6,
               ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(String status) {
-    Color color;
-    switch (status.toLowerCase()) {
-      case 'active':
-        color = Colors.green;
-        break;
-      case 'completed':
-        color = Colors.blue;
-        break;
-      case 'pending':
-        color = Colors.orange;
-        break;
-      default:
-        color = Colors.grey;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Text(
-        status,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: color,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatisticsCards(
-    ProjectViewModel projectViewModel,
-    bool isDesktop,
-  ) {
-    final stats = projectViewModel.getProjectStatistics();
-
-    return Row(
-      children: [
-        _buildStatCard('Total', stats['total'] ?? 0, Colors.blue, isDesktop),
-        SizedBox(width: isDesktop ? 12 : 8),
-        _buildStatCard('Active', stats['active'] ?? 0, Colors.green, isDesktop),
-        SizedBox(width: isDesktop ? 12 : 8),
-        _buildStatCard(
-          'Completed',
-          stats['completed'] ?? 0,
-          Colors.purple,
-          isDesktop,
-        ),
-        SizedBox(width: isDesktop ? 12 : 8),
-        _buildStatCard(
-          'High Priority',
-          stats['high_priority'] ?? 0,
-          Colors.red,
-          isDesktop,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard(String label, int value, Color color, bool isDesktop) {
-    return Expanded(
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: isDesktop ? 16 : 12,
-          vertical: isDesktop ? 12 : 12,
-        ),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Theme.of(context).dividerColor.withOpacity(0.1),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Text(
-              value.toString(),
-              style: GoogleFonts.outfit(
-                fontSize: isDesktop ? 24 : 20,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            SizedBox(height: isDesktop ? 4 : 2),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: isDesktop ? 12 : 11,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchAndFilter(bool isDesktop) {
-    return Container(
-      padding: EdgeInsets.all(isDesktop ? 24 : 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(isDesktop ? 16 : 12),
-                border: Border.all(
-                  color: Theme.of(context).dividerColor.withOpacity(0.1),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
-                decoration: InputDecoration(
-                  hintText: 'Search projects...',
-                  prefixIcon: Icon(
-                    Icons.search_rounded,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: isDesktop ? 20 : 16,
-                    vertical: isDesktop ? 16 : 14,
-                  ),
-                  hintStyle: GoogleFonts.inter(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.5),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: isDesktop ? 16 : 12),
-          Consumer<ProjectViewModel>(
-            builder: (context, projectViewModel, child) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Theme.of(context).dividerColor.withOpacity(0.1),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: IconButton(
-                  onPressed: () => projectViewModel.refreshProjects(),
-                  icon: projectViewModel.isLoading
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        )
-                      : Icon(
-                          Icons.refresh_rounded,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                  tooltip: 'Refresh',
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabBar(bool isDesktop) {
-    return Center(
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: isDesktop ? 800 : double.infinity,
-        ),
-        margin: isDesktop
-            ? EdgeInsets.zero
-            : const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(50),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-              spreadRadius: 0,
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildNanoTabItem(
-              context,
-              'All',
-              Icons.folder_open_rounded,
-              0,
-              isDesktop,
-            ),
-            _buildNanoTabItem(
-              context,
-              'Active',
-              Icons.play_circle_rounded,
-              1,
-              isDesktop,
-            ),
-            _buildNanoTabItem(
-              context,
-              'Completed',
-              Icons.check_circle_rounded,
-              2,
-              isDesktop,
-            ),
-            _buildNanoTabItem(
-              context,
-              'Priority',
-              Icons.flag_rounded,
-              3,
-              isDesktop,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNanoTabItem(
-    BuildContext context,
-    String title,
-    IconData icon,
-    int index,
-    bool isDesktop,
-  ) {
-    // We need to listen to the tab controller to update the UI
-    return AnimatedBuilder(
-      animation: _tabController,
-      builder: (context, child) {
-        final isSelected = _tabController.index == index;
-        return MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            onTap: () {
-              _tabController.animateTo(index);
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: EdgeInsets.symmetric(
-                horizontal: isDesktop ? 24 : 12,
-                vertical: isDesktop ? 12 : 8,
-              ),
-              decoration: BoxDecoration(
-                gradient: isSelected ? CommonColors.primaryGradient : null,
-                color: isSelected ? null : Colors.transparent,
-                borderRadius: BorderRadius.circular(40),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: CommonColors.primary.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    icon,
-                    size: isDesktop ? 18 : 16,
-                    color: isSelected
-                        ? Colors.white
-                        : Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.6),
-                  ),
-                  // Always show text on desktop
-                  if (isDesktop || isSelected || true) ...[
-                    const SizedBox(width: 8),
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: isSelected
-                            ? Colors.white
-                            : Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withOpacity(0.8),
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w500,
-                        fontSize: isDesktop ? 14 : 12,
+              itemCount: projects.length,
+              itemBuilder: (context, index) {
+                return AnimationConfiguration.staggeredGrid(
+                  position: index,
+                  duration: const Duration(milliseconds: 375),
+                  columnCount: 3,
+                  child: ScaleAnimation(
+                    child: FadeInAnimation(
+                      child: ModernProjectCard(
+                        project: projects[index],
+                        onTap: () => _showProjectDetails(projects[index]),
                       ),
                     ),
-                  ],
-                ],
-              ),
+                  ),
+                );
+              },
             ),
           ),
         );
@@ -1013,32 +814,52 @@ class _ProjectsScreenState extends State<ProjectsScreen>
   }
 
   Widget _buildEmptyState() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.folder_outlined,
-            size: 64,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No projects found',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B).withOpacity(0.2) : Colors.grey.shade100,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isDark ? const Color(0xFF334155).withOpacity(0.3) : Colors.grey.shade200,
                 ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'You are not assigned to any projects yet',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              ),
+              child: Icon(
+                Icons.folder_open_rounded,
+                size: 64,
+                color: isDark ? const Color(0xFF64748B) : Colors.grey.shade400,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'No projects found',
+              style: GoogleFonts.outfit(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Text(
+                'You are not assigned to any projects yet. When projects are assigned to you, they will appear here.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                  height: 1.5,
                 ),
-          ),
-        ],
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1052,50 +873,7 @@ class _ProjectsScreenState extends State<ProjectsScreen>
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: SizedBox(
                   height: constraints.maxHeight,
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.folder_outlined,
-                          size: 64,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.3),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No projects found',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withOpacity(0.7),
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'You are not assigned to any projects yet',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface.withOpacity(0.5),
-                                  ),
-                        ),
-                        const SizedBox(height: 24),
-                        OutlinedButton.icon(
-                          onPressed: () => context
-                              .read<ProjectViewModel>()
-                              .refreshProjects(),
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Refresh'),
-                        ),
-                      ],
-                    ),
-                  ),
+                  child: _buildEmptyState(),
                 ),
               ),
             )
@@ -1144,7 +922,6 @@ class _ProjectsScreenState extends State<ProjectsScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Row
               Row(
                 children: [
                   Expanded(
@@ -1186,7 +963,6 @@ class _ProjectsScreenState extends State<ProjectsScreen>
 
               const SizedBox(height: 16),
 
-              // Project Details Row
               Row(
                 children: [
                   _buildDetailChip(
@@ -1213,7 +989,6 @@ class _ProjectsScreenState extends State<ProjectsScreen>
 
               const SizedBox(height: 16),
 
-              // Progress and Actions Row
               Row(
                 children: [
                   Expanded(child: _buildProgressInfo(project)),
@@ -1309,6 +1084,40 @@ class _ProjectsScreenState extends State<ProjectsScreen>
       default:
         return Colors.grey;
     }
+  }
+
+  Widget _buildStatusChip(String status) {
+    Color color;
+    switch (status.toLowerCase()) {
+      case 'active':
+        color = Colors.green;
+        break;
+      case 'completed':
+        color = Colors.blue;
+        break;
+      case 'pending':
+        color = Colors.orange;
+        break;
+      default:
+        color = Colors.grey;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: color,
+        ),
+      ),
+    );
   }
 
   void _showProjectDetails(Project project) {

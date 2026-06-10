@@ -139,20 +139,25 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
     final isMobile = MediaQuery.of(context).size.width < 600;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.white, // Clean white professional background
+      backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
       body: Container(
         decoration: BoxDecoration(
-          // Very subtle, professional gradient
+          // Subtle, professional gradient that syncs with UI themes
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.white,
-              // Subtle tint of brand color at the bottom
-              primaryColor.withOpacity(0.05),
-            ],
+            colors: isDark
+                ? [
+                    const Color(0xFF0F172A),
+                    const Color(0xFF1E293B),
+                  ]
+                : [
+                    Colors.white,
+                    primaryColor.withOpacity(0.05),
+                  ],
           ),
         ),
         child: SafeArea(
@@ -166,72 +171,41 @@ class _SplashScreenState extends State<SplashScreen>
                   children: [
                     const Spacer(),
 
-                    // Logo Section - Clean, no effects
+                    // Logo Section - Clean, scaled up for better presence
                     Hero(
                       tag: 'app_logo',
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Image.asset(
-                              'assets/logo/logo.png', // Using existing logo
-                              width: isMobile ? 80 : 100,
-                              height: isMobile ? 80 : 100,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
+                      child: Image.asset(
+                        'assets/logo/rathz_joined_logo.png',
+                        width: isMobile ? 220 : 285,
+                        height: isMobile ? 85 : 110,
+                        fit: BoxFit.contain,
                       ),
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
-                    // Brand Name - Strong, Professional
-                    Text(
-                      'Rathz',
-                      style: TextStyle(
-                        fontFamily: 'Inter', // Presuming Inter or system font
-                        fontSize: isMobile ? 32 : 40,
-                        fontWeight: FontWeight.bold, // Strong bold
-                        color: Colors.black87, // High contrast
-                        letterSpacing: -0.5, // Tight corporate tracking
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // Subtitle - Clear hierarchy
+                    // Subtitle - Clear hierarchy, Dark mode synced
                     Text(
                       'Employee Portal',
                       style: TextStyle(
+                        fontFamily: 'Inter',
                         fontSize: 14,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0.5,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.5,
                       ),
                     ),
 
                     const Spacer(),
 
-                    // Minimal Footer Loader
+                    // Minimal Footer Loader - Dark mode synced
                     SizedBox(
                       width: 200,
                       child: Column(
                         children: [
                           LinearProgressIndicator(
                             minHeight: 2,
-                            backgroundColor: Colors.grey[200],
+                            backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
                             valueColor:
                                 AlwaysStoppedAnimation<Color>(primaryColor),
                           ),
@@ -239,7 +213,7 @@ class _SplashScreenState extends State<SplashScreen>
                           Text(
                             _loadingText,
                             style: TextStyle(
-                              color: Colors.grey[400],
+                              color: isDark ? Colors.grey[500] : Colors.grey[400],
                               fontSize: 12,
                             ),
                           ),

@@ -2,13 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:lottie/lottie.dart';
-import 'package:webnox_taskops/theme/app_theme.dart';
-import 'package:webnox_taskops/helpers/common_colors.dart';
 import 'package:webnox_taskops/utils/responsive_utils.dart';
 import 'package:webnox_taskops/services/calendar_service.dart';
 import 'package:webnox_taskops/view_model/auth_view_model.dart';
-import '../../widgets/animations/silk_shader_widget.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CalendarScreen extends HookWidget {
   const CalendarScreen({super.key});
@@ -290,86 +287,59 @@ class CalendarScreen extends HookWidget {
   }
 
   Widget _buildHeader(BuildContext context, bool isDesktop) {
-    return SilkShaderWidget(
-      speed: 0.8,
-      scale: 1.2,
-      color: Theme.of(context).colorScheme.primary,
-      noiseIntensity: 1.5,
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(
-          horizontal: isDesktop ? 32 : 16,
-          vertical: ResponsiveUtils.getResponsiveSize(
-            context,
-            mobile: 16,
-            tablet: 18,
-            laptop: 20, // Reduced from 28
-            desktop: 28,
+    return Container(
+      margin: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 16),
+      padding: EdgeInsets.all(isDesktop ? 20 : 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF1E293B),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(isDesktop ? 12 : 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF3B82F6).withOpacity(0.15),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFF3B82F6).withOpacity(0.3),
+              ),
+            ),
+            child: const Icon(
+              Icons.calendar_month_rounded,
+              color: Color(0xFF3B82F6),
+              size: 24,
+            ),
           ),
-        ),
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: CommonColors.primary.withOpacity(0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-              spreadRadius: 0,
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(isDesktop ? 12 : 10),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                Icons.calendar_month_rounded,
-                color: Colors.white,
-                size: ResponsiveUtils.getResponsiveSize(
-                  context,
-                  mobile: 22,
-                  tablet: 22,
-                  laptop: 20, // Reduced from 24
-                  desktop: 24,
-                ),
-              ),
-            ),
-            SizedBox(width: isDesktop ? 16 : 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Manage Your Schedule',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: ResponsiveUtils.getResponsiveSize(
-                        context,
-                        mobile: 20,
-                        tablet: 22,
-                        laptop: 22, // Reduced from 28
-                        desktop: 28,
-                      ),
-                      fontWeight: FontWeight.bold,
-                      height: 1.2,
-                    ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Manage Your Schedule',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: isDesktop ? 24 : 20,
+                    fontWeight: FontWeight.bold,
                   ),
-                  if (isDesktop)
-                    Text(
-                      'View and manage your tasks, leaves, and holidays efficiently',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
-                      ),
-                    ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'View and manage your tasks, leaves, and holidays efficiently',
+                  style: GoogleFonts.inter(
+                    color: Colors.white60,
+                    fontSize: isDesktop ? 13 : 11,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -438,35 +408,45 @@ class CalendarScreen extends HookWidget {
       context: context,
       barrierDismissible: true,
       builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF0F172A),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(
+            color: Color(0xFF1E293B),
+            width: 1,
+          ),
         ),
         title: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.orange.withOpacity(0.1),
+            color: const Color(0xFFF97316).withOpacity(0.15),
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: const Color(0xFFF97316).withOpacity(0.3),
+            ),
           ),
           child: Row(
             children: [
-              Icon(Icons.event_available, color: Colors.orange, size: 28),
+              const Icon(Icons.event_available, color: Color(0xFFF97316), size: 28),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Continuous Leave Period',
-                      style: TextStyle(
+                      style: GoogleFonts.outfit(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
                       title,
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontSize: 14,
-                        color: Colors.orange[700],
+                        color: const Color(0xFFF97316),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -476,7 +456,7 @@ class CalendarScreen extends HookWidget {
             ],
           ),
         ),
-        content: Container(
+        content: SizedBox(
           width: isDesktop ? 400 : 300,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -486,16 +466,16 @@ class CalendarScreen extends HookWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: const Color(0xFF0B0F19),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.orange.withOpacity(0.3),
+                    color: const Color(0xFF1E293B),
                   ),
                 ),
                 child: Text(
                   title,
-                  style: TextStyle(
-                    color: Colors.orange,
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -509,44 +489,46 @@ class CalendarScreen extends HookWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryBlue.withOpacity(0.1),
+                  color: const Color(0xFF0B0F19),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: AppTheme.primaryBlue.withOpacity(0.3),
+                    color: const Color(0xFF1E293B),
                   ),
                 ),
                 child: Column(
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.calendar_today,
-                            color: AppTheme.primaryBlue, size: 20),
-                        const SizedBox(width: 8),
+                        const Icon(Icons.calendar_today,
+                            color: Color(0xFF3B82F6), size: 18),
+                        const SizedBox(width: 10),
                         Text(
                           'From: ${_formatDate(startDate)}',
-                          style: TextStyle(
-                            color: AppTheme.primaryBlue,
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
                             fontWeight: FontWeight.w600,
+                            fontSize: 14,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
-                        Icon(Icons.calendar_today,
-                            color: AppTheme.primaryBlue, size: 20),
-                        const SizedBox(width: 8),
+                        const Icon(Icons.calendar_today,
+                            color: Color(0xFF3B82F6), size: 18),
+                        const SizedBox(width: 10),
                         Text(
                           'To: ${_formatDate(endDate)}',
-                          style: TextStyle(
-                            color: AppTheme.primaryBlue,
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
                             fontWeight: FontWeight.w600,
+                            fontSize: 14,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -554,14 +536,18 @@ class CalendarScreen extends HookWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryBlue,
+                            color: const Color(0xFF3B82F6).withOpacity(0.15),
                             borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: const Color(0xFF3B82F6).withOpacity(0.3),
+                            ),
                           ),
                           child: Text(
                             '$daysDifference ${daysDifference == 1 ? 'Day' : 'Days'}',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: GoogleFonts.outfit(
+                              color: const Color(0xFF3B82F6),
                               fontWeight: FontWeight.bold,
+                              fontSize: 12,
                             ),
                           ),
                         ),
@@ -569,14 +555,18 @@ class CalendarScreen extends HookWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.orange,
+                            color: const Color(0xFFF97316).withOpacity(0.15),
                             borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: const Color(0xFFF97316).withOpacity(0.3),
+                            ),
                           ),
                           child: Text(
                             leaveType,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: GoogleFonts.outfit(
+                              color: const Color(0xFFF97316),
                               fontWeight: FontWeight.bold,
+                              fontSize: 12,
                             ),
                           ),
                         ),
@@ -591,7 +581,13 @@ class CalendarScreen extends HookWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            child: Text(
+              'Close',
+              style: GoogleFonts.outfit(
+                color: const Color(0xFF3B82F6),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -606,8 +602,6 @@ class CalendarScreen extends HookWidget {
     ValueNotifier<bool> showAttendance,
     bool isDesktop,
   ) {
-    // Get responsive breakpoints
-
     final tabSpacing = ResponsiveUtils.getResponsiveSpacing(
       context,
       mobile: 8.0,
@@ -625,7 +619,7 @@ class CalendarScreen extends HookWidget {
             context,
             'Tasks',
             Icons.task_alt,
-            AppTheme.primaryBlue,
+            const Color(0xFF3B82F6),
             showTasks.value,
             () => showTasks.value = !showTasks.value,
           ),
@@ -635,7 +629,7 @@ class CalendarScreen extends HookWidget {
             context,
             'Holidays',
             Icons.celebration,
-            Colors.red,
+            const Color(0xFFEF4444),
             showHolidays.value,
             () => showHolidays.value = !showHolidays.value,
           ),
@@ -645,7 +639,7 @@ class CalendarScreen extends HookWidget {
             context,
             'Leave',
             Icons.event_available,
-            Colors.orange,
+            const Color(0xFFF97316),
             showLeave.value,
             () => showLeave.value = !showLeave.value,
           ),
@@ -655,7 +649,7 @@ class CalendarScreen extends HookWidget {
             context,
             'Attendance',
             Icons.access_time_filled,
-            Colors.green,
+            const Color(0xFF10B981),
             showAttendance.value,
             () => showAttendance.value = !showAttendance.value,
           ),
@@ -665,7 +659,7 @@ class CalendarScreen extends HookWidget {
           Container(
             height: 24,
             width: 1,
-            color: Theme.of(context).dividerColor,
+            color: const Color(0xFF1E293B),
           ),
           SizedBox(width: tabSpacing * 1.5),
 
@@ -698,21 +692,26 @@ class CalendarScreen extends HookWidget {
   }
 
   Widget _buildQuickAction(
-      BuildContext context, String label, VoidCallback onTap,
-      {bool isDestructive = false}) {
-    return InkWell(
+    BuildContext context,
+    String label,
+    VoidCallback onTap, {
+    bool isDestructive = false,
+  }) {
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0B0F19),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFF1E293B)),
+        ),
         child: Text(
           label,
-          style: TextStyle(
-            color: isDestructive
-                ? Theme.of(context).colorScheme.error
-                : Theme.of(context).colorScheme.primary,
+          style: GoogleFonts.outfit(
+            color: isDestructive ? const Color(0xFFEF4444) : const Color(0xFF3B82F6),
             fontWeight: FontWeight.w600,
-            fontSize: 13,
+            fontSize: 12,
           ),
         ),
       ),
@@ -727,10 +726,8 @@ class CalendarScreen extends HookWidget {
     bool isSelected,
     VoidCallback onTap,
   ) {
-    // Get responsive breakpoints
     final isVerySmallMobile = MediaQuery.of(context).size.width < 360;
 
-    // Responsive sizing
     final iconSize = ResponsiveUtils.getResponsiveIconSize(
       context,
       mobile: isVerySmallMobile ? 14.0 : 16.0,
@@ -790,62 +787,30 @@ class CalendarScreen extends HookWidget {
         ),
         padding: padding,
         decoration: BoxDecoration(
-          color: isSelected ? color : Colors.transparent,
+          color: isSelected ? color.withOpacity(0.15) : const Color(0xFF0B0F19),
           borderRadius: BorderRadius.circular(borderRadius),
+          border: Border.all(
+            color: isSelected ? color.withOpacity(0.4) : const Color(0xFF1E293B),
+            width: 1.0,
+          ),
         ),
-        child: Column(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  size: iconSize,
-                  color: isSelected ? Colors.white : color,
-                ),
-                SizedBox(width: spacing),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey[300]
-                            : Colors.grey[600],
-                    fontSize: fontSize,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  ),
-                ),
-              ],
+            Icon(
+              icon,
+              size: iconSize,
+              color: isSelected ? color : Colors.white54,
             ),
-            if (isSelected) ...[
-              SizedBox(
-                  height: ResponsiveUtils.getResponsiveSpacing(
-                context,
-                mobile: 6.0,
-                tablet: 8.0,
-                desktop: 10.0,
-              )),
-              Container(
-                height: ResponsiveUtils.getResponsiveSize(
-                  context,
-                  mobile: 2.0,
-                  tablet: 2.5,
-                  desktop: 3.0,
-                ),
-                width: ResponsiveUtils.getResponsiveSize(
-                  context,
-                  mobile: 16.0,
-                  tablet: 20.0,
-                  desktop: 24.0,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(1.5),
-                ),
+            SizedBox(width: spacing),
+            Text(
+              label,
+              style: GoogleFonts.outfit(
+                color: isSelected ? Colors.white : Colors.white54,
+                fontSize: fontSize,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
-            ],
+            ),
           ],
         ),
       ),
@@ -869,17 +834,17 @@ class CalendarScreen extends HookWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: const Color(0xFF0F172A),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.1),
+          color: const Color(0xFF1E293B),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -940,19 +905,8 @@ class CalendarScreen extends HookWidget {
                 });
               },
               eventLoader: (day) {
-                // Normalize the day to remove time component for consistent lookup
                 final normalizedDay = DateTime(day.year, day.month, day.day);
-
-                // Get the actual events for this day from our stored map
                 final dayEventsList = dayEvents.value[normalizedDay] ?? [];
-
-                // Debug: Print what we're looking for and what we found
-                print(
-                    '📅 EventLoader for ${day.toIso8601String().split('T')[0]}: Looking for normalized ${normalizedDay.toIso8601String().split('T')[0]}');
-                print(
-                    '📅 Found ${dayEventsList.length} events in dayEvents map');
-
-                // Filter events based on current filter settings
                 final filteredEvents = <CalendarEvent>[];
 
                 for (final event in dayEventsList) {
@@ -974,9 +928,6 @@ class CalendarScreen extends HookWidget {
                       break;
                   }
                 }
-
-                print(
-                    '📅 EventLoader returning ${filteredEvents.length} filtered events');
                 return filteredEvents;
               },
               rowHeight: ResponsiveUtils.getResponsiveSize(
@@ -995,53 +946,31 @@ class CalendarScreen extends HookWidget {
               ),
               calendarStyle: CalendarStyle(
                 outsideDaysVisible: false,
-                weekendTextStyle: TextStyle(
-                  color: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.color
-                      ?.withOpacity(0.6),
+                weekendTextStyle: GoogleFonts.outfit(
+                  color: Colors.white38,
+                  fontSize: 14,
                 ),
-                defaultTextStyle: TextStyle(
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                defaultTextStyle: GoogleFonts.outfit(
+                  color: Colors.white,
                   fontWeight: FontWeight.w500,
+                  fontSize: 14,
                 ),
-                selectedDecoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
+                selectedDecoration: const BoxDecoration(
+                  color: Color(0xFF3B82F6),
                   shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
                 ),
                 todayDecoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  color: const Color(0xFF3B82F6).withOpacity(0.15),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.primary,
-                    width: 2,
+                    color: const Color(0xFF3B82F6),
+                    width: 1.5,
                   ),
                 ),
                 markersMaxCount: 3,
-                markerDecoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondary,
+                markerDecoration: const BoxDecoration(
+                  color: Color(0xFF3B82F6),
                   shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .secondary
-                          .withOpacity(0.3),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
                 ),
                 cellPadding: const EdgeInsets.all(8),
                 cellMargin: const EdgeInsets.all(2),
@@ -1049,35 +978,39 @@ class CalendarScreen extends HookWidget {
               headerStyle: HeaderStyle(
                 formatButtonVisible: false,
                 titleCentered: true,
-                titleTextStyle: TextStyle(
-                  color: Theme.of(context).textTheme.headlineSmall?.color,
-                  fontSize: isDesktop ? 20 : 18,
+                titleTextStyle: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
                 leftChevronIcon: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    color: const Color(0xFF0B0F19),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xFF1E293B),
+                    ),
                   ),
-                  child: Icon(
-                    Icons.chevron_left,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: isDesktop ? 24 : 20,
+                  child: const Icon(
+                    Icons.chevron_left_rounded,
+                    color: Colors.white70,
+                    size: 20,
                   ),
                 ),
                 rightChevronIcon: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    color: const Color(0xFF0B0F19),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xFF1E293B),
+                    ),
                   ),
-                  child: Icon(
-                    Icons.chevron_right,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: isDesktop ? 24 : 20,
+                  child: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.white70,
+                    size: 20,
                   ),
                 ),
                 headerPadding: EdgeInsets.symmetric(
@@ -1086,40 +1019,28 @@ class CalendarScreen extends HookWidget {
                 ),
               ),
               daysOfWeekStyle: DaysOfWeekStyle(
-                weekdayStyle: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontSize: isDesktop ? 14 : 12,
+                weekdayStyle: GoogleFonts.outfit(
+                  color: const Color(0xFF3B82F6),
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
-                weekendStyle: TextStyle(
-                  color: Theme.of(context).colorScheme.secondary,
-                  fontSize: isDesktop ? 14 : 12,
+                weekendStyle: GoogleFonts.outfit(
+                  color: const Color(0xFF94A3B8),
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
                 decoration: BoxDecoration(
-                  color:
-                      Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                  color: const Color(0xFF0B0F19),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFF1E293B),
+                  ),
                 ),
               ),
               calendarBuilders: CalendarBuilders<CalendarEvent>(
                 markerBuilder: (context, day, events) {
-                  // Debug: Always print marker builder calls
-                  print(
-                      '📅 Marker builder called for ${day.toIso8601String().split('T')[0]} with ${events.length} events');
-
-                  // Use the events passed from eventLoader (already filtered)
                   if (events.isEmpty) {
-                    print(
-                        '📅 No events for ${day.toIso8601String().split('T')[0]}, returning null');
                     return null;
-                  }
-
-                  // Debug: Print what we're working with
-                  print(
-                      '📅 Marker builder for ${day.toIso8601String().split('T')[0]}: ${events.length} filtered events');
-                  for (final event in events) {
-                    print('📅 Event: ${event.type.name} - ${event.title}');
                   }
 
                   return Positioned(
@@ -1150,26 +1071,22 @@ class CalendarScreen extends HookWidget {
       ValueNotifier<bool> showAttendance,
       bool isDesktop,
       [bool? useSplitLayout]) {
-    // Add optional parameter
-
-    // Determine if we should use Expanded (only in split layout mode)
     final useExpanded = useSplitLayout ?? isDesktop;
 
     return Container(
-      // height removed to avoid unwanted white space at the bottom
       height: null,
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: const Color(0xFF0F172A),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.1),
+          color: const Color(0xFF1E293B),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -1187,20 +1104,23 @@ class CalendarScreen extends HookWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: CommonColors.primary.withOpacity(0.1),
+                        color: const Color(0xFF3B82F6).withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color(0xFF3B82F6).withOpacity(0.3),
+                        ),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.event_note_rounded,
-                        color: CommonColors.primary,
-                        size: isDesktop ? 20 : 18,
+                        color: Color(0xFF3B82F6),
+                        size: 20,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Text(
                       'Events',
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.titleLarge?.color,
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
                         fontSize: isDesktop ? 20 : 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -1213,31 +1133,24 @@ class CalendarScreen extends HookWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        CommonColors.primary.withOpacity(0.05),
-                        CommonColors.primary.withOpacity(0.1),
-                      ],
-                    ),
+                    color: const Color(0xFF0B0F19),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: CommonColors.primary.withOpacity(0.1),
+                      color: const Color(0xFF1E293B),
                     ),
                   ),
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.calendar_today_rounded,
-                        color: CommonColors.primary,
+                        color: Color(0xFF3B82F6),
                         size: 16,
                       ),
                       const SizedBox(width: 12),
                       Text(
                         '${_getMonthName(selectedDate.value.month)} ${selectedDate.value.day}, ${selectedDate.value.year}',
-                        style: TextStyle(
-                          color: CommonColors.primary,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
                           fontSize: isDesktop ? 16 : 14,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1249,7 +1162,6 @@ class CalendarScreen extends HookWidget {
             ),
           ),
 
-          // Scrollable List
           // Scrollable List
           if (useExpanded)
             Expanded(
@@ -1270,8 +1182,7 @@ class CalendarScreen extends HookWidget {
           else
             ListView(
               shrinkWrap: true,
-              physics:
-                  const NeverScrollableScrollPhysics(), // Let parent scroll
+              physics: const NeverScrollableScrollPhysics(), // Let parent scroll
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               children: _buildEventListContent(
                 context,
@@ -1310,56 +1221,43 @@ class CalendarScreen extends HookWidget {
     } else if (selectedDateEvents.value.isEmpty) {
       return [
         Container(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
           decoration: BoxDecoration(
-            color:
-                Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            color: const Color(0xFF0B0F19),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Theme.of(context).dividerColor.withOpacity(0.1),
+              color: const Color(0xFF1E293B),
             ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Lottie.asset(
-                'assets/lottie/empty_box.json',
-                height: 200,
-                width: 200,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Column(
-                    children: [
-                      Icon(
-                        Icons.event_busy_rounded,
-                        size: 48,
-                        color: Theme.of(context).disabledColor,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No events scheduled',
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.bodyLarge?.color,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  );
-                },
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E293B).withOpacity(0.4),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.event_busy_rounded,
+                  size: 40,
+                  color: Colors.white38,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
                 'No events scheduled',
-                style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
                 'Enjoy your free time!',
-                style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                style: GoogleFonts.inter(
+                  color: Colors.white38,
                   fontSize: 12,
                 ),
               ),
@@ -1381,16 +1279,19 @@ class CalendarScreen extends HookWidget {
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: CommonColors.primary.withOpacity(0.05),
+          color: const Color(0xFF3B82F6).withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: const Color(0xFF3B82F6).withOpacity(0.2),
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               '${selectedDateEvents.value.length} event${selectedDateEvents.value.length == 1 ? '' : 's'} found',
-              style: TextStyle(
-                color: CommonColors.primary,
+              style: GoogleFonts.outfit(
+                color: const Color(0xFF3B82F6),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -1401,153 +1302,205 @@ class CalendarScreen extends HookWidget {
     ];
   }
 
+  Color _parseColor(String? colorStr, Color fallback) {
+    if (colorStr == null || colorStr.isEmpty || colorStr == 'null') return fallback;
+    try {
+      String cleanColor = colorStr.replaceAll('#', '');
+      if (cleanColor.length == 6) {
+        cleanColor = 'FF' + cleanColor;
+      }
+      return Color(int.parse(cleanColor, radix: 16));
+    } catch (e) {
+      print('⚠️ Error parsing color "$colorStr": $e');
+      return fallback;
+    }
+  }
+
   Widget _buildEventItem(
       BuildContext context, CalendarEvent event, bool isDesktop) {
-    // Determine event type styling
-    Color eventColor;
-    String eventTypeText;
-    IconData eventIcon;
+    try {
+      Color eventColor;
+      String eventTypeText;
+      IconData eventIcon;
 
-    switch (event.type) {
-      case CalendarEventType.task:
-        eventColor = event.color != null
-            ? Color(int.parse(event.color!.replaceFirst('#', '0xff')))
-            : Colors.blue;
-        eventTypeText = 'Task';
-        eventIcon = Icons.task_alt;
-        break;
-      case CalendarEventType.holiday:
-        eventColor = event.color != null
-            ? Color(int.parse(event.color!.replaceFirst('#', '0xff')))
-            : Colors.red;
-        eventTypeText = 'Holiday';
-        eventIcon = Icons.celebration;
-        break;
-      case CalendarEventType.leave:
-        eventColor = event.color != null
-            ? Color(int.parse(event.color!.replaceFirst('#', '0xff')))
-            : Colors.orange;
-        eventTypeText = 'Leave';
-        eventIcon = Icons.event_available;
-        break;
-      case CalendarEventType.attendance:
-        eventColor = Colors.green;
-        eventTypeText = 'Attendance';
-        eventIcon = Icons.access_time_filled;
-        break;
-      case CalendarEventType.absent:
-        eventColor = Colors.red;
-        eventTypeText = 'Absent';
-        eventIcon = Icons.cancel;
-        break;
-    }
+      switch (event.type) {
+        case CalendarEventType.task:
+          eventColor = _parseColor(event.color, const Color(0xFF3B82F6));
+          eventTypeText = 'Task';
+          eventIcon = Icons.task_alt;
+          break;
+        case CalendarEventType.holiday:
+          eventColor = _parseColor(event.color, const Color(0xFFEF4444));
+          eventTypeText = 'Holiday';
+          eventIcon = Icons.celebration;
+          break;
+        case CalendarEventType.leave:
+          eventColor = _parseColor(event.color, const Color(0xFFF97316));
+          eventTypeText = 'Leave';
+          eventIcon = Icons.event_available;
+          break;
+        case CalendarEventType.attendance:
+          eventColor = const Color(0xFF10B981);
+          eventTypeText = 'Attendance';
+          eventIcon = Icons.access_time_filled;
+          break;
+        case CalendarEventType.absent:
+          eventColor = const Color(0xFFEF4444);
+          eventTypeText = 'Absent';
+          eventIcon = Icons.cancel;
+          break;
+      }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: eventColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: eventColor.withOpacity(0.1), // Softer border
-          width: 1,
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0B0F19),
+          borderRadius: const BorderRadius.only(
+            topRight: Radius.circular(12),
+            bottomRight: Radius.circular(12),
+            topLeft: Radius.circular(4),
+            bottomLeft: Radius.circular(4),
+          ),
+          border: Border(
+            left: BorderSide(color: eventColor, width: 4),
+            top: const BorderSide(color: Color(0xFF1E293B)),
+            right: const BorderSide(color: Color(0xFF1E293B)),
+            bottom: const BorderSide(color: Color(0xFF1E293B)),
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Event header
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: eventColor,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      eventIcon,
-                      color: Colors.white,
-                      size: 14,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Event header
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: eventColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: eventColor.withOpacity(0.3),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      eventTypeText,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        eventIcon,
+                        color: eventColor,
+                        size: 12,
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              if (event.data?['time'] != null)
-                Text(
-                  event.data!['time'],
-                  style: TextStyle(
-                    color: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.color
-                        ?.withOpacity(0.7),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                      const SizedBox(width: 4),
+                      Text(
+                        eventTypeText,
+                        style: GoogleFonts.outfit(
+                          color: eventColor,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Event title
-          Text(
-            event.title,
-            style: TextStyle(
-              color: Theme.of(context).textTheme.titleMedium?.color,
-              fontSize: isDesktop ? 16 : 14,
-              fontWeight: FontWeight.w600,
+                const Spacer(),
+                if (event.data?['time'] != null)
+                  Text(
+                    event.data!['time'],
+                    style: GoogleFonts.inter(
+                      color: Colors.white54,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+              ],
             ),
-          ),
 
-          // Event description
-          if (event.description != null && event.description!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+
+            // Event title
+            Text(
+              event.title,
+              style: GoogleFonts.outfit(
+                color: Colors.white,
+                fontSize: isDesktop ? 16 : 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+
+            // Event description
+            if (event.description != null && event.description!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                event.description!,
+                style: GoogleFonts.inter(
+                  color: Colors.white60,
+                  fontSize: isDesktop ? 13 : 11,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+
+            // Event details based on type
+            if (event.type == CalendarEventType.task && event.data != null) ...[
+              const SizedBox(height: 12),
+              _buildTaskDetails(context, event.data!, isDesktop),
+            ] else if (event.type == CalendarEventType.leave &&
+                event.data != null) ...[
+              const SizedBox(height: 12),
+              _buildLeaveDetails(context, event.data!, isDesktop),
+            ] else if (event.type == CalendarEventType.holiday &&
+                event.data != null) ...[
+              const SizedBox(height: 12),
+              _buildHolidayDetails(context, event.data!, isDesktop),
+            ],
+          ],
+        ),
+      );
+    } catch (e, stack) {
+      print('❌ Exception rendering event card: $e\n$stack');
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF7F1D1D).withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFFEF4444).withOpacity(0.4),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  'Error rendering event',
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFFEF4444),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             Text(
-              event.description!,
-              style: TextStyle(
-                color: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.color
-                    ?.withOpacity(0.8),
-                fontSize: isDesktop ? 14 : 12,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+              'Event: ${event.title}',
+              style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Details: $e',
+              style: GoogleFonts.inter(color: Colors.white70, fontSize: 12),
             ),
           ],
-
-          // Event details based on type
-          if (event.type == CalendarEventType.task && event.data != null) ...[
-            const SizedBox(height: 8),
-            _buildTaskDetails(context, event.data!, isDesktop),
-          ] else if (event.type == CalendarEventType.leave &&
-              event.data != null) ...[
-            const SizedBox(height: 8),
-            _buildLeaveDetails(context, event.data!, isDesktop),
-          ] else if (event.type == CalendarEventType.holiday &&
-              event.data != null) ...[
-            const SizedBox(height: 8),
-            _buildHolidayDetails(context, event.data!, isDesktop),
-          ],
-        ],
-      ),
-    );
+        ),
+      );
+    }
   }
 
   Widget _buildTaskDetails(
@@ -1558,51 +1511,35 @@ class CalendarScreen extends HookWidget {
         if (taskData['project_name'] != null) ...[
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.folder_outlined,
                 size: 14,
-                color: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.color
-                    ?.withOpacity(0.6),
+                color: Colors.white38,
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 6),
               Text(
                 taskData['project_name'],
-                style: TextStyle(
-                  color: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.color
-                      ?.withOpacity(0.7),
+                style: GoogleFonts.inter(
+                  color: Colors.white60,
                   fontSize: 12,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
         ],
         Row(
           children: [
-            Icon(
+            const Icon(
               Icons.flag_outlined,
               size: 14,
-              color: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.color
-                  ?.withOpacity(0.6),
+              color: Colors.white38,
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 6),
             Text(
               'Priority: ${taskData['priority_level'] ?? 'N/A'}',
-              style: TextStyle(
-                color: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.color
-                    ?.withOpacity(0.7),
+              style: GoogleFonts.inter(
+                color: Colors.white60,
                 fontSize: 12,
               ),
             ),
@@ -1639,31 +1576,27 @@ class CalendarScreen extends HookWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: statusColor.withOpacity(0.2),
+            color: statusColor.withOpacity(0.15),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: statusColor.withOpacity(0.5)),
+            border: Border.all(color: statusColor.withOpacity(0.3)),
           ),
           child: Text(
             statusText,
-            style: TextStyle(
+            style: GoogleFonts.outfit(
               color: statusColor,
               fontSize: 10,
               fontWeight: FontWeight.w600,
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 12),
         if (leaveData['leave_type'] != null)
           Text(
             'Type: ${leaveData['leave_type']}',
-            style: TextStyle(
-              color: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.color
-                  ?.withOpacity(0.7),
+            style: GoogleFonts.inter(
+              color: Colors.white60,
               fontSize: 12,
             ),
           ),
@@ -1675,37 +1608,33 @@ class CalendarScreen extends HookWidget {
       BuildContext context, Map<String, dynamic> holidayData, bool isDesktop) {
     return Row(
       children: [
-        if (holidayData['is_optional'] == true)
+        if (holidayData['is_optional'] == true) ...[
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.2),
+              color: Colors.orange.withOpacity(0.15),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange.withOpacity(0.5)),
+              border: Border.all(color: Colors.orange.withOpacity(0.3)),
             ),
-            child: const Text(
+            child: Text(
               'Optional',
-              style: TextStyle(
+              style: GoogleFonts.outfit(
                 color: Colors.orange,
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-        if (holidayData['total_days'] != null) ...[
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
+        ],
+        if (holidayData['total_days'] != null)
           Text(
-            '${holidayData['total_days']} day${holidayData['total_days'] == '1' ? '' : 's'}',
-            style: TextStyle(
-              color: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.color
-                  ?.withOpacity(0.7),
+            'Duration: ${holidayData['total_days']} day${holidayData['total_days'] == '1' ? '' : 's'}',
+            style: GoogleFonts.inter(
+              color: Colors.white60,
               fontSize: 12,
             ),
           ),
-        ],
       ],
     );
   }
@@ -1722,27 +1651,27 @@ class CalendarScreen extends HookWidget {
 
     switch (event.type) {
       case CalendarEventType.task:
-        markerColor = Theme.of(context).colorScheme.primary;
+        markerColor = const Color(0xFF3B82F6);
         icon = Icons.task_alt;
         shape = BoxShape.circle;
         break;
       case CalendarEventType.holiday:
-        markerColor = Colors.red[600]!;
+        markerColor = const Color(0xFFEF4444);
         icon = Icons.celebration;
         shape = BoxShape.circle;
         break;
       case CalendarEventType.leave:
-        markerColor = Colors.orange[600]!;
+        markerColor = const Color(0xFFF97316);
         icon = Icons.event_available;
         shape = BoxShape.circle;
         break;
       case CalendarEventType.attendance:
-        markerColor = Colors.green[600]!;
+        markerColor = const Color(0xFF10B981);
         icon = Icons.access_time_filled;
         shape = BoxShape.circle;
         break;
       case CalendarEventType.absent:
-        markerColor = Colors.red[600]!;
+        markerColor = const Color(0xFFEF4444);
         icon = Icons.cancel;
         shape = BoxShape.circle;
         break;
@@ -1756,19 +1685,14 @@ class CalendarScreen extends HookWidget {
         color: markerColor,
         shape: shape,
         border: Border.all(
-          color: Colors.white,
+          color: const Color(0xFF0F172A),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: markerColor.withOpacity(0.6),
+            color: markerColor.withOpacity(0.4),
             blurRadius: isDesktop ? 8 : 6,
             offset: const Offset(0, 2),
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 2,
-            offset: const Offset(0, 1),
           ),
         ],
       ),

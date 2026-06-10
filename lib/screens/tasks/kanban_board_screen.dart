@@ -7,6 +7,7 @@ import '../../widgets/task_details_dialog.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import '../../widgets/app_bar_search_filter.dart';
 import '../dashboard/modern_dashboard_screen.dart';
+import '../task_request/task_card_request_screen.dart';
 import '../../widgets/congratulations_overlay.dart';
 import 'package:webnox_taskops/model/task_model.dart';
 import 'package:webnox_taskops/helpers/app_theme.dart';
@@ -18,6 +19,7 @@ import 'package:webnox_taskops/services/task_card_log_service.dart';
 import 'package:webnox_taskops/services/local_storage_service.dart';
 import 'package:webnox_taskops/utils/responsive_utils.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // Task status enum for kanban columns
 enum KanbanTaskStatus {
@@ -1751,6 +1753,143 @@ class KanbanBoardScreen extends HookWidget {
       );
     }
 
+    // Helper to build status-specific empty states
+    Widget _buildColumnEmptyState(
+      KanbanTaskStatus status,
+      Color color,
+      bool isAccepting,
+    ) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      
+      IconData iconData;
+      switch (status) {
+        case KanbanTaskStatus.todo:
+          iconData = Icons.add_box_outlined;
+          break;
+        case KanbanTaskStatus.inProgress:
+          iconData = Icons.engineering_outlined;
+          break;
+        case KanbanTaskStatus.devcompleted:
+          iconData = Icons.code_rounded;
+          break;
+        case KanbanTaskStatus.inQc:
+          iconData = Icons.biotech_outlined;
+          break;
+        case KanbanTaskStatus.workDone:
+          iconData = Icons.check_circle_outline_rounded;
+          break;
+        case KanbanTaskStatus.redo:
+          iconData = Icons.replay_rounded;
+          break;
+      }
+
+      return Container(
+        margin: const EdgeInsets.only(top: 40),
+        alignment: Alignment.topCenter,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B).withOpacity(0.3) : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark ? color.withOpacity(0.2) : color.withOpacity(0.15),
+                  width: 1.5,
+                ),
+              ),
+              child: Icon(
+                iconData,
+                color: color,
+                size: isDesktop ? 28 : 24,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              isAccepting ? 'Drop task here' : 'No tasks here',
+              style: GoogleFonts.outfit(
+                color: isDark ? Colors.white70 : Colors.black87,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (status == KanbanTaskStatus.todo && !isAccepting) ...[
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  'Drag tasks here or create a new one.',
+                  style: GoogleFonts.inter(
+                    color: isDark ? Colors.white38 : Colors.black38,
+                    fontSize: 11,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 16),
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () {
+                    final isWide = MediaQuery.of(context).size.width > 900;
+                    showDialog(
+                      context: context,
+                      builder: (context) => Dialog(
+                        backgroundColor: Colors.transparent,
+                        insetPadding: EdgeInsets.symmetric(
+                          horizontal: isWide ? 40 : 16,
+                          vertical: isWide ? 40 : 24,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            constraints: const BoxConstraints(maxWidth: 1200, maxHeight: 900),
+                            child: const TaskCardRequestScreen(),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: color.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.add,
+                          size: 14,
+                          color: color,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Create Task',
+                          style: GoogleFonts.inter(
+                            color: color,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
     // Build column with drop functionality and locked visual positions
     Widget buildColumn(KanbanTaskStatus status, String title, Color color) {
       print('🏗️ Building column: $title (${status.name})');
@@ -1884,144 +2023,94 @@ class KanbanBoardScreen extends HookWidget {
         },
         builder: (context, candidateData, rejectedData) {
           final isAccepting = candidateData.isNotEmpty;
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final columnBorderColor = isAccepting 
+              ? color.withOpacity(0.5) 
+              : (isDark ? const Color(0xFF1E293B).withOpacity(0.3) : Colors.grey.shade200);
 
           return AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeInOut,
             margin: EdgeInsets.symmetric(horizontal: isDesktop ? 8 : 4),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isAccepting ? color.withOpacity(0.1) : Colors.transparent,
+              color: isAccepting ? color.withOpacity(0.05) : Colors.transparent,
               borderRadius: BorderRadius.circular(16),
-              border: isAccepting
-                  ? Border.all(color: color.withOpacity(0.5), width: 2)
-                  : Border.all(color: Colors.transparent, width: 2),
-              boxShadow: isAccepting
-                  ? [
-                      BoxShadow(
-                        color: color.withOpacity(0.2),
-                        blurRadius: 12,
-                        spreadRadius: 2,
-                      )
-                    ]
-                  : [],
+              border: Border.all(
+                color: columnBorderColor,
+                width: isAccepting ? 2 : 1,
+              ),
             ),
             child: Column(
               children: [
                 // Column header with premium design
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        color,
-                        color.withOpacity(0.8),
-                      ],
+                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDark ? color.withOpacity(0.4) : color.withOpacity(0.3),
+                      width: 1.2,
                     ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withOpacity(0.3),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                        spreadRadius: 0,
-                      ),
-                      BoxShadow(
-                        color: color.withOpacity(0.15),
-                        blurRadius: 32,
-                        offset: const Offset(0, 12),
-                        spreadRadius: 0,
-                      ),
-                    ],
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      customTextWithClip(
-                        text: title,
-                        textColor: Colors.white,
-                        fontSize: isDesktop ? 16 : 14,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      // Status Dot
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                        width: 8,
+                        height: 8,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
-                          borderRadius: BorderRadius.circular(20),
+                          color: color,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      // Title
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: GoogleFonts.outfit(
+                            color: isDark ? Colors.white : Colors.black,
+                            fontSize: isDesktop ? 14 : 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      // Count Badge
+                      Container(
+                        width: 22,
+                        height: 22,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
+                            color: isDark ? Colors.white12 : Colors.black12,
                             width: 1,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
                         ),
-                        child: customTextWithClip(
-                          text:
-                              '${kanbanViewModel.getTaskCountForStatus(status.name.toLowerCase())}',
-                          textColor: Colors.white,
-                          fontSize: isDesktop ? 14 : 12,
-                          fontWeight: FontWeight.bold,
+                        child: Text(
+                          '${columnTasks.length}',
+                          style: GoogleFonts.inter(
+                            color: isDark ? Colors.white60 : Colors.black54,
+                            fontSize: isDesktop ? 12 : 10,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(height: 12),
                 // Tasks list with proper height constraint for vertical scrolling
                 SizedBox(
                   height: MediaQuery.of(context).size.height *
                       0.7, // 70% of screen height
                   child: Padding(
                     padding: const EdgeInsets.only(top: 8),
-                    child: kanbanViewModel.getTaskCountForStatus(
-                                status.name.toLowerCase()) ==
-                            0
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(20),
-                                  decoration: BoxDecoration(
-                                    color: color.withOpacity(0.05),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: color.withOpacity(0.1),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    Icons.inbox_outlined,
-                                    color: color.withOpacity(0.4),
-                                    size: isDesktop ? 48 : 36,
-                                  ),
-                                ),
-                                8.hGap,
-                                customTextWithClip(
-                                  text: isAccepting
-                                      ? 'Drop task here'
-                                      : 'No tasks here',
-                                  textColor: isAccepting
-                                      ? color
-                                      : Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.color ??
-                                          Colors.grey,
-                                  fontSize: isDesktop ? 14 : 12,
-                                  fontWeight: FontWeight.w500,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          )
+                    child: columnTasks.isEmpty
+                        ? _buildColumnEmptyState(status, color, isAccepting)
                         : SingleChildScrollView(
                             child: AnimationLimiter(
                               child: Column(
@@ -2380,7 +2469,7 @@ class KanbanBoardScreen extends HookWidget {
                                                   child: buildColumn(
                                                       KanbanTaskStatus.todo,
                                                       'To Do',
-                                                      const Color(0xFF6366F1)),
+                                                      const Color(0xFF3B82F6)),
                                                 ),
                                                 SizedBox(width: columnSpacing),
                                                 SizedBox(
@@ -2414,7 +2503,7 @@ class KanbanBoardScreen extends HookWidget {
                                                   child: buildColumn(
                                                       KanbanTaskStatus.workDone,
                                                       'Work Done',
-                                                      const Color(0xFF059669)),
+                                                      const Color(0xFF06B6D4)),
                                                 ),
                                                 SizedBox(width: columnSpacing),
                                                 SizedBox(
