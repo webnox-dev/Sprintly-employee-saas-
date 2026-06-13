@@ -56,6 +56,9 @@ class TeamSyncViewModel extends ChangeNotifier {
   final _themeUpdateController =
       StreamController<Map<String, dynamic>>.broadcast();
 
+  // Stream for chess multiplayer events
+  final _chessEventController = StreamController<ChatEvent>.broadcast();
+
   // State
   bool _isLoading = false;
   bool _isLoadingMessages = false;
@@ -109,6 +112,9 @@ class TeamSyncViewModel extends ChangeNotifier {
   /// Stream of theme updates: {conversationId, themeId}
   Stream<Map<String, dynamic>> get themeUpdateStream =>
       _themeUpdateController.stream;
+
+  /// Stream of chess multiplayer events
+  Stream<ChatEvent> get chessEventsStream => _chessEventController.stream;
 
   /// Get typing users for a specific conversation
   Map<String, String> getTypingUsers(String conversationId) {
@@ -257,6 +263,13 @@ class TeamSyncViewModel extends ChangeNotifier {
         break;
       case ChatEventType.themeUpdate:
         _handleThemeUpdate(event.data);
+        break;
+      case ChatEventType.chessChallengeReceived:
+      case ChatEventType.chessGameStarted:
+      case ChatEventType.chessChallengeDeclined:
+      case ChatEventType.chessMoveReceived:
+      case ChatEventType.chessGameOverReceived:
+        _chessEventController.add(event);
         break;
       case ChatEventType.error:
         print('[TeamSyncVM] WebSocket error: ${event.data}');
@@ -1208,6 +1221,7 @@ class TeamSyncViewModel extends ChangeNotifier {
     _messagePinnedController.close();
     _messageUpdatedController.close();
     _themeUpdateController.close();
+    _chessEventController.close();
     super.dispose();
   }
 }

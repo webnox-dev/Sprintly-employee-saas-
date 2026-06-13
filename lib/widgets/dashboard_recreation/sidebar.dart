@@ -32,6 +32,7 @@ class _RecreatedSidebarState extends State<RecreatedSidebar> {
       case 4: return 'calendar_meetings';
       case 6: return 'task_management';
       case 7: return 'projects';
+      case 10: return 'chess_game';
       default: return null;
     }
   }
@@ -46,6 +47,7 @@ class _RecreatedSidebarState extends State<RecreatedSidebar> {
     {'title': 'Kanban Board', 'icon': Icons.view_kanban_rounded},
     {'title': 'Projects', 'icon': Icons.workspaces_rounded},
     {'title': 'Settings', 'icon': Icons.settings_rounded},
+    {'title': 'Chess', 'icon': Icons.sports_esports_rounded},
   ];
 
   @override
@@ -103,8 +105,9 @@ class _RecreatedSidebarState extends State<RecreatedSidebar> {
                       itemCount: _menuItems.length,
                       itemBuilder: (context, index) {
                         final item = _menuItems[index];
-                        final isSelected = widget.selectedIndex == index;
-                        final featureKey = _getFeatureKeyForIndex(index);
+                        final actualPageIndex = index == 9 ? 10 : index;
+                        final isSelected = widget.selectedIndex == actualPageIndex;
+                        final featureKey = _getFeatureKeyForIndex(actualPageIndex);
                         final isLocked = featureKey != null && !FeatureGuard.hasFeature(featureKey);
                         final isHovered = _hoveredIndex == index && !isLocked;
 
@@ -113,7 +116,7 @@ class _RecreatedSidebarState extends State<RecreatedSidebar> {
                           onExit: isLocked ? null : (_) => setState(() => _hoveredIndex = null),
                           cursor: isLocked ? SystemMouseCursors.basic : SystemMouseCursors.click,
                           child: GestureDetector(
-                            onTap: isLocked ? null : () => widget.onIndexChanged(index),
+                            onTap: isLocked ? null : () => widget.onIndexChanged(actualPageIndex),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
                               margin: const EdgeInsets.symmetric(vertical: 4),
@@ -122,36 +125,23 @@ class _RecreatedSidebarState extends State<RecreatedSidebar> {
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
                                 color: isSelected
-                                    ? const Color(0xFF3B82F6)
+                                    ? const Color(0xFF3B82F6).withOpacity(0.12)
                                     : (isHovered
                                         ? Colors.white.withOpacity(0.04)
                                         : Colors.transparent),
-                                boxShadow: isSelected
-                                    ? [
-                                        BoxShadow(
-                                          color: const Color(0xFF3B82F6)
-                                              .withOpacity(0.4),
-                                          blurRadius: 16,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ]
-                                    : null,
-                                border: isSelected
-                                    ? Border.all(
-                                        color: Colors.white.withOpacity(0.15),
-                                        width: 1,
-                                      )
-                                    : Border.all(
-                                        color: Colors.transparent,
-                                        width: 1,
-                                      ),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? const Color(0xFF3B82F6).withOpacity(0.15)
+                                      : Colors.transparent,
+                                  width: 1,
+                                ),
                               ),
                               child: Row(
                                 children: [
                                   Icon(
                                     item['icon'] as IconData,
                                     color: isSelected
-                                        ? Colors.white
+                                        ? const Color(0xFF3B82F6)
                                         : (isLocked
                                             ? Colors.white.withOpacity(0.15)
                                             : (isHovered
@@ -169,7 +159,7 @@ class _RecreatedSidebarState extends State<RecreatedSidebar> {
                                             ? FontWeight.w600
                                             : FontWeight.w500,
                                         color: isSelected
-                                            ? Colors.white
+                                            ? const Color(0xFF3B82F6)
                                             : (isLocked
                                                 ? Colors.white.withOpacity(0.15)
                                                 : (isHovered
@@ -193,6 +183,27 @@ class _RecreatedSidebarState extends State<RecreatedSidebar> {
                                         'Upgrade',
                                         style: TextStyle(
                                           color: Color(0xFFFCA5A5),
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 0.2,
+                                        ),
+                                      ),
+                                    )
+                                  else if (item['title'] == 'Chess')
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF3B82F6).withOpacity(0.12),
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: const Color(0xFF3B82F6).withOpacity(0.3),
+                                          width: 0.8,
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Dev',
+                                        style: TextStyle(
+                                          color: Color(0xFF93C5FD),
                                           fontSize: 9,
                                           fontWeight: FontWeight.w600,
                                           letterSpacing: 0.2,

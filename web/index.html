@@ -57,142 +57,22 @@
   <meta name="theme-color" content="#0E0E0E" media="(prefers-color-scheme: dark)">
 
   <style>
-    :root {
-      --bg-gradient: linear-gradient(135deg, #FFFFFF 0%, #F3F7FF 100%);
-      --primary-color: #0F172A;
-      --logo-shadow: rgba(15, 23, 42, 0.05);
-      --border-color: rgba(148, 163, 184, 0.12);
-      --logo-bg: #FFFFFF;
-      --text-primary: #0F172A;
-      --text-secondary: #475569;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg-gradient: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-        --primary-color: #38BDF8;
-        --logo-shadow: rgba(0, 0, 0, 0.25);
-        --border-color: rgba(255, 255, 255, 0.08);
-        --logo-bg: rgba(255, 255, 255, 0.05);
-        --text-primary: #E2E8F0;
-        --text-secondary: #94A3B8;
-      }
-    }
     body {
       margin: 0;
       width: 100vw;
       height: 100vh;
-      background: var(--bg-gradient);
+      background: linear-gradient(135deg, #FFFFFF 0%, #F3F7FF 100%);
       overflow: hidden;
     }
-    #loading {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background: var(--bg-gradient);
-      z-index: 99999;
-      opacity: 1;
-      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transform: translateY(20px);
-      animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    .loading-logo-wrapper {
-      padding: 24px;
-      background: var(--logo-bg);
-      border-radius: 50%;
-      border: 1px solid var(--border-color);
-      box-shadow: 0 24px 48px var(--logo-shadow);
-      margin-bottom: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-    /* Larger logo representation */
-    .loading-logo {
-      width: 120px;
-      height: 120px;
-      object-fit: contain;
-      animation: logoPulse 2.5s infinite ease-in-out;
-    }
-    .brand-name {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 32px;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin: 0 0 8px 0;
-      letter-spacing: -0.5px;
-      text-align: center;
-    }
-    .brand-subtitle {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      letter-spacing: 0.5px;
-      margin: 0 0 40px 0;
-      text-align: center;
-    }
-    .loading-spinner-wrapper {
-      width: 120px;
-      height: 2px;
-      background: var(--border-color);
-      border-radius: 1px;
-      overflow: hidden;
-      position: relative;
-    }
-    .loading-spinner-bar {
-      width: 60%;
-      height: 100%;
-      background: var(--primary-color);
-      position: absolute;
-      border-radius: 1px;
-      animation: loadingBar 1.5s infinite ease-in-out;
-    }
-    @keyframes fadeInUp {
-      to {
-        opacity: 1;
-        transform: translateY(0);
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
       }
-    }
-    @keyframes logoPulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.04); }
-    }
-    @keyframes loadingBar {
-      0% { left: -60%; }
-      50% { left: 100%; }
-      100% { left: 100%; }
     }
   </style>
 </head>
 
 <body>
-  <div id="loading">
-    <div class="loading-container">
-      <div class="loading-logo-wrapper">
-        <img class="loading-logo" src="favicon.png" alt="Sprintly Logo">
-      </div>
-      <h1 class="brand-name">Rathz</h1>
-      <h2 class="brand-subtitle">Employee Portal</h2>
-      <div class="loading-spinner-wrapper">
-        <div class="loading-spinner-bar"></div>
-      </div>
-    </div>
-  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@2.12.313/build/pdf.js" type="text/javascript"></script>
   <script type="text/javascript">
@@ -301,26 +181,6 @@
         }
       });
     });
-  </script>
-
-  <script>
-    // Remove loading overlay once Flutter starts rendering canvas
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        for (const node of mutation.addedNodes) {
-          if (node.tagName === 'FLUTTER-VIEW' || node.tagName === 'CANVAS') {
-            const loader = document.getElementById('loading');
-            if (loader) {
-              loader.style.opacity = '0';
-              setTimeout(() => loader.remove(), 500);
-            }
-            observer.disconnect();
-            return;
-          }
-        }
-      }
-    });
-    observer.observe(document.body, { childList: true });
   </script>
 
   <script src="flutter_bootstrap.js" async></script>

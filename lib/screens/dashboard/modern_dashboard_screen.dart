@@ -37,7 +37,11 @@ import 'package:webnox_taskops/services/firebase_notification_service.dart';
 import 'package:webnox_taskops/widgets/fullscreen_toggle_button.dart';
 import 'package:webnox_taskops/widgets/dashboard_recreation/sidebar.dart';
 import 'package:webnox_taskops/widgets/dashboard_recreation/header.dart';
+import 'package:webnox_taskops/screens/chess/chess_screen.dart';
 import '../../utils/feature_guard.dart';
+import 'package:webnox_taskops/screens/splash_screen.dart';
+
+
 
 // Global notifiers for search/filter state (shared across screens)
 // Child screens (HomeScreen, KanbanBoardScreen, TeamScreen) should use these
@@ -100,6 +104,8 @@ class ModernDashboardScreen extends HookWidget {
         return '/settings'; // Settings
       case 9:
         return '/change-password';
+      case 10:
+        return '/chess';
       default:
         return '/dashboard';
     }
@@ -128,6 +134,8 @@ class ModernDashboardScreen extends HookWidget {
         return 8;
       case '/change-password':
         return 9;
+      case '/chess':
+        return 10;
       default:
         return 0;
     }
@@ -177,6 +185,7 @@ class ModernDashboardScreen extends HookWidget {
           case 4: featureKey = 'calendar_meetings'; break;
           case 6: featureKey = 'task_management'; break;
           case 7: featureKey = 'projects'; break;
+          case 10: featureKey = 'chess_game'; break;
         }
         if (featureKey != null && !FeatureGuard.hasFeature(featureKey)) {
           print('🔒 Gated initial route $currentRoute redirected to /dashboard due to plan limits.');
@@ -202,7 +211,8 @@ class ModernDashboardScreen extends HookWidget {
     var isTablet = ResponsiveUtils.isTablet(context);
 
     // Fetch user profile on mount to ensure avatar is displayed
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final authViewModel = Provider.of<AuthViewModel>(context);
+    print('DEBUG: ModernDashboardScreen build - isInitialized: ${authViewModel.isInitialized}, isAuthenticated: ${authViewModel.isAuthenticated}');
     final announcementViewModel = Provider.of<AnnouncementViewModel>(
       context,
       listen: false,
@@ -217,29 +227,55 @@ class ModernDashboardScreen extends HookWidget {
       listen: false,
     );
 
+    // Check authentication state on mount if not already initialized
     useEffect(() {
-      authViewModel.fetchUserProfile();
-
-      // Start polling for real-time attendance updates
-      attendanceViewModel.startPolling();
-
-      // Fetch announcements to update notification badge
-      announcementViewModel.fetchAnnouncements();
-
-      // Fetch notifications if user ID is available
-      final userId = authViewModel.localStorage.userId;
-      if (userId.isNotEmpty) {
-        notificationViewModel.fetchNotifications(userId);
+      print('DEBUG: ModernDashboardScreen useEffect mount - isInitialized: ${authViewModel.isInitialized}');
+      if (!authViewModel.isInitialized) {
+        print('DEBUG: ModernDashboardScreen calling checkAuthState()');
+        Future.microtask(() => authViewModel.checkAuthState());
       }
+      return null;
+    }, []);
 
-      // Register FCM Token
-      FirebaseNotificationService.saveTokenToBackend();
+    // Redirect to login if user is not authenticated after auth initialization
+    useEffect(() {
+      if (authViewModel.isInitialized && !authViewModel.isAuthenticated) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (Get.currentRoute != '/login') {
+            Get.offAllNamed('/login');
+          }
+        });
+      }
+      return null;
+    }, [authViewModel.isInitialized, authViewModel.isAuthenticated]);
+
+    useEffect(() {
+      if (authViewModel.isInitialized && authViewModel.isAuthenticated) {
+        Future.microtask(() {
+          authViewModel.fetchUserProfile();
+
+          // Start polling for real-time attendance updates
+          attendanceViewModel.startPolling();
+
+          // Fetch announcements to update notification badge
+          announcementViewModel.fetchAnnouncements();
+
+          // Fetch notifications if user ID is available
+          final userId = authViewModel.localStorage.userId;
+          if (userId.isNotEmpty) {
+            notificationViewModel.fetchNotifications(userId);
+          }
+
+          // Register FCM Token
+          FirebaseNotificationService.saveTokenToBackend();
+        });
+      }
 
       return () {
         // Stop polling when dashboard is disposed
         attendanceViewModel.stopPolling();
       };
-    }, []);
+    }, [authViewModel.isInitialized, authViewModel.isAuthenticated]);
 
     // Shared refs for navigation state management
     final isNavigating = useRef(false);
@@ -328,6 +364,7 @@ class ModernDashboardScreen extends HookWidget {
             case 4: featureKey = 'calendar_meetings'; break;
             case 6: featureKey = 'task_management'; break;
             case 7: featureKey = 'projects'; break;
+            case 10: featureKey = 'chess_game'; break;
           }
           if (featureKey != null && !FeatureGuard.hasFeature(featureKey)) {
             print('🔒 Detected route $currentRoute is gated by $featureKey. Access denied, redirecting to /dashboard.');
@@ -494,6 +531,10 @@ class ModernDashboardScreen extends HookWidget {
       return null;
     }, [selectedIndex.value]);
 
+    if (!authViewModel.isInitialized) {
+      return const SplashScreen(isSubWidget: true);
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF070B14),
       appBar: null, // Removed MainAppBar
@@ -638,6 +679,10 @@ class ModernDashboardScreen extends HookWidget {
     ValueNotifier<int> appRefreshKey,
     ObjectRef<DateTime?> lastManualIndexChange,
   ) {
+    final authViewModel = Provider.of<AuthViewModel>(context);
+    final workspaceName = authViewModel.organizationName.isNotEmpty
+        ? authViewModel.organizationName
+        : 'Workspace';
     // Define all the pages for navigation
     final allPages = [
       const HomeScreen(), // Index 0 - Home
@@ -650,6 +695,7 @@ class ModernDashboardScreen extends HookWidget {
       const ProjectsScreen(), // Index 7 - Projects
       const SettingsScreen(), // Index 8 - Settings
       const ChangePasswordScreen(), // Index 9 - Change Password
+      const ChessScreen(), // Index 10 - Chess
     ];
 
     return Row(
@@ -665,6 +711,7 @@ class ModernDashboardScreen extends HookWidget {
               case 4: featureKey = 'calendar_meetings'; break;
               case 6: featureKey = 'task_management'; break;
               case 7: featureKey = 'projects'; break;
+              case 10: featureKey = 'chess_game'; break;
             }
 
             void navigate() {
@@ -711,26 +758,30 @@ class ModernDashboardScreen extends HookWidget {
                                                 ? 'Active Projects'
                                                 : selectedIndex.value == 8
                                                     ? 'Settings'
-                                                    : 'Dashboard',
+                                                    : selectedIndex.value == 10
+                                                        ? 'Sprintly Chess'
+                                                        : 'Dashboard',
                 breadcrumb: selectedIndex.value == 0
-                    ? 'Workspace / Dashboard'
+                    ? '$workspaceName / Dashboard'
                     : selectedIndex.value == 1
-                        ? 'Workspace / Reports'
+                        ? '$workspaceName / Reports'
                         : selectedIndex.value == 2
-                            ? 'Workspace / Sync Board'
+                            ? '$workspaceName / Sync Board'
                             : selectedIndex.value == 3
-                                ? 'Workspace / Attendance'
+                                ? '$workspaceName / Attendance'
                                 : selectedIndex.value == 4
-                                    ? 'Workspace / Calendar'
+                                    ? '$workspaceName / Calendar'
                                     : selectedIndex.value == 5
-                                        ? 'Workspace / Profile'
+                                        ? '$workspaceName / Profile'
                                         : selectedIndex.value == 6
-                                            ? 'Workspace / Kanban Board'
+                                            ? '$workspaceName / Kanban Board'
                                             : selectedIndex.value == 7
-                                                ? 'Workspace / Projects'
+                                                ? '$workspaceName / Projects'
                                                 : selectedIndex.value == 8
-                                                    ? 'Workspace / Settings'
-                                                    : 'Workspace',
+                                                    ? '$workspaceName / Settings'
+                                                    : selectedIndex.value == 10
+                                                        ? '$workspaceName / Chess'
+                                                        : workspaceName,
                 searchQueryNotifier: getSearchQueryTextNotifierForScreen(selectedIndex.value),
                 onSearchChanged: (val) {
                   getSearchQueryTextNotifierForScreen(selectedIndex.value).value = val;
@@ -781,6 +832,8 @@ class ModernDashboardScreen extends HookWidget {
       const KanbanBoardScreen(), // Index 6 - Kanban Board
       const ProjectsScreen(), // Index 7 - Projects
       const SettingsScreen(), // Index 8 - Settings
+      const ChangePasswordScreen(), // Index 9 - Change Password
+      const ChessScreen(), // Index 10 - Chess
     ];
 
     return Column(
@@ -845,21 +898,7 @@ class ModernDashboardScreen extends HookWidget {
               // Right - Controls
               Row(
                 children: [
-                  // Theme Toggle
-                  Consumer<ThemeProvider>(
-                    builder: (context, themeProvider, child) {
-                      return IconButton(
-                        onPressed: () => themeProvider.toggleTheme(),
-                        icon: Icon(
-                          themeProvider.isDarkMode
-                              ? Icons.light_mode_outlined
-                              : Icons.dark_mode_outlined,
-                          color: Colors.white,
-                          size: 24.0,
-                        ),
-                      );
-                    },
-                  ),
+
                   // Fullscreen Toggle Button
                   const FullscreenToggleButton(
                     iconColor: Colors.white,
@@ -990,6 +1029,14 @@ class ModernDashboardScreen extends HookWidget {
                   selectedIndex,
                   lastManualIndexChange,
                 ),
+                _buildTabletNavItem(
+                  context,
+                  Icons.sports_esports_outlined,
+                  'Chess',
+                  10,
+                  selectedIndex,
+                  lastManualIndexChange,
+                ),
               ],
             ),
           ),
@@ -1018,6 +1065,7 @@ class ModernDashboardScreen extends HookWidget {
       case 4: featureKey = 'calendar_meetings'; break;
       case 6: featureKey = 'task_management'; break;
       case 7: featureKey = 'projects'; break;
+      case 10: featureKey = 'chess_game'; break;
     }
     final isLocked = featureKey != null && !FeatureGuard.hasFeature(featureKey);
 
@@ -1148,6 +1196,8 @@ class ModernDashboardScreen extends HookWidget {
       const KanbanBoardScreen(), // Index 6 - Kanban Board
       const ProjectsScreen(), // Index 7 - Projects
       const SettingsScreen(), // Index 8 - Settings
+      const ChangePasswordScreen(), // Index 9 - Change Password
+      const ChessScreen(), // Index 10 - Chess
     ];
 
     return Column(
@@ -1258,39 +1308,7 @@ class ModernDashboardScreen extends HookWidget {
                     },
                   ),
                   const SizedBox(width: 12),
-                  // Theme toggle - iPhone style
-                  Consumer<ThemeProvider>(
-                    builder: (context, themeProvider, child) {
-                      return Container(
-                        width: 44, // iPhone standard touch target
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.03),
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.08),
-                            width: 1,
-                          ),
-                        ),
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: () => themeProvider.toggleTheme(),
-                          icon: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            child: Icon(
-                              themeProvider.isDarkMode
-                                  ? Icons.light_mode_outlined
-                                  : Icons.dark_mode_outlined,
-                              key: ValueKey(themeProvider.isDarkMode),
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 12),
+
                   // Fullscreen Toggle Button - iPhone style
                   Container(
                     width: 44,
@@ -1443,6 +1461,7 @@ class ModernDashboardScreen extends HookWidget {
       case 4: featureKey = 'calendar_meetings'; break;
       case 6: featureKey = 'task_management'; break;
       case 7: featureKey = 'projects'; break;
+      case 10: featureKey = 'chess_game'; break;
     }
     final isLocked = featureKey != null && !FeatureGuard.hasFeature(featureKey);
 
@@ -2065,6 +2084,15 @@ class ModernDashboardScreen extends HookWidget {
                 ),
                 _buildMobileSideMenuItem(
                   context,
+                  Icons.sports_esports_outlined,
+                  'Chess',
+                  'Play chess vs computer or colleague',
+                  10,
+                  selectedIndex,
+                  lastManualIndexChange,
+                ),
+                _buildMobileSideMenuItem(
+                  context,
                   Icons.view_kanban,
                   'Kanban Board',
                   'Drag and drop task management',
@@ -2183,6 +2211,7 @@ class ModernDashboardScreen extends HookWidget {
         case 4: featureKey = 'calendar_meetings'; break;
         case 6: featureKey = 'task_management'; break;
         case 7: featureKey = 'projects'; break;
+        case 10: featureKey = 'chess_game'; break;
       }
     }
     final isLocked = featureKey != null && !FeatureGuard.hasFeature(featureKey);
@@ -2460,6 +2489,9 @@ class ModernDashboardScreen extends HookWidget {
             listen: false,
           );
           await authViewModel.getUserRole();
+          break;
+        case 10: // Chess Screen
+          // No initialization needed
           break;
       }
     } catch (e) {

@@ -41,6 +41,7 @@ class _EmployeeAssistantState extends State<EmployeeAssistant>
   late AnimationController _pulseController;
 
   bool _isTyping = false;
+  bool _isHovered = false;
 
   @override
   void initState() {
@@ -62,6 +63,10 @@ class _EmployeeAssistantState extends State<EmployeeAssistant>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
+
+    _focusNode.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -328,10 +333,10 @@ class _EmployeeAssistantState extends State<EmployeeAssistant>
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             gradient: msg.isUser
-                ? LinearGradient(
+                ? const LinearGradient(
                     colors: [
-                      AppTheme.primaryBlue,
-                      AppTheme.primaryBlue.withValues(alpha: 0.8),
+                      Color(0xFF2563EB),
+                      Color(0xFF7C3AED),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -339,7 +344,13 @@ class _EmployeeAssistantState extends State<EmployeeAssistant>
                 : null,
             color: msg.isUser
                 ? null
-                : (isDark ? AppTheme.darkCardColor : Colors.white),
+                : (isDark ? const Color(0xFF1E293B).withOpacity(0.7) : Colors.white),
+            border: msg.isUser
+                ? null
+                : Border.all(
+                    color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.05),
+                    width: 1,
+                  ),
             borderRadius: BorderRadius.only(
               topLeft: const Radius.circular(20),
               topRight: const Radius.circular(20),
@@ -349,8 +360,8 @@ class _EmployeeAssistantState extends State<EmployeeAssistant>
             boxShadow: [
               BoxShadow(
                 color: msg.isUser
-                    ? AppTheme.primaryBlue.withValues(alpha: 0.2)
-                    : Colors.black.withValues(alpha: 0.05),
+                    ? const Color(0xFF7C3AED).withOpacity(0.15)
+                    : Colors.black.withOpacity(0.02),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -404,53 +415,7 @@ class _EmployeeAssistantState extends State<EmployeeAssistant>
     return "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
   }
 
-  Widget _buildQuickActionChip(
-    String label,
-    IconData icon,
-    VoidCallback onTap,
-  ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return BounceInUp(
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: onTap,
-          child: Container(
-            margin: const EdgeInsets.only(right: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkInputFill : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                  color: AppTheme.primaryBlue.withValues(alpha: 0.1)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 16, color: AppTheme.primaryBlue),
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: GoogleFonts.lexend(
-                    fontSize: 12,
-                    color: isDark ? Colors.white70 : Colors.black87,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -544,9 +509,17 @@ class _EmployeeAssistantState extends State<EmployeeAssistant>
                             desktop: 18,
                           ),
                         ),
-                        decoration: BoxDecoration(
-                          gradient: AppTheme.primaryGradient,
-                          borderRadius: const BorderRadius.vertical(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Color(0xFF2563EB), // Rich Royal Blue
+                              Color(0xFF7C3AED), // Deep Indigo/Purple
+                              Color(0xFFDB2777), // Magenta
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.vertical(
                             top: Radius.circular(28),
                           ),
                         ),
@@ -576,17 +549,35 @@ class _EmployeeAssistantState extends State<EmployeeAssistant>
                                 Positioned(
                                   right: 0,
                                   bottom: 0,
-                                  child: Container(
-                                    width: 10,
-                                    height: 10,
-                                    decoration: BoxDecoration(
-                                      color: Colors.green,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Colors.white,
-                                        width: 2,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      AnimatedBuilder(
+                                        animation: _pulseController,
+                                        builder: (context, child) {
+                                          return Container(
+                                            width: 10 + (6 * _pulseController.value),
+                                            height: 10 + (6 * _pulseController.value),
+                                            decoration: BoxDecoration(
+                                              color: Colors.green.withOpacity(0.4 * (1 - _pulseController.value)),
+                                              shape: BoxShape.circle,
+                                            ),
+                                          );
+                                        },
                                       ),
-                                    ),
+                                      Container(
+                                        width: 9,
+                                        height: 9,
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF22C55E),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
@@ -678,20 +669,20 @@ class _EmployeeAssistantState extends State<EmployeeAssistant>
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: Row(
                               children: [
-                                _buildQuickActionChip(
-                                  "Task",
-                                  Icons.add_task,
-                                  () => _sendMessage("Request a new task"),
+                                QuickActionChip(
+                                  label: "Task",
+                                  icon: Icons.add_task,
+                                  onTap: () => _sendMessage("Request a new task"),
                                 ),
-                                _buildQuickActionChip(
-                                  "Leave",
-                                  Icons.event_busy,
-                                  () => _sendMessage("Apply for leave"),
+                                QuickActionChip(
+                                  label: "Leave",
+                                  icon: Icons.event_busy,
+                                  onTap: () => _sendMessage("Apply for leave"),
                                 ),
-                                _buildQuickActionChip(
-                                  "Report",
-                                  Icons.analytics,
-                                  () => _sendMessage("Show my reports"),
+                                QuickActionChip(
+                                  label: "Report",
+                                  icon: Icons.analytics,
+                                  onTap: () => _sendMessage("Show my reports"),
                                 ),
                               ],
                             ),
@@ -724,20 +715,33 @@ class _EmployeeAssistantState extends State<EmployeeAssistant>
                         child: Row(
                           children: [
                             Expanded(
-                              child: Container(
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 18,
                                 ),
                                 decoration: BoxDecoration(
                                   color: isDark
-                                      ? AppTheme.darkInputFill
+                                      ? const Color(0xFF0F172A).withOpacity(0.4)
                                       : Colors.grey[100],
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: isDark
-                                        ? Colors.white.withValues(alpha: 0.05)
-                                        : Colors.transparent,
+                                    color: _focusNode.hasFocus
+                                        ? const Color(0xFF7C3AED).withOpacity(0.6)
+                                        : (isDark
+                                            ? Colors.white.withOpacity(0.08)
+                                            : Colors.grey.withOpacity(0.2)),
+                                    width: 1.2,
                                   ),
+                                  boxShadow: _focusNode.hasFocus
+                                      ? [
+                                          BoxShadow(
+                                            color: const Color(0xFF7C3AED).withOpacity(0.12),
+                                            blurRadius: 8,
+                                            spreadRadius: 1,
+                                          )
+                                        ]
+                                      : [],
                                 ),
                                 child: TextField(
                                   controller: _textController,
@@ -770,13 +774,19 @@ class _EmployeeAssistantState extends State<EmployeeAssistant>
                                 child: Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    gradient: AppTheme.primaryGradient,
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFF2563EB),
+                                        Color(0xFF7C3AED),
+                                        Color(0xFFDB2777),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: AppTheme.primaryBlue.withOpacity(
-                                          0.3,
-                                        ),
+                                        color: const Color(0xFF7C3AED).withOpacity(0.3),
                                         blurRadius: 8,
                                         offset: const Offset(0, 4),
                                       ),
@@ -800,55 +810,186 @@ class _EmployeeAssistantState extends State<EmployeeAssistant>
             ),
 
           // Floating Button
-          Hero(
-            tag: 'assistant-fab',
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                if (!_isOpen)
-                  AnimatedBuilder(
-                    animation: _pulseController,
-                    builder: (context, child) {
-                      return Container(
-                        width: 60 + (25 * _pulseController.value),
-                        height: 60 + (25 * _pulseController.value),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppTheme.primaryBlue.withValues(
-                              alpha: 0.15 * (1 - _pulseController.value)),
-                        ),
-                      );
-                    },
-                  ),
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: _toggleChat,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 400),
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        gradient: AppTheme.primaryGradient,
-                        borderRadius: BorderRadius.circular(_isOpen ? 20 : 30),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.primaryBlue.withValues(alpha: 0.4),
-                            blurRadius: 15,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        _isOpen ? Icons.close : Icons.smart_toy,
-                        size: 28,
-                        color: Colors.white,
-                      ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedOpacity(
+                opacity: (_isHovered && !_isOpen) ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  margin: const EdgeInsets.only(right: 12),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF0F172A).withOpacity(0.85) : Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFF7C3AED).withOpacity(0.3),
+                      width: 1.2,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.12),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ShaderMask(
+                        shaderCallback: (bounds) => const LinearGradient(
+                          colors: [Color(0xFF2563EB), Color(0xFF7C3AED), Color(0xFFDB2777)],
+                        ).createShader(bounds),
+                        child: const Icon(
+                          Icons.auto_awesome_rounded,
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Ask Sprintly AI',
+                        style: GoogleFonts.lexend(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              Hero(
+                tag: 'assistant-fab',
+                child: Stack(
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.none,
+                  children: [
+                    if (!_isOpen) ...[
+                      // Pulse Ring 1
+                      AnimatedBuilder(
+                        animation: _pulseController,
+                        builder: (context, child) {
+                          return Container(
+                            width: 60 + (20 * _pulseController.value),
+                            height: 60 + (20 * _pulseController.value),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: const Color(0xFF7C3AED).withOpacity(0.3 * (1 - _pulseController.value)),
+                                width: 1.5,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      // Pulse Ring 2 (larger/different color)
+                      AnimatedBuilder(
+                        animation: _pulseController,
+                        builder: (context, child) {
+                          final double delayValue = (_pulseController.value + 0.5) % 1.0;
+                          return Container(
+                            width: 60 + (32 * delayValue),
+                            height: 60 + (32 * delayValue),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: const Color(0xFFDB2777).withOpacity(0.15 * (1 - delayValue)),
+                                width: 1.0,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                    MouseRegion(
+                      onEnter: (_) => setState(() => _isHovered = true),
+                      onExit: (_) => setState(() => _isHovered = false),
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: _toggleChat,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeOutCubic,
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFF2563EB), // Rich Royal Blue
+                                Color(0xFF7C3AED), // Deep Indigo/Purple
+                                Color(0xFFDB2777), // Magenta
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(_isOpen ? 18 : 30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF7C3AED).withOpacity(_isHovered ? 0.65 : 0.4),
+                                blurRadius: _isHovered ? 22 : 16,
+                                spreadRadius: _isHovered ? 2 : 0,
+                                offset: Offset(0, _isHovered ? 8 : 6),
+                              ),
+                              BoxShadow(
+                                color: const Color(0xFFDB2777).withOpacity(_isHovered ? 0.35 : 0.15),
+                                blurRadius: _isHovered ? 14 : 10,
+                                offset: const Offset(0, -2),
+                              ),
+                            ],
+                          ),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Glossy top reflection for premium 3D look
+                              Positioned(
+                                top: 2,
+                                left: 8,
+                                right: 8,
+                                child: Container(
+                                  height: 18,
+                                  decoration: BoxDecoration(
+                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.white.withOpacity(0.35),
+                                        Colors.white.withOpacity(0.0),
+                                      ],
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              // Rotating, scaling transition for icon
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 300),
+                                transitionBuilder: (child, animation) {
+                                  return RotationTransition(
+                                    turns: animation,
+                                    child: ScaleTransition(
+                                      scale: animation,
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                                child: Icon(
+                                  _isOpen ? Icons.close_rounded : Icons.smart_toy_rounded,
+                                  key: ValueKey<bool>(_isOpen),
+                                  size: 26,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -866,4 +1007,86 @@ class ChatMessage {
     required this.isUser,
     required this.timestamp,
   });
+}
+
+class QuickActionChip extends StatefulWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const QuickActionChip({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  State<QuickActionChip> createState() => _QuickActionChipState();
+}
+
+class _QuickActionChipState extends State<QuickActionChip> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: _isHovered
+                ? (isDark ? const Color(0xFF1E293B) : Colors.grey[200])
+                : (isDark ? const Color(0xFF0F172A).withOpacity(0.4) : Colors.white),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: _isHovered
+                  ? const Color(0xFF7C3AED).withOpacity(0.5)
+                  : (isDark ? Colors.white.withOpacity(0.08) : Colors.grey.withOpacity(0.15)),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: _isHovered
+                    ? const Color(0xFF7C3AED).withOpacity(0.15)
+                    : Colors.black.withOpacity(0.03),
+                blurRadius: _isHovered ? 8 : 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ShaderMask(
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: [Color(0xFF2563EB), Color(0xFF7C3AED), Color(0xFFDB2777)],
+                ).createShader(bounds),
+                child: Icon(
+                  widget.icon,
+                  size: 16,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                widget.label,
+                style: GoogleFonts.lexend(
+                  fontSize: 12,
+                  color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

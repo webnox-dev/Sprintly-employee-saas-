@@ -5,6 +5,9 @@ import '../services/local_storage_service.dart';
 class FeatureGuard {
   /// Check if the organization has access to the specified feature.
   static bool hasFeature(String featureKey) {
+    if (featureKey == 'chess_game') {
+      return true;
+    }
     final storage = LocalStorageService();
     final planFeaturesStr = storage.planFeatures;
 
@@ -28,6 +31,10 @@ class FeatureGuard {
     required String featureKey,
     required VoidCallback onAccess,
   }) {
+    if (featureKey == 'chess_game') {
+      onAccess();
+      return;
+    }
     final storage = LocalStorageService();
     final planFeaturesStr = storage.planFeatures;
 

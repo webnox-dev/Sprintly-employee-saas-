@@ -209,10 +209,12 @@ class AuthViewModel extends ChangeNotifier {
   // Future<Map<String, dynamic>?> _fetchEmployeeFromSupabase() async { ... }
 
   Future<void> checkAuthState() async {
+    print('DEBUG: checkAuthState starting...');
     try {
       // 1. Check Local Storage for Backend Token
       final token = localStorage.accessToken;
       final userId = localStorage.userId;
+      print('DEBUG: checkAuthState - token found: ${token.isNotEmpty}, userId found: ${userId.isNotEmpty}');
 
       if (token.isNotEmpty) {
         logger.i('Found backend token in local storage');
@@ -220,7 +222,9 @@ class AuthViewModel extends ChangeNotifier {
 
         // Validate by fetching profile
         if (userId.isNotEmpty) {
+          print('DEBUG: checkAuthState - fetching user profile...');
           await fetchUserProfile();
+          print('DEBUG: checkAuthState - user profile fetched: ${_currentUserProfile != null}');
           if (_currentUserProfile != null) {
             _isBackendAuthenticated = true;
             notifyListeners();
@@ -232,8 +236,10 @@ class AuthViewModel extends ChangeNotifier {
       // 2. Check Supabase Session (for Chat/Legacy) - REMOVED
 
       _isInitialized = true;
+      print('DEBUG: checkAuthState finished, setting isInitialized to true');
       notifyListeners();
     } catch (e) {
+      print('DEBUG: checkAuthState error: $e');
       logger.e('Error checking auth state: $e');
       _isInitialized = true;
       notifyListeners();

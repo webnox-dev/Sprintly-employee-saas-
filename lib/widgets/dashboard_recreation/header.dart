@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:webnox_taskops/view_model/auth_view_model.dart';
 import 'package:webnox_taskops/view_model/notification_view_model.dart';
-import 'package:webnox_taskops/providers/theme_provider.dart';
+
 
 class RecreatedHeader extends StatefulWidget {
   final String title;
@@ -177,35 +177,7 @@ class _RecreatedHeaderState extends State<RecreatedHeader> {
           // Right Side - Notifications, Theme Toggle & User Info
           Row(
             children: [
-              // Theme Toggle
-              Consumer<ThemeProvider>(
-                builder: (context, themeProvider, child) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.03),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.08),
-                        width: 1,
-                      ),
-                    ),
-                    child: IconButton(
-                      onPressed: () => themeProvider.toggleTheme(),
-                      icon: Icon(
-                        themeProvider.isDarkMode
-                            ? Icons.light_mode_outlined
-                            : Icons.dark_mode_outlined,
-                        color: Colors.white,
-                        size: 20.0,
-                      ),
-                      tooltip: themeProvider.isDarkMode
-                          ? 'Switch to Light Mode'
-                          : 'Switch to Dark Mode',
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(width: 12),
+
 
               // Notification Bell Widget
               Consumer<NotificationViewModel>(

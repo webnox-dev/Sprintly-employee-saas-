@@ -9,6 +9,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../helpers/common_colors.dart';
 import '../../widgets/modern_project_card.dart';
+import '../../widgets/animated_loading_states.dart';
 
 class ProjectsScreen extends StatefulWidget {
   const ProjectsScreen({super.key});
@@ -542,7 +543,7 @@ class _ProjectsScreenState extends State<ProjectsScreen>
     return Consumer<ProjectViewModel>(
       builder: (context, projectViewModel, child) {
         if (projectViewModel.isLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return _buildLoadingState();
         }
 
         if (projectViewModel.error != null) {
@@ -591,7 +592,7 @@ class _ProjectsScreenState extends State<ProjectsScreen>
     return Consumer<ProjectViewModel>(
       builder: (context, projectViewModel, child) {
         if (projectViewModel.isLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return _buildLoadingState();
         }
 
         if (projectViewModel.error != null) {
@@ -738,7 +739,23 @@ class _ProjectsScreenState extends State<ProjectsScreen>
   }
 
   Widget _buildLoadingState() {
-    return const Center(child: CircularProgressIndicator());
+    final isDesktop = ResponsiveUtils.isDesktop(context) || ResponsiveUtils.isLaptop(context);
+    return isDesktop
+        ? const Padding(
+            padding: EdgeInsets.all(24),
+            child: GridLoadingSkeleton(
+              crossAxisCount: 3,
+              itemCount: 6,
+              itemHeight: 180,
+            ),
+          )
+        : const Padding(
+            padding: EdgeInsets.all(16),
+            child: ListLoadingSkeleton(
+              itemCount: 4,
+              itemHeight: 120,
+            ),
+          );
   }
 
   Widget _buildErrorState(String error) {

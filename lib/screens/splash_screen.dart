@@ -8,11 +8,13 @@ import '../view_model/auth_view_model.dart';
 
 @RoutePage()
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final bool isSubWidget;
+  const SplashScreen({super.key, this.isSubWidget = false});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
+
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
@@ -56,9 +58,11 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
 
     // Navigation Logic
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) _navigateToNextScreen();
-    });
+    if (!widget.isSubWidget) {
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) _navigateToNextScreen();
+      });
+    }
   }
 
   void _navigateToNextScreen() async {

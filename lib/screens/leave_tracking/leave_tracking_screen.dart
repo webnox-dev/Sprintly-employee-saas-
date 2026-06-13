@@ -15,6 +15,7 @@ import 'package:webnox_taskops/model/work_from_home_model.dart';
 import 'package:webnox_taskops/model/permission_model.dart';
 import 'package:webnox_taskops/model/employee_attendance_model.dart';
 import 'package:webnox_taskops/theme/app_theme.dart';
+import 'package:webnox_taskops/widgets/animated_loading_states.dart';
 
 class _UnifiedHistoryItem {
   final DateTime date;
@@ -720,12 +721,21 @@ class _LeaveTrackingScreenState extends State<LeaveTrackingScreen> {
                 ),
                 const SizedBox(height: 24),
                 if (viewModel.isLoading)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 40),
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
+                  MediaQuery.of(context).size.width > 900
+                      ? const Expanded(
+                          child: ListLoadingSkeleton(
+                            itemCount: 3,
+                            itemHeight: 90,
+                            itemMargin: EdgeInsets.only(bottom: 16),
+                            itemPadding: EdgeInsets.all(16),
+                          ),
+                        )
+                      : const ListLoadingSkeleton(
+                          itemCount: 3,
+                          itemHeight: 90,
+                          itemMargin: EdgeInsets.only(bottom: 16),
+                          itemPadding: EdgeInsets.all(16),
+                        )
                 else if (wfhRequests.isEmpty)
                   Center(
                     child: Padding(
@@ -1020,12 +1030,21 @@ class _LeaveTrackingScreenState extends State<LeaveTrackingScreen> {
                 ),
                 const SizedBox(height: 24),
                 if (_loadingLeaves)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 40),
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
+                  MediaQuery.of(context).size.width > 900
+                      ? const Expanded(
+                          child: ListLoadingSkeleton(
+                            itemCount: 3,
+                            itemHeight: 90,
+                            itemMargin: EdgeInsets.only(bottom: 16),
+                            itemPadding: EdgeInsets.all(16),
+                          ),
+                        )
+                      : const ListLoadingSkeleton(
+                          itemCount: 3,
+                          itemHeight: 90,
+                          itemMargin: EdgeInsets.only(bottom: 16),
+                          itemPadding: EdgeInsets.all(16),
+                        )
                 else if (_leaveHistory.isEmpty)
                   Center(
                     child: Padding(
@@ -1386,12 +1405,21 @@ class _LeaveTrackingScreenState extends State<LeaveTrackingScreen> {
                 ),
                 const SizedBox(height: 20),
                 if (viewModel.isLoading)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 40),
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
+                  MediaQuery.of(context).size.width > 900
+                      ? const Expanded(
+                          child: ListLoadingSkeleton(
+                            itemCount: 3,
+                            itemHeight: 90,
+                            itemMargin: EdgeInsets.only(bottom: 16),
+                            itemPadding: EdgeInsets.all(16),
+                          ),
+                        )
+                      : const ListLoadingSkeleton(
+                          itemCount: 3,
+                          itemHeight: 90,
+                          itemMargin: EdgeInsets.only(bottom: 16),
+                          itemPadding: EdgeInsets.all(16),
+                        )
                 else if (paginatedRequests.isEmpty)
                   Center(
                     child: Padding(
@@ -2106,7 +2134,33 @@ class _LeaveTrackingScreenState extends State<LeaveTrackingScreen> {
                   future: attendanceViewModel.getDailyWorkSummary(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: ShimmerLoadingCard(
+                              height: 70,
+                              margin: EdgeInsets.zero,
+                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ShimmerLoadingCard(
+                              height: 70,
+                              margin: EdgeInsets.zero,
+                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ShimmerLoadingCard(
+                              height: 70,
+                              margin: EdgeInsets.zero,
+                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+                            ),
+                          ),
+                        ],
+                      );
                     }
                     final summary = snapshot.data;
                     if (summary == null) {
@@ -2306,9 +2360,35 @@ class _LeaveTrackingScreenState extends State<LeaveTrackingScreen> {
       future: _weeklyAttendanceFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SizedBox(
+          return Container(
             height: 180,
-            child: Center(child: CircularProgressIndicator()),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.01),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withOpacity(0.05)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SkeletonLoader(height: 14, width: 120),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: List.generate(5, (index) {
+                      final randomHeight = 40.0 + (index * 20) % 70.0;
+                      return SkeletonLoader(
+                        height: randomHeight,
+                        width: 24,
+                        borderRadius: 4,
+                      );
+                    }),
+                  ),
+                ),
+              ],
+            ),
           );
         }
 
@@ -2421,9 +2501,35 @@ class _LeaveTrackingScreenState extends State<LeaveTrackingScreen> {
       future: attendanceViewModel.getTodayAttendanceRecords(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SizedBox(
+          return Container(
             height: 180,
-            child: Center(child: CircularProgressIndicator()),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.01),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withOpacity(0.05)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SkeletonLoader(height: 14, width: 120),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: List.generate(8, (index) {
+                      final randomHeight = 30.0 + (index * 15) % 80.0;
+                      return SkeletonLoader(
+                        height: randomHeight,
+                        width: 16,
+                        borderRadius: 3,
+                      );
+                    }),
+                  ),
+                ),
+              ],
+            ),
           );
         }
 

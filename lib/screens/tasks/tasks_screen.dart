@@ -5,6 +5,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:webnox_taskops/model/task_model.dart';
 import 'package:webnox_taskops/helpers/common_colors.dart';
 import 'package:webnox_taskops/widgets/common_widgets.dart';
+import 'package:webnox_taskops/widgets/animated_loading_states.dart';
 import 'package:webnox_taskops/view_model/task_view_model.dart';
 import 'package:webnox_taskops/view_model/auth_view_model.dart';
 import 'package:responsive_framework/responsive_framework.dart' as responsive;
@@ -381,10 +382,12 @@ class TasksScreen extends HookWidget {
             ),
           ),
           if (isLoadingTasks.value)
-            Container(
-              height: 20.h,
-              child: const Center(
-                child: CircularProgressIndicator(),
+            Column(
+              children: List.generate(
+                3,
+                (index) => TaskCardSkeleton(
+                  isMobile: !isDesktop,
+                ),
               ),
             )
           else if (taskError.value != null)

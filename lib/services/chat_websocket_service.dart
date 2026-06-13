@@ -20,6 +20,11 @@ enum ChatEventType {
   messagePinned,
   messageUpdated,
   themeUpdate,
+  chessChallengeReceived,
+  chessGameStarted,
+  chessChallengeDeclined,
+  chessMoveReceived,
+  chessGameOverReceived,
   error,
 }
 
@@ -245,6 +250,64 @@ class ChatWebSocketService {
     });
   }
 
+  /// Send chess challenge
+  void sendChessChallenge({required String targetId, required String challengerName}) {
+    _send({
+      'type': 'chess_challenge',
+      'targetId': targetId,
+      'challengerName': challengerName,
+    });
+  }
+
+  /// Accept chess challenge
+  void acceptChessChallenge({required String challengerId, required String challengerType}) {
+    _send({
+      'type': 'chess_challenge_accept',
+      'challengerId': challengerId,
+      'challengerType': challengerType,
+    });
+  }
+
+  /// Decline chess challenge
+  void declineChessChallenge({required String challengerId}) {
+    _send({
+      'type': 'chess_challenge_decline',
+      'challengerId': challengerId,
+    });
+  }
+
+  /// Send chess move
+  void sendChessMove({
+    required String gameId,
+    required String opponentId,
+    required String opponentType,
+    required Map<String, dynamic> move,
+  }) {
+    _send({
+      'type': 'chess_move',
+      'gameId': gameId,
+      'opponentId': opponentId,
+      'opponentType': opponentType,
+      'move': move,
+    });
+  }
+
+  /// Send chess game over status (e.g. resigned, checkmate)
+  void sendChessGameOver({
+    required String gameId,
+    required String opponentId,
+    required String opponentType,
+    required String reason,
+  }) {
+    _send({
+      'type': 'chess_game_over',
+      'gameId': gameId,
+      'opponentId': opponentId,
+      'opponentType': opponentType,
+      'reason': reason,
+    });
+  }
+
   /// Send data through WebSocket
   void _send(Map<String, dynamic> data) {
     if (!_isConnected || _channel == null) {
@@ -309,6 +372,21 @@ class ChatWebSocketService {
           break;
         case 'theme_update':
           _eventController.add(ChatEvent(ChatEventType.themeUpdate, message));
+          break;
+        case 'chess_challenge_received':
+          _eventController.add(ChatEvent(ChatEventType.chessChallengeReceived, message));
+          break;
+        case 'chess_game_started':
+          _eventController.add(ChatEvent(ChatEventType.chessGameStarted, message));
+          break;
+        case 'chess_challenge_declined':
+          _eventController.add(ChatEvent(ChatEventType.chessChallengeDeclined, message));
+          break;
+        case 'chess_move_received':
+          _eventController.add(ChatEvent(ChatEventType.chessMoveReceived, message));
+          break;
+        case 'chess_game_over_received':
+          _eventController.add(ChatEvent(ChatEventType.chessGameOverReceived, message));
           break;
         case 'error':
           _eventController.add(ChatEvent(ChatEventType.error, message));

@@ -1647,9 +1647,16 @@ class HomeScreen extends HookWidget {
                         fontWeight: FontWeight.w600,
                       ),
                 ),
-                const SizedBox(height: 10),
                 if (vm.isLoading)
-                  const Center(child: CircularProgressIndicator())
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    child: ListLoadingSkeleton(
+                      itemCount: 2,
+                      itemHeight: 90,
+                      itemMargin: EdgeInsets.only(bottom: 12),
+                      itemPadding: EdgeInsets.all(12),
+                    ),
+                  )
                 else if (vm.cards.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 40),
@@ -1691,7 +1698,15 @@ class HomeScreen extends HookWidget {
         child: Consumer<TeamCardViewModel>(
           builder: (context, vm, _) {
             if (vm.isLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return const Padding(
+                padding: EdgeInsets.all(16),
+                child: ListLoadingSkeleton(
+                  itemCount: 3,
+                  itemHeight: 90,
+                  itemMargin: EdgeInsets.only(bottom: 12),
+                  itemPadding: EdgeInsets.all(12),
+                ),
+              );
             }
 
             if (vm.error != null) {
@@ -3474,64 +3489,31 @@ class HomeScreen extends HookWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
+                  SkeletonLoader(
                     width: iconSize,
                     height: iconSize,
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: SizedBox(
-                        width: iconSize * 0.5,
-                        height: iconSize * 0.5,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    ),
+                    borderRadius: 12,
                   ),
                   const Spacer(),
-                  Container(
+                  const SkeletonLoader(
                     width: 60,
                     height: 20,
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    borderRadius: 10,
                   ),
                 ],
               ),
               SizedBox(height: spacing1),
-              Container(
+              SkeletonLoader(
                 width: container2Width,
                 height: container2Height,
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                borderRadius: 12,
               ),
               SizedBox(height: spacing2),
               Flexible(
-                child: Container(
+                child: SkeletonLoader(
                   width: container3Width,
                   height: container3Height,
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  borderRadius: 8,
                 ),
               ),
             ],
