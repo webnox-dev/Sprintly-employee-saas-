@@ -7,9 +7,9 @@ class ApiConfig {
     final activeEnv = dotenv.env['ACTIVE_ENV'] ?? 'local';
     if (activeEnv == 'live') {
       return dotenv.env['API_BASE_URL_LIVE'] ??
-          'https://sprintlyapi.webnoxdigital.com/api';
+          'https://api.rathz.com/api';
     }
-    return dotenv.env['API_BASE_URL_LOCAL'] ?? 'http://localhost:8080/api';
+    return dotenv.env['API_BASE_URL_LOCAL'] ?? 'https://api.rathz.com/api';
   }
 
   /// Request timeout duration

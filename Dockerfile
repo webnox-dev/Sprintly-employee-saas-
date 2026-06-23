@@ -1,5 +1,9 @@
 # Stage 1: Build the Flutter web app
-FROM ghcr.io/cirruslabs/flutter:stable AS build-env
+FROM ghcr.io/cirruslabs/flutter:3.38.6 AS build-env
+
+# Fix corrupt Flutter SDK in the base image
+RUN rm -rf /sdks/flutter && \
+    git clone -b 3.38.6 --depth 1 https://github.com/flutter/flutter.git /sdks/flutter
 
 # Break Docker cache when code changes (pass at build: --build-arg BUILD_TIME=$(date +%s))
 ARG BUILD_TIME
