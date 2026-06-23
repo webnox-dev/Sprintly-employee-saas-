@@ -1,5 +1,5 @@
 # Stage 1: Build the Flutter web app
-FROM instrumentisto/flutter:stable AS build-env
+FROM ghcr.io/cirruslabs/flutter:stable AS build-env
 
 # Break Docker cache when code changes (pass at build: --build-arg BUILD_TIME=$(date +%s))
 ARG BUILD_TIME
